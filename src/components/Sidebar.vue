@@ -230,6 +230,7 @@ const kpiItems = [
 
 // ⭐ NEW: Holding items
 const holdingItems = [
+  { name: 'Overview', icon: ChartPieIcon, path: '/dashboard/overview' },
   {
     name: 'KPI Perusahaan',
     icon: ChartBarSquareIcon,
