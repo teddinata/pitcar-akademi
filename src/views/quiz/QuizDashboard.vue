@@ -6,14 +6,22 @@
         <h1 class="text-xl md:text-2xl font-black text-gray-900 tracking-tight">Dashboard Assessment SOP</h1>
         <p class="text-xs md:text-sm text-gray-500 mt-1">Monitoring hasil quiz & kepatuhan SOP karyawan</p>
       </div>
-      <div class="flex items-center gap-3 w-full sm:w-auto">
+      <div class="flex items-center gap-2 w-full sm:w-auto">
         <select
-          v-model="selectedPeriod"
+          v-model="selectedMonth"
           @change="loadDashboard"
-          class="flex-1 sm:flex-none text-xs md:text-sm border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:ring-2 focus:ring-[#B70000] focus:border-[#B70000] outline-none shadow-sm font-semibold text-gray-700"
+          class="flex-1 sm:w-32 text-xs md:text-sm border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:ring-2 focus:ring-[#B70000] focus:border-[#B70000] outline-none shadow-sm font-semibold text-gray-700"
         >
-          <option value="">Semua Periode</option>
-          <option v-for="p in periods" :key="p" :value="p">{{ formatPeriod(p) }}</option>
+          <option value="">Semua Bulan</option>
+          <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+        </select>
+        <select
+          v-model="selectedYear"
+          @change="loadDashboard"
+          class="flex-1 sm:w-28 text-xs md:text-sm border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:ring-2 focus:ring-[#B70000] focus:border-[#B70000] outline-none shadow-sm font-semibold text-gray-700"
+        >
+          <option value="">Semua Tahun</option>
+          <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
         </select>
         <button @click="loadDashboard" class="p-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all shadow-sm active:scale-95 shrink-0">
           <svg class="w-4 h-4 text-gray-600" :class="loading ? 'animate-spin' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -533,7 +541,28 @@ const router = useRouter()
 const loading = ref(true)
 const accessDenied = ref(false)
 const dashData = ref(null)
-const selectedPeriod = ref('')
+const selectedMonth = ref('')
+const selectedYear = ref('')
+
+const monthOptions = [
+  { value: '01', label: 'Januari' },
+  { value: '02', label: 'Februari' },
+  { value: '03', label: 'Maret' },
+  { value: '04', label: 'April' },
+  { value: '05', label: 'Mei' },
+  { value: '06', label: 'Juni' },
+  { value: '07', label: 'Juli' },
+  { value: '08', label: 'Agustus' },
+  { value: '09', label: 'September' },
+  { value: '10', label: 'Oktober' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'Desember' },
+]
+
+const yearOptions = (() => {
+  const currentYear = new Date().getFullYear()
+  return [currentYear, currentYear - 1, currentYear - 2]
+})()
 
 const activeHoveredBar = ref(null)
 const activeHoveredBarData = ref(null)
@@ -557,23 +586,19 @@ function getShortCode(quiz) {
   return quiz.quiz_code
 }
 
-// Generate last 6 months
-const periods = (() => {
-  const list = []
-  const now = new Date()
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    list.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
-  }
-  return list
-})()
 
 async function loadDashboard() {
   loading.value = true
   accessDenied.value = false
   try {
     const params = {}
-    if (selectedPeriod.value) params.period = selectedPeriod.value
+    if (selectedYear.value && selectedMonth.value) {
+      params.period = `${selectedYear.value}-${selectedMonth.value}`
+    } else if (selectedYear.value) {
+      params.year = selectedYear.value
+    } else if (selectedMonth.value) {
+      params.month = selectedMonth.value
+    }
     dashData.value = await quizApi.dashboard(params)
   } catch (e) {
     if (e.code === 'forbidden') accessDenied.value = true
