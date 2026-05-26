@@ -1,21 +1,17 @@
-<!-- ============================================================================
-FILE: src/components/Sidebar.vue
-Perubahan: Tambah section "Holding" dengan menu KPI Perusahaan
-============================================================================ -->
-
 <template>
+  <!-- Desktop Sidebar -->
   <div
-    class="h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out relative flex flex-col shadow-sm"
+    class="hidden md:flex h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out relative flex flex-col shadow-sm"
     :class="isExpanded ? 'w-64' : 'w-20'"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >
-    <!-- Logo Section -->
+    <!-- Logo -->
     <div class="flex items-center justify-center h-16 px-4 border-b border-gray-200 bg-gradient-to-r from-[#B70000] to-[#950000]">
       <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center shrink-0 shadow-md">
         <img src="/pitcar-modified.png" alt="PITCAR" class="w-6 h-6" />
       </div>
-      <div 
+      <div
         class="ml-3 transition-all duration-300 overflow-hidden whitespace-nowrap"
         :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'"
       >
@@ -23,121 +19,125 @@ Perubahan: Tambah section "Holding" dengan menu KPI Perusahaan
       </div>
     </div>
 
-    <!-- Scrollable Menu Container -->
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-4 px-3">
+    <!-- Scrollable nav -->
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-4 px-3 space-y-1">
 
-      <!-- ============================================================
-           HOLDING MENU GROUP — BARU
-      ============================================================ -->
-      <div class="mb-6">
-        <!-- Section Header -->
-        <div 
-          class="flex items-center px-3 h-10 text-xs font-bold uppercase tracking-wider mb-2 cursor-pointer rounded-lg transition-all duration-200"
+      <!-- ── LMS SECTION ── -->
+      <div class="mb-4">
+        <div
+          class="flex items-center px-3 h-9 text-xs font-bold uppercase tracking-wider mb-1 cursor-pointer rounded-lg transition-all duration-200"
           :class="[
             isExpanded ? 'justify-between' : 'justify-center',
-            showHolding ? 'text-[#C9A84C]' : 'text-gray-500 hover:text-[#C9A84C]'
+            showLms || isLmsRoute ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'
           ]"
-          @click="toggleHolding"
+          @click="toggleLms"
         >
-          <div class="flex items-center">
-            <!-- Gold icon container when expanded/active -->
-            <div 
-              class="w-5 h-5 min-w-[20px] flex items-center justify-center rounded transition-all duration-200"
-              :class="showHolding && isExpanded ? 'text-[#C9A84C]' : ''"
+          <div class="flex items-center gap-3">
+            <AcademicCapIcon class="w-5 h-5 shrink-0" />
+            <span
+              class="transition-all duration-300 overflow-hidden"
+              :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'"
             >
-              <BuildingOffice2Icon class="w-5 h-5" />
-            </div>
-            <span class="transition-all duration-300 overflow-hidden ml-3" :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'">
-              Holding
+              LMS
             </span>
           </div>
-          <ChevronDownIcon v-if="isExpanded" class="w-4 h-4 transition-transform duration-200" :class="showHolding ? 'rotate-180' : ''" />
+          <ChevronDownIcon
+            v-if="isExpanded"
+            class="w-4 h-4 transition-transform duration-200"
+            :class="showLms ? 'rotate-180' : ''"
+          />
         </div>
 
-        <!-- Holding Submenu -->
-        <div v-show="showHolding && isExpanded" class="space-y-1 pl-2">
-          <router-link
-            v-for="item in holdingItems"
-            :key="item.path"
-            :to="item.path"
-            custom
-            v-slot="{ isActive, href, navigate }"
-          >
-            <a
-              :href="href"
-              @click="navigate"
-              class="group relative flex items-center cursor-pointer transition-all duration-200 rounded-lg"
-              :class="[
-                isActive
-                  ? 'holding-menu-active shadow-sm'
-                  : 'text-gray-600 hover:bg-amber-50 hover:text-amber-800'
-              ]"
-            >
-              <div class="h-10 w-full flex items-center px-3">
-                <component
-                  :is="item.icon"
-                  class="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110"
-                  :class="isActive ? 'text-amber-700' : 'text-gray-500 group-hover:text-amber-700'"
-                />
-                <span
-                  class="ml-3 whitespace-nowrap transition-all duration-300 text-sm font-medium overflow-hidden"
-                  :class="[
-                    isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0',
-                    isActive ? 'text-amber-800' : 'text-gray-700'
-                  ]"
-                >
-                  {{ item.name }}
-                </span>
-                <!-- Gold dot indicator for active -->
-                <div
-                  v-if="isActive"
-                  class="ml-auto w-1.5 h-1.5 rounded-full bg-[#C9A84C] transition-all duration-300"
-                  :class="isExpanded ? 'opacity-100' : 'opacity-0'"
-                ></div>
-              </div>
-            </a>
-          </router-link>
+        <!-- Expanded submenu -->
+        <div v-show="showLms && isExpanded" class="space-y-0.5 pl-2">
+          <template v-for="item in filteredLmsItems" :key="item.path || item.label">
+            <div v-if="item.divider" class="pt-3 pb-1 px-1">
+              <p class="text-[9px] font-bold uppercase tracking-widest text-gray-400 px-2">{{ item.label }}</p>
+              <div class="h-px bg-gray-100 mt-1.5"></div>
+            </div>
+            <NavItem
+              v-else
+              :item="item"
+              :is-expanded="isExpanded"
+              active-class="lms-active"
+            />
+          </template>
         </div>
 
-        <!-- Collapsed: show icon only for KPI Perusahaan -->
-        <div v-show="!isExpanded" class="space-y-1">
-          <router-link
-            v-for="item in holdingItems"
-            :key="`collapsed-${item.path}`"
-            :to="item.path"
-            custom
-            v-slot="{ isActive, href, navigate }"
-          >
-            <a
-              :href="href"
-              @click="navigate"
-              class="group relative flex items-center justify-center cursor-pointer transition-all duration-200 rounded-lg"
-              :class="isActive ? 'holding-menu-active' : 'text-gray-600 hover:bg-amber-50'"
-              :title="item.name"
-            >
-              <div class="h-10 w-full flex items-center justify-center">
-                <component
-                  :is="item.icon"
-                  class="w-4 h-4 shrink-0"
-                  :class="isActive ? 'text-amber-700' : 'text-gray-500 group-hover:text-amber-700'"
-                />
-              </div>
-            </a>
-          </router-link>
+        <!-- Collapsed: icons only (no dividers) -->
+        <div v-show="!isExpanded" class="space-y-0.5">
+          <NavItem
+            v-for="item in filteredLmsItems.filter(i => !i.divider)"
+            :key="`lc-${item.path}`"
+            :item="item"
+            :is-expanded="false"
+            active-class="lms-active"
+          />
         </div>
       </div>
-      <!-- END HOLDING MENU GROUP -->
+
+      <!-- ── ASSESSMENT SECTION ── -->
+      <div class="mb-4">
+        <div
+          class="flex items-center px-3 h-9 text-xs font-bold uppercase tracking-wider mb-1 cursor-pointer rounded-lg transition-all duration-200"
+          :class="[
+            isExpanded ? 'justify-between' : 'justify-center',
+            showAssessment ? 'text-[#B70000]' : 'text-gray-400 hover:text-[#B70000]'
+          ]"
+          @click="toggleAssessment"
+        >
+          <div class="flex items-center gap-3">
+            <ClipboardDocumentListIcon class="w-5 h-5 shrink-0" />
+            <span
+              class="transition-all duration-300 overflow-hidden"
+              :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'"
+            >
+              Assessment
+            </span>
+          </div>
+          <ChevronDownIcon
+            v-if="isExpanded"
+            class="w-4 h-4 transition-transform duration-200"
+            :class="showAssessment ? 'rotate-180' : ''"
+          />
+        </div>
+
+        <!-- Expanded submenu -->
+        <div v-show="showAssessment && isExpanded" class="space-y-0.5 pl-2">
+          <NavItem
+            v-for="item in filteredAssessmentItems"
+            :key="item.path"
+            :item="item"
+            :is-expanded="isExpanded"
+            active-class="assessment-active"
+          />
+        </div>
+
+        <!-- Collapsed: icons only -->
+        <div v-show="!isExpanded" class="space-y-0.5">
+          <NavItem
+            v-for="item in filteredAssessmentItems"
+            :key="`c-${item.path}`"
+            :item="item"
+            :is-expanded="false"
+            active-class="assessment-active"
+          />
+        </div>
+      </div>
 
     </nav>
 
-    <!-- Bottom Section -->
+    <!-- Bottom: user -->
     <div class="border-t border-gray-200 bg-gray-50">
-      <div class="px-4 py-2 text-xs text-gray-400 text-center transition-all duration-300" :class="isExpanded ? 'opacity-100' : 'opacity-0'">
+      <div
+        class="px-4 py-2 text-xs text-gray-400 text-center transition-all duration-300"
+        :class="isExpanded ? 'opacity-100' : 'opacity-0'"
+      >
         <span class="font-mono">v{{ version }}</span>
       </div>
       <div class="p-3">
         <div class="relative">
-          <button 
+          <button
             class="w-full flex items-center p-2 rounded-lg transition-all duration-200 hover:bg-white hover:shadow-sm"
             :class="showDropdown ? 'bg-white shadow-sm' : ''"
             @click="showDropdown = !showDropdown"
@@ -145,11 +145,18 @@ Perubahan: Tambah section "Holding" dengan menu KPI Perusahaan
             <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#B70000] to-[#950000] overflow-hidden shrink-0 flex items-center justify-center shadow-md">
               <UserIcon class="w-5 h-5 text-white" />
             </div>
-            <div class="ml-3 transition-all duration-300 overflow-hidden whitespace-nowrap text-left flex-1" :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'">
+            <div
+              class="ml-3 transition-all duration-300 overflow-hidden whitespace-nowrap text-left flex-1"
+              :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'"
+            >
               <div class="font-semibold text-gray-900 text-sm truncate">{{ authStore.user?.name || 'User' }}</div>
-              <div class="text-xs text-gray-500">{{ authStore.user?.is_admin ? 'Administrator' : 'User' }}</div>
+              <div class="text-xs text-gray-500">{{ authStore.user?.is_admin ? 'Administrator' : 'Karyawan' }}</div>
             </div>
-            <ChevronDownIcon v-if="isExpanded" class="w-4 h-4 text-gray-400 transition-transform duration-200 ml-2" :class="showDropdown ? 'rotate-180' : ''" />
+            <ChevronDownIcon
+              v-if="isExpanded"
+              class="w-4 h-4 text-gray-400 transition-transform duration-200 ml-2"
+              :class="showDropdown ? 'rotate-180' : ''"
+            />
           </button>
           <transition
             enter-active-class="transition ease-out duration-100"
@@ -159,13 +166,14 @@ Perubahan: Tambah section "Holding" dengan menu KPI Perusahaan
             leave-from-class="transform opacity-100 scale-100"
             leave-to-class="transform opacity-0 scale-95"
           >
-            <div v-if="showDropdown && isExpanded" class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-              <button class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors" @click="handleProfile">
-                <UserCircleIcon class="w-4 h-4 mr-3 text-gray-400" />
-                <span class="font-medium">Profile</span>
-              </button>
-              <div class="border-t border-gray-100 my-1"></div>
-              <button class="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center transition-colors" @click="handleLogout">
+            <div
+              v-if="showDropdown && isExpanded"
+              class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+            >
+              <button
+                class="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center transition-colors"
+                @click="handleLogout"
+              >
                 <ArrowRightOnRectangleIcon class="w-4 h-4 mr-3" />
                 <span class="font-medium">Logout</span>
               </button>
@@ -175,118 +183,402 @@ Perubahan: Tambah section "Holding" dengan menu KPI Perusahaan
       </div>
     </div>
   </div>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 flex items-center justify-around px-2 z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+    <!-- Quiz List Tab -->
+    <button
+      @click="navigateAndClose('/dashboard/quiz')"
+      class="flex flex-col items-center justify-center flex-1 py-1 transition-all"
+      :class="isRouteActive('/dashboard/quiz') ? 'text-[#B70000]' : 'text-gray-400 hover:text-gray-600'"
+    >
+      <ClipboardDocumentListIcon class="w-6 h-6 shrink-0" />
+      <span class="text-[9px] font-bold mt-0.5">Quiz</span>
+    </button>
+
+    <!-- History Tab -->
+    <button
+      @click="navigateAndClose('/dashboard/quiz/history')"
+      class="flex flex-col items-center justify-center flex-1 py-1 transition-all"
+      :class="isRouteActive('/dashboard/quiz/history') ? 'text-[#B70000]' : 'text-gray-400 hover:text-gray-600'"
+    >
+      <ClockIcon class="w-6 h-6 shrink-0" />
+      <span class="text-[9px] font-bold mt-0.5">Riwayat</span>
+    </button>
+
+    <!-- LMS Tab -->
+    <button
+      @click="toggleMobileLms"
+      class="flex flex-col items-center justify-center flex-1 py-1 transition-all"
+      :class="isLmsRoute || showMobileLms ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'"
+    >
+      <AcademicCapIcon class="w-6 h-6 shrink-0" />
+      <span class="text-[9px] font-bold mt-0.5">LMS</span>
+    </button>
+
+    <!-- Admin Manage Tab (Admins Only) -->
+    <button
+      v-if="authStore.user?.is_admin"
+      @click="toggleMobileKelola"
+      class="flex flex-col items-center justify-center flex-1 py-1 transition-all"
+      :class="isKelolaRoute || showMobileKelola ? 'text-[#B70000]' : 'text-gray-400 hover:text-gray-600'"
+    >
+      <Cog6ToothIcon class="w-6 h-6 shrink-0" />
+      <span class="text-[9px] font-bold mt-0.5">Kelola</span>
+    </button>
+
+    <!-- Account Tab -->
+    <button
+      @click="toggleMobileAkun"
+      class="flex flex-col items-center justify-center flex-1 py-1 transition-all"
+      :class="showMobileAkun ? 'text-[#B70000]' : 'text-gray-400 hover:text-gray-600'"
+    >
+      <UserIcon class="w-6 h-6 shrink-0" />
+      <span class="text-[9px] font-bold mt-0.5">Akun</span>
+    </button>
+  </div>
+
+  <!-- Backdrop Overlay for Mobile Bottom Sheets -->
+  <transition
+    enter-active-class="transition-opacity ease-out duration-300"
+    enter-from-class="opacity-0"
+    enter-to-class="opacity-100"
+    leave-active-class="transition-opacity ease-in duration-200"
+    leave-from-class="opacity-100"
+    leave-to-class="opacity-0"
+  >
+    <div
+      v-if="showMobileKelola || showMobileAkun || showMobileLms"
+      class="md:hidden fixed inset-0 bg-black/40 z-30 transition-opacity"
+      @click="closeAllMobileSheets"
+    ></div>
+  </transition>
+
+  <!-- Mobile Bottom Sheet for Kelola (Admin Only) -->
+  <transition
+    enter-active-class="transition ease-out duration-300 transform"
+    enter-from-class="translate-y-full opacity-0"
+    enter-to-class="translate-y-0 opacity-100"
+    leave-active-class="transition ease-in duration-200 transform"
+    leave-from-class="translate-y-0 opacity-100"
+    leave-to-class="translate-y-full opacity-0"
+  >
+    <div v-if="showMobileKelola && authStore.user?.is_admin" class="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-white rounded-t-3xl border-t border-gray-200 shadow-2xl p-5 space-y-4 pb-8 transition-all">
+      <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-2"></div>
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Kelola Assessment</h3>
+      <div class="grid grid-cols-3 gap-3">
+        <button
+          @click="navigateAndClose('/dashboard/quiz/manage', 'kelola')"
+          class="flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+        >
+          <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-[#B70000] mb-2 shadow-sm">
+            <Cog6ToothIcon class="w-5 h-5" />
+          </div>
+          <span class="text-[10px] font-bold text-gray-800 leading-snug">Quiz Bank</span>
+        </button>
+        
+        <button
+          @click="navigateAndClose('/dashboard/quiz/program', 'kelola')"
+          class="flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+        >
+          <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-[#B70000] mb-2 shadow-sm">
+            <BuildingOffice2Icon class="w-5 h-5" />
+          </div>
+          <span class="text-[10px] font-bold text-gray-800 leading-snug">Program</span>
+        </button>
+
+        <button
+          @click="navigateAndClose('/dashboard/quiz/admin', 'kelola')"
+          class="flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+        >
+          <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-[#B70000] mb-2 shadow-sm">
+            <ChartBarSquareIcon class="w-5 h-5" />
+          </div>
+          <span class="text-[10px] font-bold text-gray-800 leading-snug">Dashboard</span>
+        </button>
+      </div>
+    </div>
+  </transition>
+
+  <!-- Mobile Bottom Sheet for LMS -->
+  <transition
+    enter-active-class="transition ease-out duration-300 transform"
+    enter-from-class="translate-y-full opacity-0"
+    enter-to-class="translate-y-0 opacity-100"
+    leave-active-class="transition ease-in duration-200 transform"
+    leave-from-class="translate-y-0 opacity-100"
+    leave-to-class="translate-y-full opacity-0"
+  >
+    <div v-if="showMobileLms" class="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-white rounded-t-3xl border-t border-gray-200 shadow-2xl p-5 pb-8 transition-all overflow-y-auto max-h-[70vh]">
+      <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-3"></div>
+
+      <!-- Learner section -->
+      <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Belajar</h3>
+      <div class="grid grid-cols-4 gap-2 mb-4">
+        <button
+          v-for="item in lmsLearnerItems"
+          :key="item.path"
+          @click="navigateAndClose(item.path, 'lms')"
+          class="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+          :class="isRouteActive(item.path) ? 'border-blue-200 bg-blue-50' : ''"
+        >
+          <div class="w-9 h-9 rounded-full flex items-center justify-center mb-1.5 shadow-sm"
+            :class="isRouteActive(item.path) ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'">
+            <component :is="item.icon" class="w-4 h-4" />
+          </div>
+          <span class="text-[9px] font-bold text-gray-700 leading-snug">{{ item.name }}</span>
+        </button>
+      </div>
+
+      <!-- Admin section -->
+      <template v-if="authStore.user?.is_admin">
+        <div class="h-px bg-gray-100 mb-3"></div>
+        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Admin</h3>
+        <div class="grid grid-cols-4 gap-2">
+          <button
+            v-for="item in lmsAdminItems"
+            :key="item.path"
+            @click="navigateAndClose(item.path, 'lms')"
+            class="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+            :class="isRouteActive(item.path) ? 'border-purple-200 bg-purple-50' : ''"
+          >
+            <div class="w-9 h-9 rounded-full flex items-center justify-center mb-1.5 shadow-sm"
+              :class="isRouteActive(item.path) ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-600'">
+              <component :is="item.icon" class="w-4 h-4" />
+            </div>
+            <span class="text-[9px] font-bold text-gray-700 leading-snug">{{ item.name }}</span>
+          </button>
+        </div>
+      </template>
+    </div>
+  </transition>
+
+  <!-- Mobile Bottom Sheet for Akun -->
+  <transition
+    enter-active-class="transition ease-out duration-300 transform"
+    enter-from-class="translate-y-full opacity-0"
+    enter-to-class="translate-y-0 opacity-100"
+    leave-active-class="transition ease-in duration-200 transform"
+    leave-from-class="translate-y-0 opacity-100"
+    leave-to-class="translate-y-full opacity-0"
+  >
+    <div v-if="showMobileAkun" class="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-white rounded-t-3xl border-t border-gray-200 shadow-2xl p-5 space-y-4 pb-8 transition-all">
+      <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-2"></div>
+      
+      <!-- User Info -->
+      <div class="flex items-center gap-3 p-3 bg-red-50/30 border border-red-50/50 rounded-2xl">
+        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#B70000] to-[#950000] flex items-center justify-center text-white shadow-md font-bold text-lg">
+          {{ (authStore.user?.name || 'U').charAt(0).toUpperCase() }}
+        </div>
+        <div>
+          <h4 class="font-bold text-gray-900 text-base leading-snug">{{ authStore.user?.name }}</h4>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+              :class="authStore.user?.is_admin ? 'bg-red-100 text-[#B70000]' : 'bg-gray-100 text-gray-600'">
+              {{ authStore.user?.is_admin ? 'Admin' : 'Karyawan' }}
+            </span>
+            <span class="text-[10px] text-gray-400 font-mono">v{{ version }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="space-y-2">
+        <button
+          @click="handleLogout"
+          class="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-[#B70000] to-[#950000] shadow-md hover:shadow-lg transition-all active:scale-95 text-sm flex items-center justify-center gap-2"
+        >
+          <ArrowRightOnRectangleIcon class="w-5 h-5" />
+          Log Out
+        </button>
+        <button
+          @click="showMobileAkun = false"
+          class="w-full py-4 rounded-xl font-semibold text-gray-500 bg-gray-50 border border-gray-200 active:scale-95 transition-all text-sm flex items-center justify-center"
+        >
+          Tutup
+        </button>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import packageJson from '../../package.json'
 
 import {
-  HomeIcon,
-  ChartPieIcon,
-  UserGroupIcon,
-  Cog6ToothIcon,
   UserIcon,
-  ChartBarIcon,
-  PresentationChartLineIcon,
-  UserCircleIcon,
+  Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
-  WrenchScrewdriverIcon,
   ChevronDownIcon,
-  SparklesIcon,
-  ArrowTrendingUpIcon,
-  ComputerDesktopIcon,
-  BuildingStorefrontIcon,
-  // ⭐ NEW: Holding icons
   BuildingOffice2Icon,
   ChartBarSquareIcon,
+  ClipboardDocumentListIcon,
+  ClockIcon,
+  AcademicCapIcon,
+  BookOpenIcon,
+  RectangleStackIcon,
+  ClipboardDocumentCheckIcon,
+  StarIcon,
+  MapIcon,
+  TrophyIcon,
+  PresentationChartLineIcon,
+  TagIcon,
+  PuzzlePieceIcon,
+  UsersIcon,
 } from '@heroicons/vue/24/outline'
+import NavItem from './NavItem.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const isExpanded = ref(false)
 const showDropdown = ref(false)
-const showStats = ref(true)
-const showKPI = ref(true)
-const showHolding = ref(true) // ⭐ NEW
+const showAssessment = ref(true)
+const showLms = ref(false)
 
-// Statistics items
-const statsItems = [
-  { name: 'Service Advisor', icon: UserIcon, path: '/dashboard/service-advisor' },
-  { name: 'Mekanik', icon: Cog6ToothIcon, path: '/dashboard/mechanics' },
-]
-
-// KPI items
-const kpiItems = [
-  { name: 'KPI Outlet', icon: BuildingStorefrontIcon, path: '/dashboard/kpi/outlet', isNew: true },
-  { name: 'Customer Support', icon: UserGroupIcon, path: '/dashboard/kpi/customer-support' },
-  { name: 'Mekanik', icon: WrenchScrewdriverIcon, path: '/dashboard/kpi/mechanic' },
-  { name: 'Marketing', icon: PresentationChartLineIcon, path: '/dashboard/kpi/marketing' },
-  { name: 'Kaizen', icon: ArrowTrendingUpIcon, path: '/dashboard/kpi/kaizen' },
-  { name: 'IT', icon: ComputerDesktopIcon, path: '/dashboard/kpi/it' },
-]
-
-// ⭐ NEW: Holding items
-const holdingItems = [
-  { name: 'Overview', icon: ChartPieIcon, path: '/dashboard/overview' },
-  {
-    name: 'KPI Perusahaan',
-    icon: ChartBarSquareIcon,
-    path: '/dashboard/holding/kpi',
-  },
-  // Tambahkan menu holding lain di sini nanti, contoh:
-  // { name: 'Financial Report', icon: BanknotesIcon, path: '/dashboard/holding/finance' },
-]
+// Mobile Navigation States
+const showMobileKelola = ref(false)
+const showMobileAkun = ref(false)
+const showMobileLms = ref(false)
 
 const version = packageJson.version
 
+const lmsLearnerItems = [
+  { name: 'Dashboard', icon: AcademicCapIcon, path: '/dashboard/lms', adminOnly: false },
+  { name: 'Kursus', icon: BookOpenIcon, path: '/dashboard/lms/courses', adminOnly: false },
+  { name: 'Enrollment', icon: RectangleStackIcon, path: '/dashboard/lms/enrollments', adminOnly: false },
+  { name: 'Penilaian', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/assessments', adminOnly: false },
+  { name: 'Kompetensi', icon: StarIcon, path: '/dashboard/lms/competencies', adminOnly: false },
+  { name: 'Learning Path', icon: MapIcon, path: '/dashboard/lms/learning-paths', adminOnly: false },
+  { name: 'Lencana', icon: TrophyIcon, path: '/dashboard/lms/badges', adminOnly: false },
+]
+
+const lmsAdminItems = [
+  { name: 'Analitik', icon: PresentationChartLineIcon, path: '/dashboard/lms/analytics', adminOnly: true },
+  { name: 'Kategori', icon: TagIcon, path: '/dashboard/lms/categories', adminOnly: true },
+  { name: 'Modul', icon: PuzzlePieceIcon, path: '/dashboard/lms/modules', adminOnly: true },
+  { name: 'Karyawan', icon: UsersIcon, path: '/dashboard/lms/employees', adminOnly: true },
+]
+
+const lmsItems = [
+  ...lmsLearnerItems,
+  { divider: true, label: 'Admin', adminOnly: true },
+  ...lmsAdminItems,
+]
+
+const filteredLmsItems = computed(() => {
+  const isAdmin = authStore.user?.is_admin
+  return isAdmin ? lmsItems : lmsItems.filter(i => !i.adminOnly && !i.divider)
+})
+
+const assessmentItems = [
+  { name: 'Daftar Quiz', icon: ClipboardDocumentListIcon, path: '/dashboard/quiz' },
+  { name: 'Riwayat', icon: ClockIcon, path: '/dashboard/quiz/history' },
+  { name: 'Kelola Quiz Bank', icon: Cog6ToothIcon, path: '/dashboard/quiz/manage' },
+  { name: 'Kelola Program', icon: BuildingOffice2Icon, path: '/dashboard/quiz/program' },
+  { name: 'Dashboard Admin', icon: ChartBarSquareIcon, path: '/dashboard/quiz/admin' },
+]
+
+// Filter assessment items dynamically based on admin status
+const filteredAssessmentItems = computed(() => {
+  const isAdmin = authStore.user?.is_admin
+  if (isAdmin) {
+    return assessmentItems
+  } else {
+    // Only show 'Daftar Quiz' and 'Riwayat' for regular employees
+    return assessmentItems.filter(item => 
+      item.path === '/dashboard/quiz' || item.path === '/dashboard/quiz/history'
+    )
+  }
+})
+
 const handleMouseEnter = () => { isExpanded.value = true }
 const handleMouseLeave = () => { isExpanded.value = false; showDropdown.value = false }
-const toggleStats = () => { if (isExpanded.value) showStats.value = !showStats.value }
-const toggleKPI = () => { if (isExpanded.value) showKPI.value = !showKPI.value }
-const toggleHolding = () => { if (isExpanded.value) showHolding.value = !showHolding.value } // ⭐ NEW
+const toggleAssessment = () => { if (isExpanded.value) showAssessment.value = !showAssessment.value }
+const toggleLms = () => { if (isExpanded.value) showLms.value = !showLms.value }
 
-const handleProfile = () => { showDropdown.value = false; router.push('/profile') }
+const toggleMobileKelola = () => {
+  showMobileKelola.value = !showMobileKelola.value
+  showMobileAkun.value = false
+  showMobileLms.value = false
+}
+
+const toggleMobileAkun = () => {
+  showMobileAkun.value = !showMobileAkun.value
+  showMobileKelola.value = false
+  showMobileLms.value = false
+}
+
+const toggleMobileLms = () => {
+  showMobileLms.value = !showMobileLms.value
+  showMobileKelola.value = false
+  showMobileAkun.value = false
+}
+
+const closeAllMobileSheets = () => {
+  showMobileKelola.value = false
+  showMobileAkun.value = false
+  showMobileLms.value = false
+}
+
+const isRouteActive = (path) => route.path === path
+
+const isLmsRoute = computed(() => route.path.startsWith('/dashboard/lms'))
+
+const kelolaRoutePrefixes = ['/dashboard/quiz/program', '/dashboard/quiz/manage', '/dashboard/quiz/admin']
+const isKelolaRoute = computed(() => kelolaRoutePrefixes.some(p => route.path.startsWith(p)))
+
+// Auto-expand LMS section on desktop when navigating to an LMS page
+watch(isLmsRoute, (val) => {
+  if (val) showLms.value = true
+}, { immediate: true })
+
+const navigateAndClose = (path, type) => {
+  if (type === 'kelola') showMobileKelola.value = false
+  if (type === 'akun') showMobileAkun.value = false
+  if (type === 'lms') showMobileLms.value = false
+  router.push(path)
+}
+
 const handleLogout = async () => {
-  try { await authStore.logout(); router.push('/login') }
-  catch (error) { console.error('Logout failed:', error) }
+  try {
+    closeAllMobileSheets()
+    await authStore.logout()
+    router.push('/login')
+  } catch {
+    router.push('/login')
+  }
 }
 
 const closeDropdown = (e) => {
   if (showDropdown.value && !e.target.closest('.relative')) showDropdown.value = false
 }
 
-onMounted(() => { document.addEventListener('click', closeDropdown) })
-onUnmounted(() => { document.removeEventListener('click', closeDropdown) })
+onMounted(() => document.addEventListener('click', closeDropdown))
+onUnmounted(() => document.removeEventListener('click', closeDropdown))
 </script>
 
 <style scoped>
-/* Holding menu active state — gold theme */
-.holding-menu-active {
-  background: linear-gradient(to right, #fef9ec, #fef3c7);
-  border: 1px solid rgba(201, 168, 76, 0.25);
+.assessment-active {
+  background: linear-gradient(to right, #fef2f2, #fee2e2);
+  border: 1px solid rgba(183, 0, 0, 0.15);
 }
 
-/* Custom scrollbar */
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.lms-active {
+  background: linear-gradient(to right, #eff6ff, #dbeafe);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 3px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 2px; }
 
 * {
   transition-property: color, background-color, border-color, transform, opacity;
   transition-duration: 200ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.router-link-active { background-color: inherit; }
-.group:hover .group-hover\:scale-110 { transform: scale(1.1); }
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 </style>
