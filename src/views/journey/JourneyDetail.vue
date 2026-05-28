@@ -297,8 +297,18 @@
                           Tandai Selesai
                         </button>
 
-                        <!-- OTHER STAGES: open score input panel when in_progress -->
-                        <button v-if="stage.state === 'in_progress' && stage.stage_type !== 'orientation' && confirmingStageId !== stage.id"
+                        <!-- FINAL STAGE: navigate to final-review page -->
+                        <button v-if="stage.state === 'in_progress' && stage.stage_type === 'final'"
+                          @click="$router.push(`/dashboard/journey/${journey.id}/final-review`)"
+                          class="stage-btn stage-btn-green">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                          </svg>
+                          Penilaian Akhir
+                        </button>
+
+                        <!-- OTHER STAGES (non-orientation, non-final): inline score input -->
+                        <button v-if="stage.state === 'in_progress' && !['orientation','final'].includes(stage.stage_type) && confirmingStageId !== stage.id"
                           @click="confirmingStageId = stage.id; confirmScore = ''"
                           :disabled="actionLoading"
                           class="stage-btn stage-btn-green">
@@ -306,6 +316,16 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                           </svg>
                           Tandai Selesai
+                        </button>
+
+                        <!-- FINAL STAGE (pending): shortcut to review page -->
+                        <button v-if="stage.stage_type === 'final' && stage.state === 'pending'"
+                          @click="$router.push(`/dashboard/journey/${journey.id}/final-review`)"
+                          class="stage-btn stage-btn-green">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                          </svg>
+                          Penilaian Akhir
                         </button>
 
                         <!-- PRACTICAL: assess form button -->

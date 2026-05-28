@@ -201,6 +201,12 @@ const routes = [
     component: () => import('../views/journey/PracticalAssessForm.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/dashboard/journey/:id/final-review',
+    name: 'FinalReviewForm',
+    component: () => import('../views/journey/FinalReviewForm.vue'),
+    meta: { requiresAuth: true }
+  },
 
   // ── HR / EMPLOYEES ────────────────────────────────────────
   {

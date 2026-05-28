@@ -33,7 +33,7 @@ export const journeyApi = {
   detail: (id) => call(`/web/journey/${id}/detail`),
   start: (id) => call(`/web/journey/${id}/start`),
   syncScores: (id) => call(`/web/journey/${id}/sync-scores`),
-  complete: (id) => call(`/web/journey/${id}/complete`),
+  complete: (id, params = {}) => call(`/web/journey/${id}/complete`, params),
   cancel: (id) => call(`/web/journey/${id}/cancel`),
 
   // ── PRACTICAL ASSESSMENT (supervisor) ────────────────────────────
