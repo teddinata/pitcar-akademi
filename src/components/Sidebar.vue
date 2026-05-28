@@ -76,6 +76,60 @@
         </div>
       </div>
 
+      <!-- ── JOURNEY SECTION ── -->
+      <div class="mb-4">
+        <div
+          class="flex items-center px-3 h-9 text-xs font-bold uppercase tracking-wider mb-1 cursor-pointer rounded-lg transition-all duration-200"
+          :class="[
+            isExpanded ? 'justify-between' : 'justify-center',
+            showJourney || isJourneyRoute ? 'text-emerald-600' : 'text-gray-400 hover:text-emerald-600'
+          ]"
+          @click="toggleJourney"
+        >
+          <div class="flex items-center gap-3">
+            <RocketLaunchIcon class="w-5 h-5 shrink-0" />
+            <span
+              class="transition-all duration-300 overflow-hidden"
+              :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'"
+            >
+              Journey
+            </span>
+          </div>
+          <ChevronDownIcon
+            v-if="isExpanded"
+            class="w-4 h-4 transition-transform duration-200"
+            :class="showJourney ? 'rotate-180' : ''"
+          />
+        </div>
+
+        <!-- Expanded submenu -->
+        <div v-show="showJourney && isExpanded" class="space-y-0.5 pl-2">
+          <template v-for="item in filteredJourneyItems" :key="item.path || item.label">
+            <div v-if="item.divider" class="pt-3 pb-1 px-1">
+              <p class="text-[9px] font-bold uppercase tracking-widest text-gray-400 px-2">{{ item.label }}</p>
+              <div class="h-px bg-gray-100 mt-1.5"></div>
+            </div>
+            <NavItem
+              v-else
+              :item="item"
+              :is-expanded="isExpanded"
+              active-class="journey-active"
+            />
+          </template>
+        </div>
+
+        <!-- Collapsed: icons only -->
+        <div v-show="!isExpanded" class="space-y-0.5">
+          <NavItem
+            v-for="item in filteredJourneyItems.filter(i => !i.divider)"
+            :key="`jc-${item.path}`"
+            :item="item"
+            :is-expanded="false"
+            active-class="journey-active"
+          />
+        </div>
+      </div>
+
       <!-- ── ASSESSMENT SECTION ── -->
       <div class="mb-4">
         <div
@@ -297,6 +351,38 @@
           <span class="text-[10px] font-bold text-gray-800 leading-snug">Dashboard</span>
         </button>
       </div>
+
+      <!-- Journey admin -->
+      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mt-4 mb-2">Training Journey</h3>
+      <div class="grid grid-cols-3 gap-3">
+        <button
+          @click="navigateAndClose('/dashboard/journey/mine', 'kelola')"
+          class="flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+        >
+          <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mb-2 shadow-sm">
+            <RocketLaunchIcon class="w-5 h-5" />
+          </div>
+          <span class="text-[10px] font-bold text-gray-800 leading-snug">Journey Saya</span>
+        </button>
+        <button
+          @click="navigateAndClose('/dashboard/journey', 'kelola')"
+          class="flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+        >
+          <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mb-2 shadow-sm">
+            <ListBulletIcon class="w-5 h-5" />
+          </div>
+          <span class="text-[10px] font-bold text-gray-800 leading-snug">Semua Journey</span>
+        </button>
+        <button
+          @click="navigateAndClose('/dashboard/journey/templates', 'kelola')"
+          class="flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+        >
+          <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mb-2 shadow-sm">
+            <DocumentTextIcon class="w-5 h-5" />
+          </div>
+          <span class="text-[10px] font-bold text-gray-800 leading-snug">Template</span>
+        </button>
+      </div>
     </div>
   </transition>
 
@@ -428,6 +514,9 @@ import {
   TagIcon,
   PuzzlePieceIcon,
   UsersIcon,
+  RocketLaunchIcon,
+  ListBulletIcon,
+  DocumentTextIcon,
 } from '@heroicons/vue/24/outline'
 import NavItem from './NavItem.vue'
 
@@ -438,6 +527,7 @@ const isExpanded = ref(false)
 const showDropdown = ref(false)
 const showAssessment = ref(true)
 const showLms = ref(false)
+const showJourney = ref(false)
 
 // Mobile Navigation States
 const showMobileKelola = ref(false)
@@ -474,6 +564,20 @@ const filteredLmsItems = computed(() => {
   return isAdmin ? lmsItems : lmsItems.filter(i => !i.adminOnly && !i.divider)
 })
 
+const journeyItems = [
+  { name: 'Journey Saya', icon: RocketLaunchIcon, path: '/dashboard/journey/mine', adminOnly: false },
+  { divider: true, label: 'Admin', adminOnly: true },
+  { name: 'Semua Journey', icon: ListBulletIcon, path: '/dashboard/journey', adminOnly: true },
+  { name: 'Template', icon: DocumentTextIcon, path: '/dashboard/journey/templates', adminOnly: true },
+]
+
+const filteredJourneyItems = computed(() => {
+  const isAdmin = authStore.user?.is_admin
+  return isAdmin ? journeyItems : journeyItems.filter(i => !i.adminOnly && !i.divider)
+})
+
+const isJourneyRoute = computed(() => route.path.startsWith('/dashboard/journey'))
+
 const assessmentItems = [
   { name: 'Daftar Quiz', icon: ClipboardDocumentListIcon, path: '/dashboard/quiz' },
   { name: 'Riwayat', icon: ClockIcon, path: '/dashboard/quiz/history' },
@@ -499,6 +603,7 @@ const handleMouseEnter = () => { isExpanded.value = true }
 const handleMouseLeave = () => { isExpanded.value = false; showDropdown.value = false }
 const toggleAssessment = () => { if (isExpanded.value) showAssessment.value = !showAssessment.value }
 const toggleLms = () => { if (isExpanded.value) showLms.value = !showLms.value }
+const toggleJourney = () => { if (isExpanded.value) showJourney.value = !showJourney.value }
 
 const toggleMobileKelola = () => {
   showMobileKelola.value = !showMobileKelola.value
@@ -536,6 +641,11 @@ watch(isLmsRoute, (val) => {
   if (val) showLms.value = true
 }, { immediate: true })
 
+// Auto-expand Journey section on desktop when navigating to a Journey page
+watch(isJourneyRoute, (val) => {
+  if (val) showJourney.value = true
+}, { immediate: true })
+
 const navigateAndClose = (path, type) => {
   if (type === 'kelola') showMobileKelola.value = false
   if (type === 'akun') showMobileAkun.value = false
@@ -570,6 +680,11 @@ onUnmounted(() => document.removeEventListener('click', closeDropdown))
 .lms-active {
   background: linear-gradient(to right, #eff6ff, #dbeafe);
   border: 1px solid rgba(37, 99, 235, 0.15);
+}
+
+.journey-active {
+  background: linear-gradient(to right, #f0fdf4, #dcfce7);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }

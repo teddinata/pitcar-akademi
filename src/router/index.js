@@ -170,6 +170,38 @@ const routes = [
     meta: { requiresAuth: true }
   },
 
+  // ── TRAINING JOURNEY ─────────────────────────────────────
+  {
+    path: '/dashboard/journey',
+    name: 'JourneyList',
+    component: () => import('../views/journey/JourneyList.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/journey/mine',
+    name: 'MyJourney',
+    component: () => import('../views/journey/MyJourney.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/journey/templates',
+    name: 'JourneyTemplates',
+    component: () => import('../views/journey/JourneyTemplates.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/journey/:id',
+    name: 'JourneyDetail',
+    component: () => import('../views/journey/JourneyDetail.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/journey/:id/assess',
+    name: 'PracticalAssessForm',
+    component: () => import('../views/journey/PracticalAssessForm.vue'),
+    meta: { requiresAuth: true }
+  },
+
   // ── HR / EMPLOYEES ────────────────────────────────────────
   {
     path: '/dashboard/employees',
