@@ -649,10 +649,10 @@
                 </p>
                 <div class="flex flex-wrap gap-2 mt-1">
                   <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
-                    {{ q.question_type === 'multiple_choice' ? 'Pilihan Ganda' : 'Benar/Salah' }}
+                    {{ q.question_type === 'multiple_choice' ? 'Pilihan Ganda' : q.question_type === 'true_false' ? 'Benar/Salah' : '✍️ Esai' }}
                   </span>
                   <span class="text-xs text-gray-400">Bobot: {{ q.weight }}</span>
-                  <span v-if="!q.correct_answer" class="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-600 font-medium">
+                  <span v-if="q.question_type !== 'essay' && !q.correct_answer" class="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-600 font-medium">
                     Belum ada jawaban
                   </span>
                   <span v-if="q._saving" class="text-xs text-blue-500">Menyimpan...</span>
@@ -693,6 +693,7 @@
                   >
                     <option value="multiple_choice">Pilihan Ganda (A–D)</option>
                     <option value="true_false">Benar / Salah</option>
+                    <option value="essay">Esai (Dinilai Supervisor)</option>
                   </select>
                 </div>
 
@@ -756,6 +757,22 @@
                         :class="q.correct_answer === 'false'"
                         :style="q.correct_answer === 'false' ? 'background-color:#dc2626;color:white;border-color:#dc2626' : 'border-color:#e5e7eb;color:#374151'"
                       >✗ Salah</button>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Essay -->
+                <template v-else-if="q.question_type === 'essay'">
+                  <div class="col-span-1 sm:col-span-2">
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-purple-50 border border-purple-200">
+                      <span class="text-purple-500 text-lg shrink-0 mt-0.5">✍️</span>
+                      <div class="text-sm text-purple-800">
+                        <p class="font-semibold mb-1">Soal tipe Esai</p>
+                        <p class="text-xs text-purple-600 leading-relaxed">
+                          Karyawan akan menulis jawaban bebas. Supervisor / Kaizen menilai setelah quiz disubmit.
+                          Tidak perlu mengisi pilihan atau jawaban benar.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </template>
@@ -1228,7 +1245,7 @@ function buildQuestionParams(q) {
 
 async function saveQuestion(q) {
   if (!q.question_text.trim()) { q._error = 'Teks soal wajib diisi'; return }
-  if (!q.correct_answer) { q._error = 'Jawaban benar wajib dipilih'; return }
+  if (q.question_type !== 'essay' && !q.correct_answer) { q._error = 'Jawaban benar wajib dipilih'; return }
   q._error = ''
   q._saving = true
   try {

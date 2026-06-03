@@ -78,6 +78,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/quiz/essay-grading',
+    name: 'QuizEssayGrading',
+    component: () => import('../views/quiz/QuizEssayGrading.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/quiz/session/:sessionId',
+    name: 'QuizSessionDetail',
+    component: () => import('../views/quiz/QuizSessionDetail.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/quiz/take',
     name: 'QuizTaking',
     component: () => import('../views/quiz/QuizTaking.vue'),

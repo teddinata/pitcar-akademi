@@ -78,6 +78,15 @@ export const quizApi = {
   programStart: (programId) => call(`/web/quiz/program/${programId}/start`),
   programSubmit: (payload) => call('/web/quiz/program/submit', payload),
 
+  // ── SESSION DETAIL (ADMIN) ───────────────────────────────────────────
+  adminSessionDetail: (sessionId) =>
+    call(`/web/quiz/admin/session/${sessionId}/detail`),
+
+  // ── ESSAY GRADING ────────────────────────────────────────────────────
+  gradeEssays: (sessionId, gradings) =>
+    call(`/web/quiz/session/${sessionId}/grade-essays`, { gradings }),
+  pendingGrading: (params = {}) => call('/web/quiz/admin/pending-grading', params),
+
   // ── IMPORT/EXPORT ────────────────────────────────────────────────────
   // Full Quiz Import (deprecated - use questions import instead)
   adminImportExcel: (params) => call('/web/quiz/admin/import-excel', params),

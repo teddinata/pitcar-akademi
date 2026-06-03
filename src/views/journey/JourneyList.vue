@@ -77,13 +77,13 @@
 
             <!-- ── Main row ── -->
             <tr class="border-t border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
-              :class="expandedId === j.id ? 'bg-blue-50/40' : ''"
+              :class="expandedIds[j.id] ? 'bg-blue-50/40' : ''"
               @click="toggleExpand(j.id)">
 
               <!-- Expand chevron -->
               <td class="pl-4 pr-1 py-3">
                 <svg class="w-4 h-4 text-gray-400 transition-transform duration-200"
-                  :class="expandedId === j.id ? 'rotate-90 text-blue-500' : ''"
+                  :class="expandedIds[j.id] ? 'rotate-90 text-blue-500' : ''"
                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
@@ -123,7 +123,7 @@
             </tr>
 
             <!-- ── Expanded timeline row ── -->
-            <tr v-if="expandedId === j.id" class="border-t-0">
+            <tr v-if="expandedIds[j.id]" class="border-t-0">
               <td colspan="8" class="px-4 pb-4 pt-0 bg-blue-50/30">
 
                 <!-- Loading stages -->
@@ -359,16 +359,19 @@ const filter = ref({ state: '', search: '' })
 const createForm = ref({ employee_id: null, template_id: '', target_end_date: '', notes: '' })
 
 // ── Inline timeline state ──────────────────────────────────────
-const expandedId = ref(null)
+const expandedIds = ref({})    // journeyId → true (multi-expand)
 const stageCache = ref({})     // journeyId → stages[]
 const stageLoading = ref({})   // journeyId → boolean
 
 async function toggleExpand(id) {
-  if (expandedId.value === id) {
-    expandedId.value = null
+  const next = { ...expandedIds.value }
+  if (next[id]) {
+    delete next[id]
+    expandedIds.value = next
     return
   }
-  expandedId.value = id
+  next[id] = true
+  expandedIds.value = next
   if (stageCache.value[id]) return   // already cached
 
   stageLoading.value = { ...stageLoading.value, [id]: true }

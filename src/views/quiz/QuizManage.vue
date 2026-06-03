@@ -30,6 +30,15 @@
             Import Excel
           </button>
 
+          <!-- Essay Grading -->
+          <button
+            @click="router.push('/dashboard/quiz/essay-grading')"
+            class="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 rounded-lg border border-purple-300 bg-purple-50 text-purple-700 text-sm font-semibold hover:bg-purple-100 transition-colors min-h-[44px]"
+          >
+            <span>✍️</span>
+            Nilai Esai
+          </button>
+
           <!-- Create New -->
           <button
             @click="router.push('/dashboard/quiz/manage/new')"
@@ -755,8 +764,8 @@
                     <th class="px-4 py-3 text-center font-medium">Status</th>
                     <th class="px-4 py-3 text-center font-medium">Skor</th>
                     <th class="px-4 py-3 text-center font-medium">Lulus</th>
-                    <th class="px-4 py-3 text-left font-medium">Mulai</th>
                     <th class="px-4 py-3 text-left font-medium">Submit</th>
+                    <th class="px-4 py-3 text-center font-medium">Aksi</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -794,8 +803,23 @@
                       <span v-else-if="emp.is_passed === false" class="text-red-500 font-bold text-xs">✗ Gagal</span>
                       <span v-else class="text-gray-300 text-xs">-</span>
                     </td>
-                    <td class="px-4 py-3 text-xs text-gray-400">{{ emp.started_at || '-' }}</td>
                     <td class="px-4 py-3 text-xs text-gray-400">{{ emp.submitted_at || '-' }}</td>
+                    <td class="px-4 py-3 text-center">
+                      <button
+                        v-if="emp.session_id && (emp.status === 'submitted' || emp.status === 'expired')"
+                        @click="viewSessionDetail(emp.session_id)"
+                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95"
+                        :class="emp.essay_graded === false
+                          ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        {{ emp.essay_graded === false ? 'Nilai Esai' : 'Lihat Jawaban' }}
+                      </button>
+                      <span v-else class="text-gray-300 text-xs">—</span>
+                    </td>
                   </tr>
                   <tr v-if="filteredMonitoringEmployees.length === 0">
                     <td colspan="7" class="px-4 py-8 text-center text-gray-400">Tidak ada data</td>
@@ -855,6 +879,10 @@ function formatCountdown(expiresAtIso) {
 function isExpired(expiresAtIso) {
   if (!expiresAtIso) return false
   return new Date(expiresAtIso).getTime() <= now.value
+}
+
+function viewSessionDetail(sessionId) {
+  router.push(`/dashboard/quiz/session/${sessionId}`)
 }
 
 async function openMonitoring(quiz) {

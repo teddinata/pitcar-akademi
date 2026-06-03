@@ -106,8 +106,30 @@
           </button>
         </div>
 
+        <!-- Essay input -->
+        <div v-else-if="currentQuestion.question_type === 'essay'" class="space-y-3">
+          <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-50 border border-purple-200 text-xs text-purple-700 font-medium">
+            <span>✍️</span>
+            <span>Soal esai — tulis jawabanmu di bawah. Akan dinilai oleh supervisor setelah quiz selesai.</span>
+          </div>
+          <textarea
+            :value="essayAnswers[currentQuestion.id] || ''"
+            @input="setEssayAnswer(currentQuestion.id, $event.target.value)"
+            rows="6"
+            placeholder="Tulis jawabanmu di sini..."
+            class="w-full px-4 py-3 text-sm border-2 rounded-xl focus:outline-none resize-none leading-relaxed transition-colors"
+            :class="(essayAnswers[currentQuestion.id] || '').trim()
+              ? 'border-purple-400 bg-purple-50/30 focus:border-purple-500'
+              : 'border-gray-200 bg-white focus:border-purple-400'"
+          ></textarea>
+          <p class="text-xs text-gray-400 text-right">
+            {{ (essayAnswers[currentQuestion.id] || '').length }} karakter
+          </p>
+        </div>
+
         <!-- Unanswered hint -->
-        <p v-if="!answers[currentQuestion.id]" class="text-xs text-gray-400 text-center mt-4">
+        <p v-if="currentQuestion.question_type !== 'essay' && !answers[currentQuestion.id]"
+           class="text-xs text-gray-400 text-center mt-4">
           Pilih salah satu jawaban
         </p>
       </template>
@@ -124,8 +146,8 @@
           class="w-7 h-7 rounded-full text-xs font-bold transition-all shrink-0"
           :class="[
             i === currentIndex ? 'ring-2 ring-[#B70000] ring-offset-1 scale-110' : '',
-            answers[q.id]
-              ? 'bg-[#B70000] text-white'
+            isQuestionAnswered(q)
+              ? (q.question_type === 'essay' ? 'bg-purple-500 text-white' : 'bg-[#B70000] text-white')
               : 'bg-gray-100 text-gray-500'
           ]"
         >
@@ -183,6 +205,10 @@
             <span v-if="unansweredCount > 0" class="text-amber-600 block mt-1">
               Perhatian: {{ unansweredCount }} soal akan dianggap kosong.
             </span>
+          </p>
+          <p v-if="questions.some(q => q.question_type === 'essay')"
+             class="text-xs text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 mt-1">
+            Soal esai akan dinilai oleh supervisor setelah kamu mengumpulkan.
           </p>
           <p class="text-xs text-gray-500">Jawaban tidak bisa diubah setelah dikumpulkan.</p>
           <div class="flex gap-3">
@@ -363,7 +389,8 @@ const router = useRouter()
 
 const sessionData = ref(null)
 const questions = ref([])
-const answers = ref({})
+const answers = ref({})       // MC/TF: questionId → 'a'|'b'|'true'|'false'
+const essayAnswers = ref({})  // essay: questionId → text
 const currentIndex = ref(0)
 const submitting = ref(false)
 const showSubmitConfirm = ref(false)
@@ -377,7 +404,14 @@ const remainingMs = ref(0)
 
 const currentQuestion = computed(() => questions.value[currentIndex.value])
 const progressPct = computed(() => ((currentIndex.value + 1) / Math.max(questions.value.length, 1)) * 100)
-const answeredCount = computed(() => Object.keys(answers.value).length)
+
+function isQuestionAnswered(q) {
+  if (!q) return false
+  if (q.question_type === 'essay') return !!(essayAnswers.value[q.id] || '').trim()
+  return !!answers.value[q.id]
+}
+
+const answeredCount = computed(() => questions.value.filter(isQuestionAnswered).length)
 const unansweredCount = computed(() => questions.value.length - answeredCount.value)
 const timerCritical = computed(() => remainingMs.value < 5 * 60 * 1000 && remainingMs.value > 0)
 
@@ -405,6 +439,11 @@ function selectAnswer(key) {
   saveToStorage()
 }
 
+function setEssayAnswer(questionId, text) {
+  essayAnswers.value = { ...essayAnswers.value, [questionId]: text }
+  saveToStorage()
+}
+
 function nextQuestion() {
   if (currentIndex.value < questions.value.length - 1) currentIndex.value++
 }
@@ -422,6 +461,7 @@ function saveToStorage() {
   localStorage.setItem('quiz_active_session', JSON.stringify({
     ...sessionData.value,
     answers: answers.value,
+    essayAnswers: essayAnswers.value,
   }))
 }
 
@@ -441,13 +481,14 @@ async function submitQuiz(autoSubmit = false) {
       const sessionGroup = {}
       questions.value.forEach(q => {
         const sId = q.session_id
-        if (!sessionGroup[sId]) {
-          sessionGroup[sId] = []
+        if (!sessionGroup[sId]) sessionGroup[sId] = []
+        const entry = { question_id: q.id }
+        if (q.question_type === 'essay') {
+          entry.essay_answer = essayAnswers.value[q.id] || ''
+        } else {
+          entry.chosen_answer = answers.value[q.id] || ''
         }
-        sessionGroup[sId].push({
-          question_id: q.id,
-          chosen_answer: answers.value[q.id] || '',
-        })
+        sessionGroup[sId].push(entry)
       })
 
       const submissions = Object.keys(sessionGroup).map(sId => ({
@@ -456,19 +497,22 @@ async function submitQuiz(autoSubmit = false) {
       }))
 
       const data = await quizApi.programSubmit({ submissions })
-      
-      // Stop ticking
+
       if (timerInterval) clearInterval(timerInterval)
-      
       localStorage.removeItem('quiz_active_session')
       programResults.value = data
       showProgramResults.value = true
       submitting.value = false
     } else {
-      const answersPayload = questions.value.map(q => ({
-        question_id: q.id,
-        chosen_answer: answers.value[q.id] || '',
-      }))
+      const answersPayload = questions.value.map(q => {
+        const entry = { question_id: q.id }
+        if (q.question_type === 'essay') {
+          entry.essay_answer = essayAnswers.value[q.id] || ''
+        } else {
+          entry.chosen_answer = answers.value[q.id] || ''
+        }
+        return entry
+      })
 
       const data = await quizApi.submit(sessionData.value.sessionId, answersPayload)
       
@@ -521,6 +565,7 @@ onMounted(() => {
     sessionData.value = stored
     questions.value = stored.questions || []
     answers.value = stored.answers || {}
+    essayAnswers.value = stored.essayAnswers || {}
 
     // Check if already expired
     if (stored.expiredAt) {
