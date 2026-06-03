@@ -367,6 +367,218 @@
         </div>
       </div>
     </div>
+    <!-- ── MONITORING PESERTA ──────────────────────────────────────── -->
+    <div v-if="program" class="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <!-- Section header -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div>
+            <h2 class="font-bold text-gray-900">Monitoring Peserta</h2>
+            <p class="text-xs text-gray-400 mt-0.5">Status pengerjaan per karyawan per quiz bank</p>
+          </div>
+          <button
+            @click="loadMonitoring"
+            :disabled="monitoringLoading"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95"
+            :class="monitoringLoaded
+              ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              : 'bg-[#B70000] text-white hover:bg-[#950000]'"
+          >
+            <svg class="w-4 h-4" :class="monitoringLoading ? 'animate-spin' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            {{ monitoringLoading ? 'Memuat...' : monitoringLoaded ? 'Refresh' : 'Muat Data' }}
+          </button>
+        </div>
+
+        <!-- Not loaded yet -->
+        <div v-if="!monitoringLoaded && !monitoringLoading" class="px-5 py-12 text-center text-gray-400 text-sm">
+          Klik "Muat Data" untuk melihat monitoring peserta
+        </div>
+
+        <!-- Loading -->
+        <div v-else-if="monitoringLoading" class="px-5 py-12 flex justify-center">
+          <div class="w-8 h-8 border-4 border-gray-200 border-t-[#B70000] rounded-full animate-spin"></div>
+        </div>
+
+        <template v-else-if="monitoringData">
+          <!-- Summary pills -->
+          <div class="px-5 py-3 flex flex-wrap gap-2 border-b border-gray-50">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+              {{ monitoringData.summary.total_employees }} peserta
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700">
+              Selesai semua: {{ monitoringData.summary.complete }}
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+              Sebagian: {{ monitoringData.summary.partial }}
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700">
+              Sedang: {{ monitoringData.summary.in_progress }}
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">
+              Belum mulai: {{ monitoringData.summary.not_started }}
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
+              Lulus semua: {{ monitoringData.summary.passed_all }}
+            </span>
+          </div>
+
+          <!-- Filter bar -->
+          <div class="px-5 py-2.5 border-b border-gray-50 flex items-center gap-3">
+            <select v-model="monitoringFilter"
+              class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#B70000] bg-white">
+              <option value="">Semua Peserta</option>
+              <option value="complete">Selesai Semua</option>
+              <option value="partial">Sebagian Selesai</option>
+              <option value="not_started">Belum Mulai</option>
+            </select>
+            <span class="text-xs text-gray-400">{{ filteredMonitoringEmployees.length }} karyawan ditampilkan</span>
+          </div>
+
+          <!-- Matrix table (desktop) -->
+          <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-sm min-w-max">
+              <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+                <tr>
+                  <th class="px-4 py-3 text-left font-medium sticky left-0 bg-gray-50 z-10 min-w-[200px]">Karyawan</th>
+                  <th v-for="bank in monitoringData.quiz_banks" :key="bank.id"
+                    class="px-3 py-3 text-center font-medium min-w-[160px]">
+                    <div class="truncate max-w-[140px] mx-auto" :title="bank.name">{{ bank.name }}</div>
+                    <div class="text-[10px] text-gray-400 font-normal normal-case mt-0.5">Min. {{ bank.passing_score }}%</div>
+                  </th>
+                  <th class="px-4 py-3 text-center font-medium min-w-[100px]">Overall</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                <tr v-for="emp in filteredMonitoringEmployees" :key="emp.employee_id" class="hover:bg-gray-50/50">
+                  <!-- Employee -->
+                  <td class="px-4 py-3 sticky left-0 bg-white hover:bg-gray-50/50 z-10">
+                    <p class="font-semibold text-gray-800 text-xs">{{ emp.employee_name }}</p>
+                    <p class="text-[10px] text-gray-400">{{ emp.job_title }}</p>
+                    <p v-if="emp.department" class="text-[10px] text-gray-400">{{ emp.department }}</p>
+                  </td>
+                  <!-- One cell per bank -->
+                  <td v-for="cell in emp.banks" :key="cell.bank_id" class="px-3 py-3 text-center">
+                    <div class="flex flex-col items-center gap-1">
+                      <!-- Status badge -->
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                        :class="{
+                          'bg-red-50 text-red-500': cell.status === 'not_started',
+                          'bg-yellow-50 text-yellow-700': cell.status === 'in_progress',
+                          'bg-gray-100 text-gray-500': cell.status === 'expired',
+                          'bg-green-100 text-green-700': cell.status === 'submitted' && cell.is_passed,
+                          'bg-red-100 text-red-700': cell.status === 'submitted' && !cell.is_passed,
+                        }">
+                        {{ cellLabel(cell) }}
+                      </span>
+                      <!-- Score -->
+                      <span v-if="cell.score != null" class="text-xs font-bold"
+                        :class="cell.is_passed ? 'text-green-600' : 'text-red-500'">
+                        {{ cell.score }}%
+                      </span>
+                      <!-- Essay badge -->
+                      <span v-if="cell.status === 'submitted' && cell.essay_graded === false"
+                        class="text-[10px] text-purple-600 font-semibold">✍ belum dinilai</span>
+                      <!-- Lihat jawaban -->
+                      <button
+                        v-if="cell.session_id && (cell.status === 'submitted' || cell.status === 'expired')"
+                        @click="router.push(`/dashboard/quiz/session/${cell.session_id}`)"
+                        class="mt-0.5 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all active:scale-95"
+                        :class="cell.essay_graded === false
+                          ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        {{ cell.essay_graded === false ? 'Nilai Esai' : 'Jawaban' }}
+                      </button>
+                    </div>
+                  </td>
+                  <!-- Overall -->
+                  <td class="px-4 py-3 text-center">
+                    <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                      :class="{
+                        'bg-green-100 text-green-700': emp.overall_status === 'complete',
+                        'bg-blue-50 text-blue-700': emp.overall_status === 'partial',
+                        'bg-gray-100 text-gray-500': emp.overall_status === 'not_started',
+                      }">
+                      {{ { complete: 'Selesai', partial: 'Sebagian', not_started: 'Belum' }[emp.overall_status] }}
+                    </span>
+                  </td>
+                </tr>
+                <tr v-if="filteredMonitoringEmployees.length === 0">
+                  <td :colspan="(monitoringData.quiz_banks?.length || 0) + 2" class="px-4 py-8 text-center text-gray-400 text-sm">
+                    Tidak ada data
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile: card list view -->
+          <div class="md:hidden divide-y divide-gray-100">
+            <div v-for="emp in filteredMonitoringEmployees" :key="emp.employee_id" class="px-4 py-4">
+              <!-- Employee header -->
+              <div class="flex items-center justify-between mb-2">
+                <div>
+                  <p class="font-semibold text-gray-800 text-sm">{{ emp.employee_name }}</p>
+                  <p class="text-xs text-gray-400">{{ emp.job_title }} · {{ emp.department }}</p>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
+                  :class="{
+                    'bg-green-100 text-green-700': emp.overall_status === 'complete',
+                    'bg-blue-50 text-blue-700': emp.overall_status === 'partial',
+                    'bg-gray-100 text-gray-500': emp.overall_status === 'not_started',
+                  }">
+                  {{ { complete: 'Selesai Semua', partial: 'Sebagian', not_started: 'Belum Mulai' }[emp.overall_status] }}
+                </span>
+              </div>
+              <!-- Per-bank rows -->
+              <div class="space-y-1.5 mt-2">
+                <div v-for="(cell, idx) in emp.banks" :key="cell.bank_id"
+                  class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-gray-50">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-gray-700 truncate">
+                      {{ monitoringData.quiz_banks[idx]?.name }}
+                    </p>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
+                        :class="{
+                          'bg-red-50 text-red-500': cell.status === 'not_started',
+                          'bg-yellow-50 text-yellow-700': cell.status === 'in_progress',
+                          'bg-gray-100 text-gray-500': cell.status === 'expired',
+                          'bg-green-100 text-green-700': cell.status === 'submitted' && cell.is_passed,
+                          'bg-red-100 text-red-700': cell.status === 'submitted' && !cell.is_passed,
+                        }">{{ cellLabel(cell) }}</span>
+                      <span v-if="cell.score != null" class="text-xs font-bold"
+                        :class="cell.is_passed ? 'text-green-600' : 'text-red-500'">{{ cell.score }}%</span>
+                      <span v-if="cell.status === 'submitted' && cell.essay_graded === false"
+                        class="text-[10px] text-purple-600 font-semibold">✍</span>
+                    </div>
+                  </div>
+                  <button
+                    v-if="cell.session_id && (cell.status === 'submitted' || cell.status === 'expired')"
+                    @click="router.push(`/dashboard/quiz/session/${cell.session_id}`)"
+                    class="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95"
+                    :class="cell.essay_graded === false
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'bg-white border border-gray-200 text-gray-600'">
+                    {{ cell.essay_graded === false ? 'Nilai Esai' : 'Jawaban' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div v-if="filteredMonitoringEmployees.length === 0" class="px-4 py-8 text-center text-gray-400 text-sm">
+              Tidak ada data
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
     <!-- Copy Quiz Modal -->
     <Teleport to="body">
       <div v-if="copyTarget" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="closeCopyModal">
@@ -462,7 +674,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { quizApi } from '../../services/quizApi'
 
@@ -474,6 +686,39 @@ const saving = ref(null) // null | 'activate' | 'close' | 'reopen'
 const error = ref('')
 const program = ref(null)
 const programs = ref([])
+
+// ── Monitoring state ──────────────────────────────────────────────────
+const monitoringData = ref(null)
+const monitoringLoading = ref(false)
+const monitoringLoaded = ref(false)
+const monitoringFilter = ref('')
+
+const filteredMonitoringEmployees = computed(() => {
+  const employees = monitoringData.value?.employees || []
+  if (!monitoringFilter.value) return employees
+  return employees.filter(e => e.overall_status === monitoringFilter.value)
+})
+
+function cellLabel(cell) {
+  if (cell.status === 'not_started') return 'Belum'
+  if (cell.status === 'in_progress') return 'Sedang'
+  if (cell.status === 'expired') return 'Expired'
+  if (cell.status === 'submitted') return cell.is_passed ? 'Lulus' : 'Tidak Lulus'
+  return cell.status
+}
+
+async function loadMonitoring() {
+  monitoringLoading.value = true
+  try {
+    monitoringData.value = await quizApi.adminProgramMonitoring(route.params.id)
+    monitoringLoaded.value = true
+    monitoringFilter.value = ''
+  } catch (e) {
+    alert('Gagal memuat monitoring: ' + (e.message || 'Error'))
+  } finally {
+    monitoringLoading.value = false
+  }
+}
 
 // Copy Quiz state
 const copyTarget = ref(null)
