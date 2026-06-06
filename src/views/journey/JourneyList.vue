@@ -458,7 +458,7 @@ const stats = computed(() => [
 async function load() {
   loading.value = true
   // Reset expanded state on reload
-  expandedId.value = null
+  expandedIds.value = {}
   stageCache.value = {}
   try {
     const params = { limit, offset: offset.value }
