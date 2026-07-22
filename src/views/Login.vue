@@ -174,6 +174,7 @@
                   required
                 >
                   <option value="" disabled>Select your branch</option>
+                  <option value="Pitcar1_Akademi">Pitcar Akademi</option>
                   <option value="Pitcar1">Pitcar Purwokerto</option>
                   <option value="pitcar_otokits_cilacap">Otokits Cilacap</option>
                   <option value="pitcar_accessories">Pitcar Aksesoris</option>
@@ -181,7 +182,7 @@
                   <option value="pitcar_purbalingga">Pitcar Purbalingga</option>
                   <option value="pitcar_tegal">Pitcar Tegal</option>
                   <option value="pitcar_batam">Pitcar Batam</option>
-                  <option value="Pitcar1_testing_2026">Pitcar Test</option>
+                  <!-- <option value="Pitcar1_testing_2026">Pitcar Test</option> -->
                 </select>
                 <ChevronDownIcon class="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
