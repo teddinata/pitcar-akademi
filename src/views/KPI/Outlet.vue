@@ -533,19 +533,15 @@ FEATURES:
                       :style="{ width: `${Math.min(kpi.value, 100)}%` }"
                     ></div>
                   </div>
-                  <!-- Breakdown -->
-                  <div v-if="kpi.breakdown" class="grid grid-cols-3 gap-1 mt-2 pt-2 border-t border-gray-200 text-[10px]">
+                  <!-- Breakdown: Dokumentasi Kasus (otomatis) -->
+                  <div v-if="kpi.breakdown" class="grid grid-cols-2 gap-1 mt-2 pt-2 border-t border-gray-200 text-[10px]">
                     <div class="text-center">
-                      <span class="text-gray-500 block mb-0.5">Doc</span>
-                      <span class="font-bold">{{ kpi.breakdown.doc }}%</span>
+                      <span class="text-gray-500 block mb-0.5">Dokumentasi</span>
+                      <span class="font-bold">{{ kpi.breakdown.doc_count ?? 0 }}</span>
                     </div>
-                    <div class="text-center border-l border-r border-gray-200">
-                      <span class="text-gray-500 block mb-0.5">Dvlry</span>
-                      <span class="font-bold">{{ kpi.breakdown.delivery }}%</span>
-                    </div>
-                    <div class="text-center">
-                      <span class="text-gray-500 block mb-0.5">Res</span>
-                      <span class="font-bold">{{ kpi.breakdown.result }}%</span>
+                    <div class="text-center border-l border-gray-200">
+                      <span class="text-gray-500 block mb-0.5">Target</span>
+                      <span class="font-bold">{{ kpi.breakdown.target_docs ?? 0 }}</span>
                     </div>
                   </div>
                 </div>

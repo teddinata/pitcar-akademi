@@ -3,15 +3,25 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Modul Kursus</h1>
-        <p class="text-sm text-gray-500 mt-1">Kelola modul dan konten kursus</p>
+        <p class="text-sm text-gray-500 mt-1">Kelola struktur, modul, dan quiz kursus</p>
       </div>
-      <button
-        @click="openCreateModal"
-        class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
-      >
-        <PlusIcon class="w-4 h-4" />
-        <span class="hidden sm:inline">Tambah Modul</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          @click="openSectionManager"
+          class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+          title="Kelola bab/section kursus"
+        >
+          <RectangleStackIcon class="w-4 h-4" />
+          <span class="hidden sm:inline">Kelola Section</span>
+        </button>
+        <button
+          @click="openCreateModal"
+          class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+        >
+          <PlusIcon class="w-4 h-4" />
+          <span class="hidden sm:inline">Tambah Modul</span>
+        </button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -66,9 +76,10 @@
           <tr>
             <th class="px-4 py-3 text-left font-medium">Nama Modul</th>
             <th class="px-4 py-3 text-center font-medium">Kursus</th>
+            <th class="px-4 py-3 text-center font-medium">Section</th>
             <th class="px-4 py-3 text-center font-medium">Tipe</th>
             <th class="px-4 py-3 text-center font-medium">Durasi</th>
-            <th class="px-4 py-3 text-center font-medium">Asesmen</th>
+            <th class="px-4 py-3 text-center font-medium">Quiz</th>
             <th class="px-4 py-3 text-center font-medium">Aksi</th>
           </tr>
         </thead>
@@ -76,6 +87,7 @@
           <tr v-for="m in modules" :key="m.id" class="hover:bg-gray-50 transition-colors">
             <td class="px-4 py-3 font-medium text-gray-800">{{ m.name }}</td>
             <td class="px-4 py-3 text-center text-gray-500 text-xs">{{ m.course_name || '—' }}</td>
+            <td class="px-4 py-3 text-center text-gray-500 text-xs">{{ m.section_name || '—' }}</td>
             <td class="px-4 py-3 text-center">
               <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="contentTypeClass(m.content_type)">
                 {{ contentTypeLabel(m.content_type) }}
@@ -83,20 +95,21 @@
             </td>
             <td class="px-4 py-3 text-center text-gray-500 text-xs">{{ m.duration_minutes }} mnt</td>
             <td class="px-4 py-3 text-center">
-              <span v-if="m.is_assessment" class="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">Ya</span>
+              <span v-if="m.content_type === 'assessment' && m.quiz_bank_name" class="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">{{ m.quiz_bank_name }}</span>
+              <span v-else-if="m.content_type === 'assessment'" class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">Belum ada</span>
               <span v-else class="text-xs text-gray-300">—</span>
             </td>
             <td class="px-4 py-3 text-center">
               <div class="flex items-center justify-center gap-2">
                 <button
-                  v-if="m.content_type === 'assessment'"
+                  v-if="m.content_type === 'assessment' && m.quiz_bank_id"
                   @click="openQuestionManager(m)"
                   class="px-2 py-1 text-xs border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
                   title="Kelola Soal"
                 >
                   <ListBulletIcon class="w-3.5 h-3.5" />
                 </button>
-                <button v-else @click="openUploadModal(m)" class="px-2 py-1 text-xs border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors" title="Atur Konten">
+                <button v-else-if="m.content_type !== 'assessment'" @click="openUploadModal(m)" class="px-2 py-1 text-xs border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors" title="Atur Konten">
                   <ArrowUpTrayIcon class="w-3.5 h-3.5" />
                 </button>
                 <button @click="openEditModal(m)" class="px-2 py-1 text-xs border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors">
@@ -132,16 +145,25 @@
 
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Modul *</label>
-              <input v-model="form.name" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="Contoh: Pengenalan Servis Berkala" />
+              <input v-model="form.name" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="Contoh: 1. Fundamental" />
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Kursus *</label>
-              <select v-model="form.course_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+              <select v-model="form.course_id" @change="onFormCourseChange" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-300">
                 <option :value="null">— Pilih kursus —</option>
                 <option v-for="c in courseList" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
               <p v-if="coursesLoading" class="text-xs text-gray-400 mt-1">Memuat kursus...</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Section / Bab</label>
+              <select v-model="form.section_id" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-300" :disabled="!form.course_id">
+                <option :value="null">— Tanpa section (root) —</option>
+                <option v-for="s in formSections" :key="s.id" :value="s.id">{{ s.name }}</option>
+              </select>
+              <p class="text-xs text-gray-400 mt-1">Pilih bab induk, mis. "M0 Fondasi". Kelola bab lewat tombol "Kelola Section".</p>
             </div>
 
             <div>
@@ -155,9 +177,46 @@
               </select>
             </div>
 
-            <!-- Hint untuk assessment -->
-            <div v-if="form.content_type === 'assessment'" class="bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 text-xs text-purple-700">
-              Quiz akan otomatis dibuat. Setelah modul tersimpan, klik tombol <strong>Kelola Soal</strong> (ikon daftar ungu) untuk menambahkan soal.
+            <!-- Assessment: quiz bank picker -->
+            <div v-if="form.content_type === 'assessment'" class="space-y-3 bg-purple-50 border border-purple-100 rounded-lg p-3">
+              <div>
+                <label class="block text-xs font-semibold text-purple-800 mb-1">Sumber Quiz *</label>
+                <select v-model="form.quiz_bank_id" class="w-full border border-purple-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300">
+                  <option :value="null">— Pilih quiz dari bank —</option>
+                  <option v-for="q in courseQuizBanks" :key="q.id" :value="q.id">
+                    {{ q.name }} ({{ q.question_count }} soal · {{ quizStateLabel(q.state) }})
+                  </option>
+                </select>
+                <p v-if="quizBanksLoading" class="text-xs text-purple-400 mt-1">Memuat daftar quiz...</p>
+              </div>
+
+              <!-- Create new quiz bank inline -->
+              <div class="border-t border-purple-100 pt-2">
+                <p class="text-xs font-semibold text-purple-800 mb-1">Atau buat quiz baru</p>
+                <div class="flex gap-2">
+                  <input v-model="newQuizName" placeholder="Nama quiz baru..." class="flex-1 border border-purple-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                  <button @click="createQuizBank" :disabled="creatingQuiz || !newQuizName.trim()" class="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors">
+                    {{ creatingQuiz ? '...' : 'Buat' }}
+                  </button>
+                </div>
+                <p class="text-xs text-purple-500 mt-1">Setelah dibuat, klik "Kelola Soal" (ikon daftar) untuk menambah soal & publish.</p>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 border-t border-purple-100 pt-2">
+                <div>
+                  <label class="block text-xs font-semibold text-purple-800 mb-1">Nilai Lulus %</label>
+                  <input v-model.number="form.passing_score" type="number" min="0" max="100" class="w-full border border-purple-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-purple-800 mb-1">Maks Coba</label>
+                  <input v-model.number="form.max_attempts" type="number" min="0" class="w-full border border-purple-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-purple-800 mb-1">Waktu (mnt)</label>
+                  <input v-model.number="form.time_limit_minutes" type="number" min="0" class="w-full border border-purple-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                </div>
+              </div>
+              <p class="text-xs text-purple-500">Maks Coba 0 = tak terbatas. Waktu 0 = ikut durasi quiz / bebas.</p>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
@@ -170,11 +229,6 @@
                 <input v-model.number="form.sequence" type="number" min="1" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
               </div>
             </div>
-
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input v-model="form.is_assessment" type="checkbox" class="w-4 h-4 rounded text-blue-600" />
-              <span class="text-sm font-medium text-gray-700">Tandai sebagai Modul Asesmen</span>
-            </label>
           </div>
           <div class="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end sticky bottom-0 bg-white">
             <button @click="showModal = false" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
@@ -232,7 +286,56 @@
       </div>
     </Teleport>
 
-    <!-- Question Manager Modal -->
+    <!-- Section Manager Modal -->
+    <Teleport to="body">
+      <div v-if="sm.open" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="sm.open = false">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+            <h2 class="font-bold text-gray-900">Kelola Section / Bab</h2>
+            <button @click="sm.open = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
+          </div>
+          <div class="p-6 space-y-4 overflow-y-auto">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Kursus</label>
+              <select v-model="sm.courseId" @change="loadSectionsForManager" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+                <option :value="null">— Pilih kursus —</option>
+                <option v-for="c in courseList" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+            </div>
+
+            <div v-if="sm.error" class="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">{{ sm.error }}</div>
+
+            <template v-if="sm.courseId">
+              <div v-if="sm.loading" class="flex justify-center py-6">
+                <div class="w-6 h-6 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+              </div>
+              <div v-else class="space-y-2">
+                <div v-if="!sm.sections.length" class="text-center py-4 text-sm text-gray-400">Belum ada section.</div>
+                <div v-for="(s, i) in sm.sections" :key="s.id" class="flex items-center gap-2 border border-gray-100 rounded-xl px-3 py-2 bg-gray-50">
+                  <div class="flex flex-col gap-0.5 shrink-0">
+                    <button @click="moveSection(i, -1)" :disabled="i === 0" class="text-gray-400 hover:text-gray-700 disabled:opacity-30 leading-none">▲</button>
+                    <button @click="moveSection(i, 1)" :disabled="i === sm.sections.length - 1" class="text-gray-400 hover:text-gray-700 disabled:opacity-30 leading-none">▼</button>
+                  </div>
+                  <input v-model="s.name" @blur="renameSection(s)" class="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                  <span class="text-xs text-gray-400 shrink-0">{{ s.module_count }} modul</span>
+                  <button @click="deleteSection(s)" class="p-1 text-gray-400 hover:text-red-500 transition-colors shrink-0"><TrashIcon class="w-4 h-4" /></button>
+                </div>
+              </div>
+
+              <div class="flex gap-2 border-t border-gray-100 pt-3">
+                <input v-model="sm.newName" @keyup.enter="addSection" placeholder="Nama section baru, mis. M0 Fondasi" class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                <button @click="addSection" :disabled="sm.saving || !sm.newName.trim()" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">Tambah</button>
+              </div>
+            </template>
+          </div>
+          <div class="px-6 py-4 border-t border-gray-100 flex justify-end shrink-0">
+            <button @click="closeSectionManager" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Selesai</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Question Manager Modal (SOP quiz bank) -->
     <Teleport to="body">
       <div v-if="qm.open" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="qm.open = false">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
@@ -240,9 +343,16 @@
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
             <div>
               <h2 class="font-bold text-gray-900">Kelola Soal</h2>
-              <p class="text-xs text-gray-400 mt-0.5">{{ qm.module?.name }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">{{ qm.module?.name }} · {{ qm.module?.quiz_bank_name }}</p>
             </div>
-            <button @click="qm.open = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2 py-1 rounded-full font-medium" :class="quizStateClass(qm.state)">{{ quizStateLabel(qm.state) }}</span>
+              <button @click="qm.open = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
+            </div>
+          </div>
+
+          <div v-if="qm.locked" class="px-6 py-2 bg-amber-50 border-b border-amber-100 text-xs text-amber-700 shrink-0">
+            Quiz sudah dipublish — soal terkunci. Untuk mengubah, buat quiz baru.
           </div>
 
           <div class="flex flex-col md:flex-row gap-0 flex-1 overflow-hidden">
@@ -261,22 +371,22 @@
               >
                 <div class="flex items-start justify-between gap-2">
                   <div class="flex-1 min-w-0">
-                    <p class="text-xs font-semibold text-gray-700 leading-snug truncate">{{ idx + 1 }}. {{ stripHtml(q.question_text) }}</p>
+                    <p class="text-xs font-semibold text-gray-700 leading-snug">{{ idx + 1 }}. {{ stripHtml(q.question_text) }}</p>
                     <div class="flex items-center gap-2 mt-1">
                       <span class="text-xs px-1.5 py-0.5 rounded bg-purple-50 text-purple-700">{{ qTypeLabel(q.question_type) }}</span>
-                      <span class="text-xs text-gray-400">{{ q.points }} poin</span>
+                      <span class="text-xs text-gray-400">{{ q.weight }} poin</span>
                     </div>
                     <!-- Options preview -->
-                    <div v-if="q.options?.length" class="mt-2 space-y-0.5">
-                      <div v-for="opt in q.options" :key="opt.id" class="flex items-center gap-1.5 text-xs">
-                        <span :class="opt.is_correct ? 'text-green-600 font-semibold' : 'text-gray-400'">
-                          {{ opt.is_correct ? '✓' : '○' }}
+                    <div v-if="q.question_type !== 'essay'" class="mt-2 space-y-0.5">
+                      <div v-for="[key, text] in optionEntries(q)" :key="key" class="flex items-center gap-1.5 text-xs">
+                        <span :class="q.correct_answer === key ? 'text-green-600 font-semibold' : 'text-gray-400'">
+                          {{ q.correct_answer === key ? '✓' : '○' }}
                         </span>
-                        <span :class="opt.is_correct ? 'text-green-700 font-medium' : 'text-gray-500'">{{ opt.text }}</span>
+                        <span :class="q.correct_answer === key ? 'text-green-700 font-medium' : 'text-gray-500'">{{ text }}</span>
                       </div>
                     </div>
                   </div>
-                  <div class="flex flex-col gap-1 shrink-0">
+                  <div v-if="!qm.locked" class="flex flex-col gap-1 shrink-0">
                     <button @click="editQuestion(q)" class="p-1 text-gray-400 hover:text-blue-600 transition-colors" title="Edit">
                       <PencilIcon class="w-3.5 h-3.5" />
                     </button>
@@ -289,7 +399,7 @@
             </div>
 
             <!-- Right: Add/Edit Form -->
-            <div class="md:w-1/2 overflow-y-auto p-4 space-y-3">
+            <div v-if="!qm.locked" class="md:w-1/2 overflow-y-auto p-4 space-y-3">
               <h3 class="text-sm font-bold text-gray-700">{{ qm.editingQuestion ? 'Edit Soal' : 'Tambah Soal' }}</h3>
 
               <div v-if="qm.formError" class="bg-red-50 border border-red-200 rounded-lg p-2 text-xs text-red-600">{{ qm.formError }}</div>
@@ -305,34 +415,37 @@
                   <select v-model="qm.form.question_type" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300">
                     <option value="multiple_choice">Pilihan Ganda</option>
                     <option value="true_false">Benar / Salah</option>
+                    <option value="essay">Esai (dinilai manual)</option>
                   </select>
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-gray-600 mb-1">Poin</label>
-                  <input v-model.number="qm.form.points" type="number" min="1" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
+                  <input v-model.number="qm.form.weight" type="number" min="1" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300" />
                 </div>
               </div>
 
-              <!-- Multiple Choice Options -->
+              <!-- Multiple Choice Options (single correct) -->
               <div v-if="qm.form.question_type === 'multiple_choice'" class="space-y-2">
-                <label class="block text-xs font-semibold text-gray-600">Pilihan Jawaban *</label>
-                <div v-for="(opt, i) in qm.form.options" :key="i" class="flex items-center gap-2">
+                <label class="block text-xs font-semibold text-gray-600">Pilihan Jawaban * (pilih 1 yang benar)</label>
+                <div v-for="(key, i) in ['a','b','c','d']" :key="key" class="flex items-center gap-2">
                   <input
-                    type="checkbox"
-                    v-model="opt.is_correct"
-                    class="w-4 h-4 rounded text-purple-600 shrink-0"
+                    type="radio"
+                    name="mc_correct"
+                    :value="key"
+                    v-model="qm.form.correct_answer"
+                    class="w-4 h-4 text-purple-600 shrink-0"
                     title="Jawaban benar"
                   />
                   <input
-                    v-model="opt.text"
-                    :placeholder="`Pilihan ${String.fromCharCode(65 + i)}`"
+                    v-model="qm.form.options[i]"
+                    :placeholder="`Pilihan ${key.toUpperCase()}`"
                     class="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
                   />
                 </div>
-                <p class="text-xs text-gray-400">Centang pilihan yang benar (boleh lebih dari satu)</p>
+                <p class="text-xs text-gray-400">Isi minimal A dan B. Pilih radio pada jawaban benar.</p>
               </div>
 
-              <!-- True/False Options -->
+              <!-- True/False -->
               <div v-if="qm.form.question_type === 'true_false'" class="space-y-2">
                 <label class="block text-xs font-semibold text-gray-600">Jawaban Benar</label>
                 <div class="flex gap-3">
@@ -346,6 +459,8 @@
                   </label>
                 </div>
               </div>
+
+              <p v-if="qm.form.question_type === 'essay'" class="text-xs text-gray-400">Soal esai tidak butuh kunci jawaban — akan dinilai supervisor.</p>
 
               <div class="flex gap-2 pt-1">
                 <button
@@ -362,10 +477,18 @@
             </div>
           </div>
 
-          <!-- Footer info -->
-          <div class="px-6 py-3 border-t border-gray-100 shrink-0 flex items-center justify-between">
+          <!-- Footer info + publish -->
+          <div class="px-6 py-3 border-t border-gray-100 shrink-0 flex items-center justify-between gap-2">
             <span class="text-xs text-gray-400">{{ qm.questions.length }} soal</span>
-            <button @click="qm.open = false" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Selesai</button>
+            <div class="flex items-center gap-2">
+              <button
+                v-if="qm.state === 'draft' || qm.state === 'review'"
+                @click="publishQuiz"
+                :disabled="qm.publishing || !qm.questions.length"
+                class="px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+              >{{ qm.publishing ? 'Mempublish...' : 'Publish Quiz' }}</button>
+              <button @click="qm.open = false" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Selesai</button>
+            </div>
           </div>
         </div>
       </div>
@@ -378,7 +501,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { lmsApi } from '../../services/lmsApi'
-import { PuzzlePieceIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon, XMarkIcon, ListBulletIcon } from '@heroicons/vue/24/outline'
+import { quizApi } from '../../services/quizApi'
+import { PuzzlePieceIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon, XMarkIcon, ListBulletIcon, RectangleStackIcon } from '@heroicons/vue/24/outline'
 
 const loading = ref(false)
 const error = ref('')
@@ -394,6 +518,14 @@ const modalError = ref('')
 const courseList = ref([])
 const coursesLoading = ref(false)
 
+// Sections shown in the module form (for the selected course)
+const formSections = ref([])
+// Course quiz banks for the assessment picker
+const courseQuizBanks = ref([])
+const quizBanksLoading = ref(false)
+const newQuizName = ref('')
+const creatingQuiz = ref(false)
+
 const uploadTarget = ref(null)
 const uploadFile = ref(null)
 const uploadUrl = ref('')
@@ -402,7 +534,12 @@ const uploading = ref(false)
 const uploadError = ref('')
 
 const filters = reactive({ search: '', course_id: null, content_type: '' })
-const form = reactive({ name: '', course_id: null, content_type: 'video', duration_minutes: 0, sequence: 1, is_assessment: false })
+const emptyForm = () => ({
+  name: '', course_id: null, section_id: null, content_type: 'video',
+  duration_minutes: 0, sequence: 1,
+  quiz_bank_id: null, passing_score: 70, max_attempts: 1, time_limit_minutes: 0,
+})
+const form = reactive(emptyForm())
 
 async function loadCourses() {
   if (courseList.value.length) return
@@ -412,6 +549,29 @@ async function loadCourses() {
     courseList.value = res?.courses ?? []
   } catch { courseList.value = [] }
   finally { coursesLoading.value = false }
+}
+
+async function loadFormSections(courseId) {
+  formSections.value = []
+  if (!courseId) return
+  try {
+    const res = await lmsApi.sectionSearch({ course_id: courseId })
+    formSections.value = res?.sections ?? []
+  } catch { formSections.value = [] }
+}
+
+async function loadCourseQuizBanks() {
+  quizBanksLoading.value = true
+  try {
+    const res = await quizApi.adminList({ is_course_bank: true, limit: 200 })
+    courseQuizBanks.value = res?.quizzes ?? []
+  } catch { courseQuizBanks.value = [] }
+  finally { quizBanksLoading.value = false }
+}
+
+function onFormCourseChange() {
+  form.section_id = null
+  loadFormSections(form.course_id)
 }
 
 let debounceTimer = null
@@ -453,10 +613,11 @@ async function deleteModule(m) {
 
 function openCreateModal() {
   editTarget.value = null
-  Object.assign(form, { name: '', course_id: null, content_type: 'video', duration_minutes: 0, sequence: 1, is_assessment: false })
+  Object.assign(form, emptyForm())
   modalError.value = ''
   showModal.value = true
   loadCourses()
+  loadCourseQuizBanks()
 }
 
 function openEditModal(m) {
@@ -464,14 +625,45 @@ function openEditModal(m) {
   Object.assign(form, {
     name: m.name,
     course_id: m.course_id,
+    section_id: m.section_id || null,
     content_type: m.content_type,
     duration_minutes: m.duration_minutes,
     sequence: m.sequence || 1,
-    is_assessment: m.is_assessment || false,
+    quiz_bank_id: m.quiz_bank_id || null,
+    passing_score: m.passing_score ?? 70,
+    max_attempts: m.max_attempts ?? 1,
+    time_limit_minutes: m.time_limit_minutes ?? 0,
   })
   modalError.value = ''
   showModal.value = true
   loadCourses()
+  loadFormSections(m.course_id)
+  loadCourseQuizBanks()
+}
+
+async function createQuizBank() {
+  if (!newQuizName.value.trim()) return
+  creatingQuiz.value = true
+  try {
+    const res = await quizApi.adminCreate({
+      is_course_bank: true,
+      name: newQuizName.value.trim(),
+      passing_score: form.passing_score || 70,
+      duration_minutes: form.time_limit_minutes || 30,
+      max_attempts: form.max_attempts || 1,
+    })
+    const q = res?.quiz
+    if (q) {
+      await loadCourseQuizBanks()
+      form.quiz_bank_id = q.id
+      newQuizName.value = ''
+      showToast('Quiz baru dibuat. Simpan modul, lalu klik "Kelola Soal".')
+    }
+  } catch (e) {
+    modalError.value = e.message || 'Gagal membuat quiz'
+  } finally {
+    creatingQuiz.value = false
+  }
 }
 
 async function saveModal() {
@@ -480,11 +672,25 @@ async function saveModal() {
   saving.value = true
   modalError.value = ''
   try {
+    const payload = {
+      name: form.name,
+      course_id: form.course_id,
+      section_id: form.section_id || false,
+      content_type: form.content_type,
+      duration_minutes: form.duration_minutes,
+      sequence: form.sequence,
+    }
+    if (form.content_type === 'assessment') {
+      payload.quiz_bank_id = form.quiz_bank_id || false
+      payload.passing_score = form.passing_score
+      payload.max_attempts = form.max_attempts
+      payload.time_limit_minutes = form.time_limit_minutes
+    }
     if (editTarget.value) {
-      await lmsApi.moduleUpdate({ module_id: editTarget.value.id, ...form })
+      await lmsApi.moduleUpdate({ module_id: editTarget.value.id, ...payload })
       showToast('Modul berhasil diperbarui')
     } else {
-      await lmsApi.moduleCreate({ ...form })
+      await lmsApi.moduleCreate(payload)
       showToast('Modul berhasil dibuat')
     }
     showModal.value = false
@@ -550,29 +756,110 @@ async function doSaveContent() {
 
 function showToast(msg) { toast.value = msg; setTimeout(() => { toast.value = '' }, 3000) }
 
-// ── QUESTION MANAGER ────────────────────────────────────────────────────────
+// ── SECTION MANAGER ─────────────────────────────────────────────────────────
+const sm = reactive({ open: false, courseId: null, sections: [], loading: false, saving: false, newName: '', error: '' })
+
+function openSectionManager() {
+  sm.open = true
+  sm.error = ''
+  sm.newName = ''
+  sm.courseId = filters.course_id || null
+  loadCourses()
+  if (sm.courseId) loadSectionsForManager()
+}
+
+function closeSectionManager() {
+  sm.open = false
+  // Refresh form sections if same course open
+  if (form.course_id && form.course_id === sm.courseId) loadFormSections(form.course_id)
+  load()
+}
+
+async function loadSectionsForManager() {
+  sm.sections = []
+  if (!sm.courseId) return
+  sm.loading = true
+  sm.error = ''
+  try {
+    const res = await lmsApi.sectionSearch({ course_id: sm.courseId })
+    sm.sections = (res?.sections ?? []).map(s => ({ ...s }))
+  } catch (e) {
+    sm.error = e.message || 'Gagal memuat section'
+  } finally {
+    sm.loading = false
+  }
+}
+
+async function addSection() {
+  if (!sm.newName.trim() || !sm.courseId) return
+  sm.saving = true
+  sm.error = ''
+  try {
+    const seq = (sm.sections.length + 1) * 10
+    await lmsApi.sectionCreate({ course_id: sm.courseId, name: sm.newName.trim(), sequence: seq })
+    sm.newName = ''
+    await loadSectionsForManager()
+  } catch (e) {
+    sm.error = e.message || 'Gagal menambah section'
+  } finally {
+    sm.saving = false
+  }
+}
+
+async function renameSection(s) {
+  if (!s.name.trim()) { await loadSectionsForManager(); return }
+  try {
+    await lmsApi.sectionUpdate({ section_id: s.id, name: s.name.trim() })
+  } catch (e) {
+    sm.error = e.message || 'Gagal mengubah nama section'
+  }
+}
+
+async function deleteSection(s) {
+  if (!confirm(`Hapus section "${s.name}"? Modul di dalamnya akan dilepas (tidak terhapus).`)) return
+  try {
+    await lmsApi.sectionDelete({ section_id: s.id })
+    await loadSectionsForManager()
+  } catch (e) {
+    sm.error = e.message || 'Gagal menghapus section'
+  }
+}
+
+async function moveSection(index, dir) {
+  const target = index + dir
+  if (target < 0 || target >= sm.sections.length) return
+  const arr = sm.sections
+  ;[arr[index], arr[target]] = [arr[target], arr[index]]
+  // Reassign sequences and persist
+  const orders = arr.map((s, i) => ({ id: s.id, sequence: (i + 1) * 10 }))
+  arr.forEach((s, i) => { s.sequence = (i + 1) * 10 })
+  try {
+    await lmsApi.sectionReorder({ orders })
+  } catch (e) {
+    sm.error = e.message || 'Gagal mengubah urutan'
+    await loadSectionsForManager()
+  }
+}
+
+// ── QUESTION MANAGER (SOP quiz bank) ────────────────────────────────────────
 const qm = reactive({
   open: false,
   loading: false,
   module: null,
-  assessment: null,
+  quizBankId: null,
+  state: 'draft',
+  locked: false,
   questions: [],
-  expanded: {},
   saving: false,
+  publishing: false,
   formError: '',
   editingQuestion: null,
   form: {
     question_text: '',
     question_type: 'multiple_choice',
-    points: 1,
-    difficulty: 'medium',
-    options: [
-      { text: '', is_correct: false },
-      { text: '', is_correct: false },
-      { text: '', is_correct: false },
-      { text: '', is_correct: false },
-    ],
-    correct_answer: 'true',
+    weight: 10,
+    options: ['', '', '', ''],
+    correct_answer: 'a',
   },
 })
 
@@ -582,21 +869,51 @@ function stripHtml(html) {
 }
 
 function qTypeLabel(t) {
-  return { multiple_choice: 'Pilihan Ganda', true_false: 'Benar/Salah', essay: 'Essay' }[t] || t
+  return { multiple_choice: 'Pilihan Ganda', true_false: 'Benar/Salah', essay: 'Esai' }[t] || t
+}
+
+function quizStateLabel(s) {
+  return { draft: 'Draft', review: 'Review', active: 'Aktif', closed: 'Ditutup' }[s] || s
+}
+function quizStateClass(s) {
+  return {
+    draft: 'bg-gray-100 text-gray-600',
+    review: 'bg-amber-50 text-amber-700',
+    active: 'bg-green-50 text-green-700',
+    closed: 'bg-red-50 text-red-600',
+  }[s] || 'bg-gray-100 text-gray-600'
+}
+
+// Build [key,text] entries for a SOP question (option_a..d or true/false)
+function optionEntries(q) {
+  if (q.question_type === 'true_false') {
+    return [['true', 'Benar'], ['false', 'Salah']]
+  }
+  const entries = []
+  for (const key of ['a', 'b', 'c', 'd']) {
+    const text = q['option_' + key]
+    if (text) entries.push([key, text])
+  }
+  return entries
 }
 
 async function openQuestionManager(m) {
+  if (!m.quiz_bank_id) {
+    showToast('Pilih/buat quiz bank dulu di form modul')
+    return
+  }
   qm.module = m
+  qm.quizBankId = m.quiz_bank_id
   qm.open = true
   qm.loading = true
   qm.questions = []
-  qm.assessment = null
   qm.editingQuestion = null
   resetQmForm()
   try {
-    const res = await lmsApi.assessmentForModule({ module_id: m.id })
-    qm.assessment = res?.assessment ?? null
+    const res = await quizApi.adminQuestionList(m.quiz_bank_id)
     qm.questions = res?.questions ?? []
+    qm.state = res?.quiz_state ?? 'draft'
+    qm.locked = !!res?.locked
   } catch (e) {
     showToast(e.message || 'Gagal memuat soal')
   } finally {
@@ -610,68 +927,55 @@ function resetQmForm() {
   Object.assign(qm.form, {
     question_text: '',
     question_type: 'multiple_choice',
-    points: 1,
-    difficulty: 'medium',
-    options: [
-      { text: '', is_correct: false },
-      { text: '', is_correct: false },
-      { text: '', is_correct: false },
-      { text: '', is_correct: false },
-    ],
-    correct_answer: 'true',
+    weight: 10,
+    options: ['', '', '', ''],
+    correct_answer: 'a',
   })
 }
 
 function editQuestion(q) {
   qm.editingQuestion = q
   qm.formError = ''
-  qm.form.question_text = q.question_text
+  qm.form.question_text = stripHtml(q.question_text)
   qm.form.question_type = q.question_type
-  qm.form.points = q.points
-  qm.form.difficulty = q.difficulty || 'medium'
-  if (q.question_type === 'multiple_choice') {
-    qm.form.options = q.options?.length
-      ? q.options.map(o => ({ text: o.text, is_correct: o.is_correct }))
-      : [{ text: '', is_correct: false }, { text: '', is_correct: false }, { text: '', is_correct: false }, { text: '', is_correct: false }]
-  } else if (q.question_type === 'true_false') {
-    const correctOpt = q.options?.find(o => o.is_correct)
-    qm.form.correct_answer = correctOpt ? correctOpt.text.toLowerCase() : 'true'
-  }
+  qm.form.weight = q.weight || 10
+  qm.form.options = [q.option_a || '', q.option_b || '', q.option_c || '', q.option_d || '']
+  qm.form.correct_answer = q.correct_answer || (q.question_type === 'true_false' ? 'true' : 'a')
 }
 
 async function saveQuestion() {
-  if (!qm.form.question_text.trim()) { qm.formError = 'Teks soal wajib diisi'; return }
-  if (qm.form.question_type === 'multiple_choice') {
-    const filled = qm.form.options.filter(o => o.text.trim())
-    if (filled.length < 2) { qm.formError = 'Minimal 2 pilihan jawaban'; return }
-    if (!filled.some(o => o.is_correct)) { qm.formError = 'Pilih setidaknya 1 jawaban benar'; return }
+  const f = qm.form
+  if (!f.question_text.trim()) { qm.formError = 'Teks soal wajib diisi'; return }
+  const payload = {
+    question_text: f.question_text.trim(),
+    question_type: f.question_type,
+    weight: f.weight || 10,
+  }
+  if (f.question_type === 'multiple_choice') {
+    if (!f.options[0]?.trim() || !f.options[1]?.trim()) { qm.formError = 'Minimal isi pilihan A dan B'; return }
+    if (!['a', 'b', 'c', 'd'].includes(f.correct_answer)) { qm.formError = 'Pilih jawaban benar'; return }
+    if (!f.options['abcd'.indexOf(f.correct_answer)]?.trim()) { qm.formError = 'Pilihan yang ditandai benar masih kosong'; return }
+    payload.option_a = f.options[0] || ''
+    payload.option_b = f.options[1] || ''
+    payload.option_c = f.options[2] || ''
+    payload.option_d = f.options[3] || ''
+    payload.correct_answer = f.correct_answer
+  } else if (f.question_type === 'true_false') {
+    payload.correct_answer = f.correct_answer === 'false' ? 'false' : 'true'
   }
   qm.saving = true
   qm.formError = ''
   try {
-    const payload = {
-      assessment_id: qm.assessment.id,
-      question_text: qm.form.question_text.trim(),
-      question_type: qm.form.question_type,
-      points: qm.form.points,
-      difficulty: qm.form.difficulty,
-    }
-    if (qm.form.question_type === 'multiple_choice') {
-      payload.options = qm.form.options.filter(o => o.text.trim())
-    } else if (qm.form.question_type === 'true_false') {
-      payload.correct_answer = qm.form.correct_answer
-    }
     if (qm.editingQuestion) {
-      await lmsApi.assessmentUpdateQuestion({ question_id: qm.editingQuestion.id, ...payload })
+      await quizApi.adminQuestionUpdate(qm.editingQuestion.id, payload)
       showToast('Soal berhasil diperbarui')
     } else {
-      await lmsApi.assessmentAddQuestion(payload)
+      await quizApi.adminQuestionCreate(qm.quizBankId, payload)
       showToast('Soal berhasil ditambahkan')
     }
-    // Reload questions
-    const res = await lmsApi.assessmentForModule({ module_id: qm.module.id })
+    const res = await quizApi.adminQuestionList(qm.quizBankId)
     qm.questions = res?.questions ?? []
-    if (res?.assessment) qm.assessment = res.assessment
+    qm.state = res?.quiz_state ?? qm.state
     resetQmForm()
   } catch (e) {
     qm.formError = e.message || 'Gagal menyimpan soal'
@@ -681,13 +985,34 @@ async function saveQuestion() {
 }
 
 async function deleteQuestion(q) {
-  if (!confirm(`Hapus soal ini?`)) return
+  if (!confirm('Hapus soal ini?')) return
   try {
-    await lmsApi.assessmentDeleteQuestion({ question_id: q.id })
+    await quizApi.adminQuestionDelete(q.id)
     qm.questions = qm.questions.filter(x => x.id !== q.id)
     showToast('Soal dihapus')
   } catch (e) {
     showToast(e.message || 'Gagal menghapus soal')
+  }
+}
+
+async function publishQuiz() {
+  if (!qm.questions.length) { showToast('Tambah minimal 1 soal dulu'); return }
+  if (!confirm('Publish quiz? Setelah dipublish, soal akan terkunci dan siap dikerjakan peserta.')) return
+  qm.publishing = true
+  try {
+    if (qm.state === 'draft') {
+      await quizApi.adminSubmitReview(qm.quizBankId)
+    }
+    await quizApi.adminPublish(qm.quizBankId)
+    qm.state = 'active'
+    qm.locked = true
+    showToast('Quiz berhasil dipublish')
+    loadCourseQuizBanks()
+    load()
+  } catch (e) {
+    showToast(e.message || 'Gagal publish quiz')
+  } finally {
+    qm.publishing = false
   }
 }
 

@@ -389,56 +389,33 @@ VERSION: 3.1.0 - FIXED: Data persistence + Consistent Pitcar Red Theme
                      SDM INPUT
                 ======================================== -->
                 
-                <!-- ⭐ NEW SDM INPUT (BREAKDOWN) -->
+                <!-- ⭐ SDM (OTOMATIS DARI DOKUMENTASI KASUS) -->
                 <div v-if="kpi?.name === 'Pengembangan SDM'" class="space-y-6">
                   <!-- Info -->
                   <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
                     <p class="text-sm text-blue-800">
-                      <strong>Formula Baru:</strong> Score adalah rata-rata dari 3 komponen di bawah ini.
+                      <strong>Otomatis:</strong> Score dihitung dari jumlah <strong>Dokumentasi Kasus</strong> yang diselesaikan.
+                      Target 1 dokumentasi per hari (proporsional hari berjalan). Nilai ini tidak dapat diedit manual.
                     </p>
                   </div>
 
-                  <!-- 1. Dokumentasi Kasus -->
-                  <div>
-                    <label class="flex justify-between text-sm font-semibold text-gray-900 mb-1">
-                      <span>Dokumentasi Kasus</span>
-                      <span class="text-[#b70000]">{{ formData.sdm_case_doc }}</span>
-                    </label>
-                    <input 
-                      type="range" min="0" max="100" v-model.number="formData.sdm_case_doc" 
-                      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
-                    />
+                  <!-- Ringkasan Dokumentasi Kasus -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-gray-50 rounded-xl text-center">
+                      <span class="text-xs text-gray-500">Dokumentasi Dibuat</span>
+                      <div class="text-2xl font-bold text-gray-900">{{ kpi?.breakdown?.doc_count ?? 0 }}</div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-xl text-center">
+                      <span class="text-xs text-gray-500">Target (hari berjalan)</span>
+                      <div class="text-2xl font-bold text-gray-900">{{ kpi?.breakdown?.target_docs ?? 0 }}</div>
+                    </div>
                   </div>
 
-                  <!-- 2. Delivery -->
-                  <div>
-                    <label class="flex justify-between text-sm font-semibold text-gray-900 mb-1">
-                      <span>Delivery</span>
-                      <span class="text-[#b70000]">{{ formData.sdm_delivery }}</span>
-                    </label>
-                    <input 
-                      type="range" min="0" max="100" v-model.number="formData.sdm_delivery" 
-                      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
-                    />
-                  </div>
-
-                  <!-- 3. Result -->
-                  <div>
-                    <label class="flex justify-between text-sm font-semibold text-gray-900 mb-1">
-                      <span>Result</span>
-                      <span class="text-[#b70000]">{{ formData.sdm_result }}</span>
-                    </label>
-                    <input 
-                      type="range" min="0" max="100" v-model.number="formData.sdm_result" 
-                      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
-                    />
-                  </div>
-                  
-                  <!-- Avg Preview -->
-                  <div class="mt-4 p-3 bg-gray-50 rounded-xl text-center">
-                    <span class="text-xs text-gray-500">Preview Score SDM</span>
+                  <!-- Score Preview -->
+                  <div class="mt-2 p-3 bg-gray-50 rounded-xl text-center">
+                    <span class="text-xs text-gray-500">Score SDM (Otomatis)</span>
                     <div class="text-2xl font-bold text-gray-900">
-                      {{ ((formData.sdm_case_doc + formData.sdm_delivery + formData.sdm_result) / 3).toFixed(1) }}%
+                      {{ Number(kpi?.value ?? 0).toFixed(1) }}%
                     </div>
                   </div>
                 </div>
@@ -455,6 +432,7 @@ VERSION: 3.1.0 - FIXED: Data persistence + Consistent Pitcar Red Theme
                   Batal
                 </button>
                 <button
+                  v-if="kpi?.name !== 'Pengembangan SDM'"
                   @click="handleSave"
                   :disabled="saving"
                   type="button"
@@ -529,10 +507,7 @@ const formData = ref({
   // NEW FIELDS
   lead_time_first_response: 0,
   lead_time_avg_response: 0,
-  sampling_target: 25,
-  sdm_case_doc: 0,
-  sdm_delivery: 0,
-  sdm_result: 0
+  sampling_target: 25
 })
 
 // Computed for circular progress
@@ -579,10 +554,7 @@ const loadExistingValues = async () => {
         // NEW FIELDS
         lead_time_first_response: kpis.find(k => k.name === 'Lead Time')?.detail?.manual_inputs?.first_response || 0,
         lead_time_avg_response: kpis.find(k => k.name === 'Lead Time')?.detail?.manual_inputs?.avg_response || 0,
-        sampling_target: kpis.find(k => k.name === 'Sampling Quantity')?.target_qty || 25,
-        sdm_case_doc: sdmKPI?.breakdown?.doc || 0,
-        sdm_delivery: sdmKPI?.breakdown?.delivery || 0,
-        sdm_result: sdmKPI?.breakdown?.result || 0
+        sampling_target: kpis.find(k => k.name === 'Sampling Quantity')?.target_qty || 25
       }
       
       // Set profit input display (TARGET)
@@ -722,13 +694,6 @@ const handleSave = async () => {
     } else if (props.kpi.name === 'Turnover') {
       endpoint = '/web/v3/kpi/save-turnover'
       params.turnover_value = formData.value.turnover_value
-    } else if (props.kpi.name === 'Pengembangan SDM') {
-      endpoint = '/web/v3/kpi/save-sdm'
-      // Send components, backend calculates average
-      params.sdm_value = formData.value.sdm_value // Optional/Legacy
-      params.sdm_case_doc = formData.value.sdm_case_doc
-      params.sdm_delivery = formData.value.sdm_delivery
-      params.sdm_result = formData.value.sdm_result
     } else if (props.kpi.name === 'Lead Time') {
       endpoint = '/web/v3/kpi/save-leadtime'
       params.lead_time_first_response = formData.value.lead_time_first_response

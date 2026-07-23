@@ -122,6 +122,28 @@ export const lmsApi = {
   moduleUploadContent: (params) =>
     call('/web/v1/lms/modules', { operation: 'upload_content', ...params }),
 
+  // ── SECTIONS (course structure 2-level) ──────────────────────────────
+  sectionSearch: (params = {}) =>
+    call('/web/v1/lms/sections', { operation: 'search', ...params }),
+  sectionCreate: (params) =>
+    call('/web/v1/lms/sections', { operation: 'create', ...params }),
+  sectionUpdate: (params) =>
+    call('/web/v1/lms/sections', { operation: 'update', ...params }),
+  sectionDelete: (params) =>
+    call('/web/v1/lms/sections', { operation: 'delete', ...params }),
+  sectionReorder: (params) =>
+    call('/web/v1/lms/sections', { operation: 'reorder', ...params }),
+
+  // ── COURSE QUIZ (in-course, sourced from SOP quiz bank) ──────────────
+  courseQuizGet: (params) =>
+    call('/web/v1/lms/course-quiz', { operation: 'get', ...params }),
+  courseQuizStart: (params) =>
+    call('/web/v1/lms/course-quiz', { operation: 'start', ...params }),
+  courseQuizSubmit: (params) =>
+    call('/web/v1/lms/course-quiz', { operation: 'submit', ...params }),
+  courseQuizGradeEssays: (params) =>
+    call('/web/v1/lms/course-quiz', { operation: 'grade_essays', ...params }),
+
   // ── LEARNING PATHS ───────────────────────────────────────────────────
   learningPathSearch: (params = {}) =>
     call('/web/v1/lms/learning-paths', { operation: 'search', ...params }),

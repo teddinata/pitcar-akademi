@@ -115,16 +115,13 @@
                   </div>
                   <div v-if="q.question_type === 'multiple_choice' || q.question_type === 'true_false'" class="space-y-2 ml-10">
                     <label
-                      v-for="opt in q.options" :key="opt.id"
+                      v-for="opt in q.optionList" :key="opt.key"
                       class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
-                      :class="answers[q.id] === String(opt.id) ? 'border-orange-400 bg-orange-50' : 'border-gray-200 hover:bg-gray-50'"
+                      :class="answers[q.id] === opt.key ? 'border-orange-400 bg-orange-50' : 'border-gray-200 hover:bg-gray-50'"
                     >
-                      <input type="radio" :name="'q_' + q.id" :value="String(opt.id)" v-model="answers[q.id]" class="accent-orange-500" />
+                      <input type="radio" :name="'q_' + q.id" :value="opt.key" v-model="answers[q.id]" class="accent-orange-500" />
                       <span class="text-sm text-gray-800">{{ opt.text }}</span>
                     </label>
-                  </div>
-                  <div v-else-if="q.question_type === 'fill_blank'" class="ml-10">
-                    <input type="text" v-model="answers[q.id]" placeholder="Ketik jawaban..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
                   </div>
                   <div v-else class="ml-10">
                     <textarea v-model="answers[q.id]" rows="4" placeholder="Tulis jawaban..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"></textarea>
@@ -139,17 +136,21 @@
             <!-- Result screen -->
             <div v-else-if="quizState === 'result'" class="max-w-lg mx-auto py-8 px-4">
               <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden text-center">
-                <div :class="quizResult?.passed ? 'bg-green-500' : 'bg-red-500'" class="px-6 py-8">
+                <div :class="quizResult?.essay_pending ? 'bg-amber-500' : (quizResult?.passed ? 'bg-green-500' : 'bg-red-500')" class="px-6 py-8">
                   <p class="text-5xl font-bold text-white">{{ Math.round(quizResult?.score_percentage ?? 0) }}%</p>
-                  <p class="text-white/80 mt-2 font-medium">{{ quizResult?.passed ? 'Selamat! Kamu Lulus' : 'Belum Lulus' }}</p>
+                  <p class="text-white/80 mt-2 font-medium">
+                    <template v-if="quizResult?.essay_pending">Menunggu Penilaian Esai</template>
+                    <template v-else>{{ quizResult?.passed ? 'Selamat! Kamu Lulus' : 'Belum Lulus' }}</template>
+                  </p>
                 </div>
                 <div class="p-6">
                   <p class="text-sm text-gray-500 mb-6">
-                    <template v-if="quizResult?.passed">Modul ini telah ditandai selesai. Lanjutkan ke modul berikutnya.</template>
+                    <template v-if="quizResult?.essay_pending">Jawaban esaimu akan dinilai supervisor. Nilai akhir & status kelulusan muncul setelah penilaian selesai.</template>
+                    <template v-else-if="quizResult?.passed">Modul ini telah ditandai selesai. Lanjutkan ke modul berikutnya.</template>
                     <template v-else>Nilai minimum lulus: {{ quizData?.passing_score }}%. Coba lagi untuk meningkatkan nilaimu.</template>
                   </p>
                   <div class="flex gap-3">
-                    <button v-if="!quizResult?.passed" @click="retryQuiz" class="flex-1 py-2.5 border border-orange-500 text-orange-500 font-semibold rounded-xl hover:bg-orange-50 transition-colors">
+                    <button v-if="!quizResult?.passed && !quizResult?.essay_pending" @click="retryQuiz" class="flex-1 py-2.5 border border-orange-500 text-orange-500 font-semibold rounded-xl hover:bg-orange-50 transition-colors">
                       Coba Lagi
                     </button>
                     <button
@@ -257,30 +258,35 @@
           <p class="text-xs text-gray-400 mt-0.5">{{ doneCount }}/{{ modules.length }} selesai</p>
         </div>
         <div class="flex-1 overflow-y-auto">
-          <div
-            v-for="(mod, idx) in modules"
-            :key="mod.id"
-            @click="activeModule = mod"
-            class="flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
-            :class="activeModule?.id === mod.id ? 'bg-blue-50 border-r-2 border-r-blue-600' : 'hover:bg-gray-50'"
-          >
+          <template v-for="(group, gi) in moduleGroups" :key="group.id ?? 'none-' + gi">
+            <div v-if="group.name" class="px-4 py-2 bg-gray-50 border-b border-gray-100 sticky top-0">
+              <p class="text-xs font-bold text-gray-600 uppercase tracking-wide">{{ group.name }}</p>
+            </div>
             <div
-              class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 transition-colors"
-              :class="modulesDone.has(mod.id) ? 'bg-green-500 text-white' : (activeModule?.id === mod.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500')"
+              v-for="mod in group.modules"
+              :key="mod.id"
+              @click="activeModule = mod"
+              class="flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
+              :class="activeModule?.id === mod.id ? 'bg-blue-50 border-r-2 border-r-blue-600' : 'hover:bg-gray-50'"
             >
-              <svg v-if="modulesDone.has(mod.id)" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-              </svg>
-              <span v-else>{{ idx + 1 }}</span>
+              <div
+                class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 transition-colors"
+                :class="modulesDone.has(mod.id) ? 'bg-green-500 text-white' : (activeModule?.id === mod.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500')"
+              >
+                <svg v-if="modulesDone.has(mod.id)" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span v-else>{{ moduleNumber(mod) }}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p
+                  class="text-sm font-medium leading-snug"
+                  :class="activeModule?.id === mod.id ? 'text-blue-700' : 'text-gray-800'"
+                >{{ mod.name }}</p>
+                <p class="text-xs text-gray-400 mt-0.5 capitalize">{{ mod.content_type }} · {{ mod.duration_minutes }}m</p>
+              </div>
             </div>
-            <div class="flex-1 min-w-0">
-              <p
-                class="text-sm font-medium leading-snug"
-                :class="activeModule?.id === mod.id ? 'text-blue-700' : 'text-gray-800'"
-              >{{ mod.name }}</p>
-              <p class="text-xs text-gray-400 mt-0.5 capitalize">{{ mod.content_type }} · {{ mod.duration_minutes }}m</p>
-            </div>
-          </div>
+          </template>
         </div>
       </div>
     </div>
@@ -297,28 +303,33 @@
         </svg>
       </button>
       <div v-if="showMobileList" class="max-h-52 overflow-y-auto border-t border-gray-50">
-        <div
-          v-for="(mod, idx) in modules"
-          :key="mod.id"
-          @click="activeModule = mod; showMobileList = false"
-          class="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
-          :class="activeModule?.id === mod.id ? 'bg-blue-50' : 'hover:bg-gray-50'"
-        >
+        <template v-for="(group, gi) in moduleGroups" :key="group.id ?? 'm-none-' + gi">
+          <div v-if="group.name" class="px-4 py-1.5 bg-gray-50 border-b border-gray-100">
+            <p class="text-xs font-bold text-gray-600 uppercase tracking-wide">{{ group.name }}</p>
+          </div>
           <div
-            class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-            :class="modulesDone.has(mod.id) ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'"
+            v-for="mod in group.modules"
+            :key="mod.id"
+            @click="activeModule = mod; showMobileList = false"
+            class="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
+            :class="activeModule?.id === mod.id ? 'bg-blue-50' : 'hover:bg-gray-50'"
           >
-            <svg v-if="modulesDone.has(mod.id)" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-            </svg>
-            <span v-else>{{ idx + 1 }}</span>
+            <div
+              class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+              :class="modulesDone.has(mod.id) ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'"
+            >
+              <svg v-if="modulesDone.has(mod.id)" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              <span v-else>{{ moduleNumber(mod) }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 truncate">{{ mod.name }}</p>
+              <p class="text-xs text-gray-400 capitalize">{{ mod.content_type }} · {{ mod.duration_minutes }}m</p>
+            </div>
+            <span v-if="modulesDone.has(mod.id)" class="text-xs text-green-600 font-medium shrink-0">✓</span>
           </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-800 truncate">{{ mod.name }}</p>
-            <p class="text-xs text-gray-400 capitalize">{{ mod.content_type }} · {{ mod.duration_minutes }}m</p>
-          </div>
-          <span v-if="modulesDone.has(mod.id)" class="text-xs text-green-600 font-medium shrink-0">✓</span>
-        </div>
+        </template>
       </div>
     </div>
 
@@ -435,6 +446,7 @@ const answers = ref({})
 const quizResult = ref(null)
 const quizLoading = ref(false)
 const quizSubmitting = ref(false)
+const quizSessionId = ref(null)
 const bestQuizScore = ref(0) // tracks highest score across all quizzes in this enrollment
 
 // Completion modals
@@ -451,6 +463,26 @@ const activeModuleIndex = computed(() => {
   if (!activeModule.value) return -1
   return modules.value.findIndex(m => m.id === activeModule.value.id)
 })
+
+// Group modules by section for the sidebar (preserves order from backend)
+const moduleGroups = computed(() => {
+  const groups = []
+  const map = {}
+  for (const m of modules.value) {
+    const key = m.section_id ?? '__none__'
+    if (!map[key]) {
+      map[key] = { id: m.section_id ?? null, name: m.section_name || null, modules: [] }
+      groups.push(map[key])
+    }
+    map[key].modules.push(m)
+  }
+  return groups
+})
+
+// Global 1-based index of a module across all sections (for numbering)
+function moduleNumber(mod) {
+  return modules.value.findIndex(m => m.id === mod.id) + 1
+}
 
 const isYouTube = computed(() => /youtube\.com|youtu\.be/.test(activeModule.value?.content_url || ''))
 
@@ -626,14 +658,23 @@ async function loadQuiz(mod) {
   quizState.value = 'info'
   answers.value = {}
   quizResult.value = null
+  quizSessionId.value = null
   quizLoading.value = true
   try {
-    const searchRes = await lmsApi.assessmentSearch({ module_id: mod.id })
-    const assessments = searchRes?.assessments ?? []
-    if (!assessments.length) { quizLoading.value = false; return }
-    const assessment = assessments[0]
-    const questRes = await lmsApi.assessmentGetQuestions({ assessment_id: assessment.id })
-    quizData.value = { ...assessment, questions: questRes?.questions ?? [] }
+    const res = await lmsApi.courseQuizGet({ module_id: mod.id })
+    const quiz = res?.quiz
+    if (!quiz) { quizLoading.value = false; return }
+    quizData.value = {
+      name: quiz.name,
+      question_count: quiz.question_count,
+      passing_score: res?.module?.passing_score ?? 70,
+      time_limit_minutes: res?.module?.time_limit_minutes ?? 0,
+      max_attempts: res?.module?.max_attempts ?? 0,
+      has_essay: quiz.has_essay,
+      state: quiz.state,
+      attempts_remaining: res?.attempts_remaining,
+      questions: [],
+    }
   } catch (e) {
     showToast(e.message || 'Gagal memuat quiz')
   } finally {
@@ -641,23 +682,51 @@ async function loadQuiz(mod) {
   }
 }
 
-function startQuiz() {
-  answers.value = {}
-  quizState.value = 'taking'
+async function startQuiz() {
+  if (!activeModule.value) return
+  quizSubmitting.value = false
+  quizLoading.value = true
+  try {
+    const res = await lmsApi.courseQuizStart({ module_id: activeModule.value.id })
+    quizSessionId.value = res?.session_id ?? null
+    // Convert options dict {a:'..',b:'..'} → array [{key,text}] for rendering
+    const questions = (res?.questions ?? []).map(q => ({
+      ...q,
+      optionList: Object.entries(q.options || {}).map(([key, text]) => ({ key, text })),
+    }))
+    quizData.value = { ...quizData.value, questions }
+    answers.value = {}
+    quizState.value = 'taking'
+  } catch (e) {
+    showToast(e.message || 'Gagal memulai quiz')
+  } finally {
+    quizLoading.value = false
+  }
 }
 
 async function submitQuiz() {
-  if (!quizData.value || !enrollment.value) return
+  if (!quizData.value || !enrollment.value || !quizSessionId.value) return
   quizSubmitting.value = true
   try {
-    const res = await lmsApi.assessmentSubmit({
-      assessment_id: quizData.value.id,
-      answers: { ...answers.value },
+    const answersData = (quizData.value.questions || []).map(q => {
+      if (q.question_type === 'essay') {
+        return { question_id: q.id, essay_answer: answers.value[q.id] || '' }
+      }
+      return { question_id: q.id, chosen_answer: answers.value[q.id] || '' }
     })
-    quizResult.value = res
+    const res = await lmsApi.courseQuizSubmit({
+      session_id: quizSessionId.value,
+      answers: answersData,
+    })
+    quizResult.value = {
+      score_percentage: res?.score ?? 0,
+      passed: res?.is_passed ?? false,
+      essay_pending: res?.essay_pending ?? false,
+    }
     quizState.value = 'result'
-    if ((res?.score_percentage ?? 0) > bestQuizScore.value) bestQuizScore.value = res.score_percentage
-    if (res?.passed) await markDone(activeModule.value)
+    if ((res?.score ?? 0) > bestQuizScore.value) bestQuizScore.value = res.score
+    // Mark module done when passed OR when essay pending (progress recorded server-side)
+    if (res?.is_passed) modulesDone.value = new Set([...modulesDone.value, activeModule.value.id])
   } catch (e) {
     showToast(e.message || 'Gagal mengirim jawaban')
   } finally {
@@ -667,7 +736,7 @@ async function submitQuiz() {
 
 function retryQuiz() {
   answers.value = {}
-  quizState.value = 'taking'
+  startQuiz()
 }
 
 watch(activeModule, (mod) => {
@@ -689,11 +758,16 @@ async function init() {
     if (!found) { router.push('/dashboard/lms/enrollments'); return }
     enrollment.value = found
 
-    // Fetch course modules
-    const courseRes = await lmsApi.courseSearch({ search: found.course_name, include_stats: true, limit: 5 })
+    // Fetch course + full modules (with section + content_url + quiz_bank)
+    const courseRes = await lmsApi.courseSearch({ search: found.course_name, limit: 5 })
     const courses = courseRes?.courses ?? []
     const course = courses.find(c => c.name === found.course_name) || courses[0]
-    modules.value = course?.modules ?? []
+    if (course?.id) {
+      const modRes = await lmsApi.moduleSearch({ course_id: course.id, limit: 200 })
+      modules.value = modRes?.modules ?? []
+    } else {
+      modules.value = []
+    }
 
     // Pre-fill completed modules from progress
     if (found.module_progress?.length) {
