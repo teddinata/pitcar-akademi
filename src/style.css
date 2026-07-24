@@ -73,6 +73,46 @@ body {
   }
   .clay-btn-primary:active { box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.28); }
   .clay-btn-primary:disabled { opacity: 0.5; }
+
+  /* Pill toggle (tabs/filters) — bentuk ramah untuk konteks edukasi */
+  .clay-pill {
+    border-radius: 9999px;
+    font-weight: 600;
+    background: #f0f1f5;
+    color: #4b5563;
+    transition: all 0.15s ease;
+    box-shadow: 4px 4px 9px rgba(174, 174, 192, 0.4),
+                -4px -4px 9px rgba(255, 255, 255, 0.9);
+  }
+  .clay-pill-active {
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.18),
+                -3px -3px 8px rgba(255, 255, 255, 0.6);
+  }
+
+  /* Pastel "clay tiles" — palet edukasi yang ramah & warna-warni.
+     Dipakai untuk stat cards / KPI tiles. */
+  .clay-tile {
+    border-radius: 1.5rem;
+    padding: 1rem 1.25rem;
+  }
+  .clay-tile-sky    { background: #e6efff; box-shadow: 6px 6px 14px rgba(140, 170, 235, 0.40), -6px -6px 14px rgba(255,255,255,0.95); }
+  .clay-tile-mint   { background: #e3f7ec; box-shadow: 6px 6px 14px rgba(120, 205, 160, 0.38), -6px -6px 14px rgba(255,255,255,0.95); }
+  .clay-tile-sun    { background: #fff2d9; box-shadow: 6px 6px 14px rgba(240, 200, 120, 0.42), -6px -6px 14px rgba(255,255,255,0.95); }
+  .clay-tile-grape  { background: #f0e8ff; box-shadow: 6px 6px 14px rgba(180, 150, 235, 0.40), -6px -6px 14px rgba(255,255,255,0.95); }
+  .clay-tile-rose   { background: #ffe6ec; box-shadow: 6px 6px 14px rgba(240, 150, 175, 0.40), -6px -6px 14px rgba(255,255,255,0.95); }
+  .clay-tile-peach  { background: #ffe9df; box-shadow: 6px 6px 14px rgba(240, 175, 140, 0.40), -6px -6px 14px rgba(255,255,255,0.95); }
+
+  /* Icon badge lembut untuk kartu */
+  .clay-icon {
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 2px 2px 5px rgba(174, 174, 192, 0.35),
+                inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+  }
 }
 
 /* Global Scrollbar Styling */

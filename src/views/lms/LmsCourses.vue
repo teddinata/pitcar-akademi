@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen p-4 md:p-6" style="background:#f0f1f5">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -17,7 +17,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5 flex flex-wrap gap-3">
+    <div class="clay-card p-4 mb-5 flex flex-wrap gap-3">
       <input
         v-model="filters.search"
         @input="debouncedLoad"
@@ -68,7 +68,7 @@
       <div
         v-for="course in courses"
         :key="course.id"
-        class="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col"
+        class="clay-card hover:shadow-md transition-shadow overflow-hidden flex flex-col"
       >
         <!-- Color band -->
         <div class="h-2" :class="difficultyBand(course.difficulty_level)"></div>

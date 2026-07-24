@@ -487,9 +487,13 @@ function moduleNumber(mod) {
 const isYouTube = computed(() => /youtube\.com|youtu\.be/.test(activeModule.value?.content_url || ''))
 
 const activeEmbedUrl = computed(() => {
-  const url = activeModule.value?.content_url
-  if (!url || isYouTube.value) return null   // YouTube handled by YT.Player, not iframe
-  return getEmbedUrl(url)
+  const m = activeModule.value
+  if (!m) return null
+  const url = m.content_url
+  if (url && !isYouTube.value) return getEmbedUrl(url)
+  // Fallback: konten di-upload sebagai file (PDF/gambar/dll) → sajikan inline
+  if (!url && m.has_content_file) return `/web/v1/lms/module/${m.id}/content`
+  return null
 })
 
 function getEmbedUrl(url) {

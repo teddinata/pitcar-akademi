@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen p-4 md:p-6" style="background:#f0f1f5">
     <!-- Header -->
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Dashboard LMS</h1>
+      <h1 class="text-2xl font-bold text-gray-800">Dashboard LMS</h1>
       <p class="text-sm text-gray-500 mt-1">Ringkasan aktivitas pembelajaran Anda</p>
     </div>
 
@@ -12,10 +12,8 @@
         v-for="tab in tabs"
         :key="tab.key"
         @click="activeTab = tab.key; load()"
-        class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all"
-        :class="activeTab === tab.key
-          ? 'bg-blue-600 text-white shadow'
-          : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'"
+        class="px-4 py-2 text-sm whitespace-nowrap clay-pill"
+        :class="activeTab === tab.key ? 'clay-pill-active' : ''"
       >
         {{ tab.label }}
       </button>
@@ -36,31 +34,39 @@
     <template v-else-if="activeTab === 'my'">
       <!-- Stats Grid -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Terdaftar</p>
-          <p class="text-2xl font-bold text-blue-600 mt-1">{{ data?.stats?.total_enrollments ?? 0 }}</p>
-          <p class="text-xs text-gray-400 mt-0.5">kursus</p>
+        <div class="clay-tile clay-tile-sky flex items-center gap-3">
+          <div class="clay-icon w-12 h-12 bg-white/70 text-blue-600 shrink-0"><BookOpenIcon class="w-6 h-6" /></div>
+          <div>
+            <p class="text-3xl font-extrabold text-blue-700 leading-none">{{ data?.stats?.total_enrollments ?? 0 }}</p>
+            <p class="text-xs text-blue-900/60 font-semibold mt-1">Kursus Terdaftar</p>
+          </div>
         </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Selesai</p>
-          <p class="text-2xl font-bold text-green-600 mt-1">{{ data?.stats?.completed_courses ?? 0 }}</p>
-          <p class="text-xs text-gray-400 mt-0.5">kursus</p>
+        <div class="clay-tile clay-tile-mint flex items-center gap-3">
+          <div class="clay-icon w-12 h-12 bg-white/70 text-emerald-600 shrink-0"><CheckBadgeIcon class="w-6 h-6" /></div>
+          <div>
+            <p class="text-3xl font-extrabold text-emerald-700 leading-none">{{ data?.stats?.completed_courses ?? 0 }}</p>
+            <p class="text-xs text-emerald-900/60 font-semibold mt-1">Kursus Selesai</p>
+          </div>
         </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Lencana</p>
-          <p class="text-2xl font-bold text-yellow-500 mt-1">{{ data?.stats?.badges_earned ?? 0 }}</p>
-          <p class="text-xs text-gray-400 mt-0.5">diperoleh</p>
+        <div class="clay-tile clay-tile-sun flex items-center gap-3">
+          <div class="clay-icon w-12 h-12 bg-white/70 text-amber-500 shrink-0"><TrophyIcon class="w-6 h-6" /></div>
+          <div>
+            <p class="text-3xl font-extrabold text-amber-600 leading-none">{{ data?.stats?.badges_earned ?? 0 }}</p>
+            <p class="text-xs text-amber-900/60 font-semibold mt-1">Lencana</p>
+          </div>
         </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Kompetensi</p>
-          <p class="text-2xl font-bold text-purple-600 mt-1">{{ data?.stats?.competencies_achieved ?? 0 }}</p>
-          <p class="text-xs text-gray-400 mt-0.5">dicapai</p>
+        <div class="clay-tile clay-tile-grape flex items-center gap-3">
+          <div class="clay-icon w-12 h-12 bg-white/70 text-purple-600 shrink-0"><StarIcon class="w-6 h-6" /></div>
+          <div>
+            <p class="text-3xl font-extrabold text-purple-700 leading-none">{{ data?.stats?.competencies_achieved ?? 0 }}</p>
+            <p class="text-xs text-purple-900/60 font-semibold mt-1">Kompetensi</p>
+          </div>
         </div>
       </div>
 
       <!-- Active Enrollments -->
       <div class="grid md:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="clay-card overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100">
             <h2 class="font-semibold text-gray-800">Kursus Aktif</h2>
           </div>
@@ -84,7 +90,7 @@
         </div>
 
         <!-- Recommendations -->
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="clay-card overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100">
             <h2 class="font-semibold text-gray-800">Rekomendasi Kursus</h2>
           </div>
@@ -109,7 +115,7 @@
       </div>
 
       <!-- Recent Activity -->
-      <div v-if="data?.recent_activity?.length" class="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-if="data?.recent_activity?.length" class="mt-6 clay-card overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="font-semibold text-gray-800">Aktivitas Terbaru</h2>
         </div>
@@ -132,12 +138,12 @@
     <!-- Manager Dashboard -->
     <template v-else-if="activeTab === 'manager'">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div v-for="stat in managerStats" :key="stat.label" class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+        <div v-for="stat in managerStats" :key="stat.label" class="clay-card-sm p-4">
           <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">{{ stat.label }}</p>
           <p class="text-2xl font-bold mt-1" :class="stat.color">{{ stat.value }}</p>
         </div>
       </div>
-      <div v-if="data?.team_members?.length" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-if="data?.team_members?.length" class="clay-card overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="font-semibold text-gray-800">Anggota Tim</h2>
         </div>
@@ -167,7 +173,7 @@
           </table>
         </div>
       </div>
-      <div v-else class="bg-white rounded-xl p-10 text-center text-gray-400 border border-gray-100 shadow-sm">
+      <div v-else class="clay-card p-10 text-center text-gray-400">
         Tidak ada data tim
       </div>
     </template>
@@ -175,12 +181,12 @@
     <!-- Company Overview -->
     <template v-else-if="activeTab === 'company'">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div v-for="stat in companyStats" :key="stat.label" class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+        <div v-for="stat in companyStats" :key="stat.label" class="clay-card-sm p-4">
           <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">{{ stat.label }}</p>
           <p class="text-2xl font-bold mt-1" :class="stat.color">{{ stat.value }}</p>
         </div>
       </div>
-      <div v-if="data?.department_stats?.length" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-if="data?.department_stats?.length" class="clay-card overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="font-semibold text-gray-800">Per Departemen</h2>
         </div>
@@ -214,12 +220,12 @@
     <!-- Analytics -->
     <template v-else-if="activeTab === 'analytics'">
       <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        <div v-for="stat in analyticsStats" :key="stat.label" class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+        <div v-for="stat in analyticsStats" :key="stat.label" class="clay-card-sm p-4">
           <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">{{ stat.label }}</p>
           <p class="text-2xl font-bold mt-1 text-blue-600">{{ stat.value }}</p>
         </div>
       </div>
-      <div v-if="data?.top_courses?.length" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-if="data?.top_courses?.length" class="clay-card overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="font-semibold text-gray-800">Kursus Terpopuler</h2>
         </div>
@@ -238,6 +244,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { lmsApi } from '../../services/lmsApi'
+import { BookOpenIcon, CheckBadgeIcon, TrophyIcon, StarIcon } from '@heroicons/vue/24/outline'
 
 const authStore = useAuthStore()
 const loading = ref(false)
