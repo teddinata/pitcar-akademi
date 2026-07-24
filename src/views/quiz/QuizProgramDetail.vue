@@ -222,13 +222,20 @@
             <h2 class="font-bold text-gray-900">Quiz Banks</h2>
             <p class="text-xs text-gray-500 mt-0.5">Daftar quiz banks dalam program ini</p>
           </div>
-          <button
-            v-if="program.state === 'draft'"
-            @click="router.push(`/dashboard/quiz/manage/new?program_id=${program.id}`)"
-            class="w-full sm:w-auto justify-center flex items-center px-4 py-2.5 text-sm font-semibold bg-[#B70000] text-white rounded-lg hover:bg-[#950000] transition-colors min-h-[44px]"
-          >
-            + Tambah Quiz Bank
-          </button>
+          <div v-if="program.state === 'draft'" class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <button
+              @click="openAttachModal"
+              class="w-full sm:w-auto justify-center flex items-center gap-1 px-4 py-2.5 text-sm font-semibold text-[#B70000] bg-red-50 rounded-2xl hover:bg-red-100 transition-all min-h-[44px] shadow-[3px_3px_8px_rgba(183,0,0,0.12),-3px_-3px_8px_rgba(255,255,255,0.9)]"
+            >
+              + Dari yang Ada
+            </button>
+            <button
+              @click="router.push(`/dashboard/quiz/manage/new?program_id=${program.id}`)"
+              class="w-full sm:w-auto justify-center flex items-center px-4 py-2.5 text-sm font-semibold bg-[#B70000] text-white rounded-2xl hover:bg-[#950000] transition-all min-h-[44px] shadow-[4px_4px_10px_rgba(183,0,0,0.25),-2px_-2px_6px_rgba(255,255,255,0.5)]"
+            >
+              + Buat Baru
+            </button>
+          </div>
         </div>
 
         <div v-if="!program.banks || program.banks.length === 0" class="p-12 text-center">
@@ -670,6 +677,59 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Attach Existing Bank Modal (claymorphism) -->
+    <Teleport to="body">
+      <div v-if="attachOpen" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" @click.self="attachOpen = false">
+        <div class="w-full max-w-lg max-h-[85vh] flex flex-col rounded-3xl bg-[#f0f1f5] p-6 shadow-[10px_10px_24px_rgba(174,174,192,0.5),-10px_-10px_24px_rgba(255,255,255,0.9)]">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-bold text-gray-800">Tambah dari Quiz Bank yang Ada</h3>
+              <p class="text-xs text-gray-500 mt-0.5">Menautkan bank yang sudah ada — tidak membuat salinan</p>
+            </div>
+            <button @click="attachOpen = false" class="w-9 h-9 flex items-center justify-center rounded-2xl bg-[#f0f1f5] text-gray-500 shadow-[3px_3px_6px_rgba(174,174,192,0.5),-3px_-3px_6px_rgba(255,255,255,0.9)] active:shadow-[inset_2px_2px_4px_rgba(174,174,192,0.5),inset_-2px_-2px_4px_rgba(255,255,255,0.9)]">✕</button>
+          </div>
+
+          <div v-if="attachLoading" class="py-10 text-center text-gray-400 text-sm">Memuat daftar quiz...</div>
+          <div v-else-if="!availableBanks.length" class="py-10 text-center text-gray-400 text-sm">
+            Tidak ada quiz bank lain yang bisa ditambahkan.
+          </div>
+          <div v-else class="flex-1 overflow-y-auto space-y-2 pr-1">
+            <label
+              v-for="b in availableBanks"
+              :key="b.id"
+              class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all bg-[#f0f1f5]"
+              :class="attachSelected.includes(b.id)
+                ? 'shadow-[inset_3px_3px_7px_rgba(174,174,192,0.6),inset_-3px_-3px_7px_rgba(255,255,255,0.9)]'
+                : 'shadow-[4px_4px_10px_rgba(174,174,192,0.4),-4px_-4px_10px_rgba(255,255,255,0.85)]'"
+            >
+              <input type="checkbox" :value="b.id" v-model="attachSelected" class="w-4 h-4 accent-[#B70000]" />
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-800 truncate">{{ b.name }}</p>
+                <p class="text-xs text-gray-500">
+                  {{ b.question_count }} soal · {{ bankStateLabel(b.state) }}
+                  <span v-if="b.current_program"> · saat ini di: {{ b.current_program }}</span>
+                  <span v-else> · standalone</span>
+                </p>
+              </div>
+            </label>
+          </div>
+
+          <div v-if="attachError" class="mt-3 px-3 py-2.5 rounded-2xl bg-red-50 text-sm text-red-700">{{ attachError }}</div>
+
+          <div class="flex gap-3 pt-4">
+            <button @click="attachOpen = false" class="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-gray-600 bg-[#f0f1f5] shadow-[4px_4px_10px_rgba(174,174,192,0.5),-4px_-4px_10px_rgba(255,255,255,0.9)] active:shadow-[inset_3px_3px_6px_rgba(174,174,192,0.6),inset_-3px_-3px_6px_rgba(255,255,255,0.9)]">Batal</button>
+            <button
+              @click="doAttach"
+              :disabled="attaching || !attachSelected.length"
+              class="flex-1 py-2.5 rounded-2xl text-sm font-bold text-white bg-[#B70000] disabled:opacity-50 shadow-[4px_4px_12px_rgba(183,0,0,0.35),-2px_-2px_6px_rgba(255,255,255,0.5)] active:shadow-[inset_2px_2px_6px_rgba(0,0,0,0.25)]"
+            >
+              {{ attaching ? 'Menambahkan...' : `Tambahkan (${attachSelected.length})` }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -769,6 +829,45 @@ async function doCopy() {
     copyError.value = e.message || 'Gagal menyalin quiz'
   } finally {
     copying.value = false
+  }
+}
+
+// ── Attach existing bank ──────────────────────────────────────────────
+const attachOpen = ref(false)
+const attachLoading = ref(false)
+const availableBanks = ref([])
+const attachSelected = ref([])
+const attaching = ref(false)
+const attachError = ref('')
+
+async function openAttachModal() {
+  attachOpen.value = true
+  attachLoading.value = true
+  attachSelected.value = []
+  attachError.value = ''
+  availableBanks.value = []
+  try {
+    const res = await quizApi.programAvailableBanks(route.params.id)
+    availableBanks.value = res?.banks || []
+  } catch (e) {
+    attachError.value = e.message || 'Gagal memuat daftar quiz'
+  } finally {
+    attachLoading.value = false
+  }
+}
+
+async function doAttach() {
+  if (!attachSelected.value.length) return
+  attaching.value = true
+  attachError.value = ''
+  try {
+    await quizApi.programAttachBanks(route.params.id, attachSelected.value)
+    attachOpen.value = false
+    await load()
+  } catch (e) {
+    attachError.value = e.message || 'Gagal menambahkan quiz bank'
+  } finally {
+    attaching.value = false
   }
 }
 

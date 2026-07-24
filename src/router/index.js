@@ -158,6 +158,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/analytics',
+    name: 'AnalyticsOverview',
+    component: () => import('../views/lms/AnalyticsOverview.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/lms/categories',
     name: 'LmsCategories',
     component: () => import('../views/lms/LmsCategories.vue'),

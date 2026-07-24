@@ -22,57 +22,75 @@
     <!-- Scrollable nav -->
     <nav class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-4 px-3 space-y-1">
 
-      <!-- ── LMS SECTION ── -->
+      <!-- ── BELAJAR SECTION ── -->
       <div class="mb-4">
         <div
           class="flex items-center px-3 h-9 text-xs font-bold uppercase tracking-wider mb-1 cursor-pointer rounded-lg transition-all duration-200"
           :class="[
             isExpanded ? 'justify-between' : 'justify-center',
-            showLms || isLmsRoute ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'
+            showBelajar || belajarActive ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'
           ]"
-          @click="toggleLms"
+          @click="toggleBelajar"
         >
           <div class="flex items-center gap-3">
             <AcademicCapIcon class="w-5 h-5 shrink-0" />
-            <span
-              class="transition-all duration-300 overflow-hidden"
-              :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'"
-            >
-              LMS
-            </span>
+            <span class="transition-all duration-300 overflow-hidden" :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Belajar</span>
           </div>
-          <ChevronDownIcon
-            v-if="isExpanded"
-            class="w-4 h-4 transition-transform duration-200"
-            :class="showLms ? 'rotate-180' : ''"
-          />
+          <ChevronDownIcon v-if="isExpanded" class="w-4 h-4 transition-transform duration-200" :class="showBelajar ? 'rotate-180' : ''" />
         </div>
-
-        <!-- Expanded submenu -->
-        <div v-show="showLms && isExpanded" class="space-y-0.5 pl-2">
-          <template v-for="item in filteredLmsItems" :key="item.path || item.label">
-            <div v-if="item.divider" class="pt-3 pb-1 px-1">
-              <p class="text-[9px] font-bold uppercase tracking-widest text-gray-400 px-2">{{ item.label }}</p>
-              <div class="h-px bg-gray-100 mt-1.5"></div>
-            </div>
-            <NavItem
-              v-else
-              :item="item"
-              :is-expanded="isExpanded"
-              active-class="lms-active"
-            />
-          </template>
+        <div v-show="showBelajar && isExpanded" class="space-y-0.5 pl-2">
+          <NavItem v-for="item in filteredBelajarItems" :key="item.path" :item="item" :is-expanded="isExpanded" active-class="lms-active" />
         </div>
-
-        <!-- Collapsed: icons only (no dividers) -->
         <div v-show="!isExpanded" class="space-y-0.5">
-          <NavItem
-            v-for="item in filteredLmsItems.filter(i => !i.divider)"
-            :key="`lc-${item.path}`"
-            :item="item"
-            :is-expanded="false"
-            active-class="lms-active"
-          />
+          <NavItem v-for="item in filteredBelajarItems" :key="`bc-${item.path}`" :item="item" :is-expanded="false" active-class="lms-active" />
+        </div>
+      </div>
+
+      <!-- ── KELOLA SECTION (admin) ── -->
+      <div v-if="filteredKelolaItems.length" class="mb-4">
+        <div
+          class="flex items-center px-3 h-9 text-xs font-bold uppercase tracking-wider mb-1 cursor-pointer rounded-lg transition-all duration-200"
+          :class="[
+            isExpanded ? 'justify-between' : 'justify-center',
+            showKelola || kelolaActive ? 'text-[#B70000]' : 'text-gray-400 hover:text-[#B70000]'
+          ]"
+          @click="toggleKelola"
+        >
+          <div class="flex items-center gap-3">
+            <Cog6ToothIcon class="w-5 h-5 shrink-0" />
+            <span class="transition-all duration-300 overflow-hidden" :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Kelola Konten</span>
+          </div>
+          <ChevronDownIcon v-if="isExpanded" class="w-4 h-4 transition-transform duration-200" :class="showKelola ? 'rotate-180' : ''" />
+        </div>
+        <div v-show="showKelola && isExpanded" class="space-y-0.5 pl-2">
+          <NavItem v-for="item in filteredKelolaItems" :key="item.path" :item="item" :is-expanded="isExpanded" active-class="assessment-active" />
+        </div>
+        <div v-show="!isExpanded" class="space-y-0.5">
+          <NavItem v-for="item in filteredKelolaItems" :key="`kc-${item.path}`" :item="item" :is-expanded="false" active-class="assessment-active" />
+        </div>
+      </div>
+
+      <!-- ── ANALITIK SECTION (admin) ── -->
+      <div v-if="filteredAnalitikItems.length" class="mb-4">
+        <div
+          class="flex items-center px-3 h-9 text-xs font-bold uppercase tracking-wider mb-1 cursor-pointer rounded-lg transition-all duration-200"
+          :class="[
+            isExpanded ? 'justify-between' : 'justify-center',
+            showAnalitik || analitikActive ? 'text-indigo-600' : 'text-gray-400 hover:text-indigo-600'
+          ]"
+          @click="toggleAnalitik"
+        >
+          <div class="flex items-center gap-3">
+            <ChartBarSquareIcon class="w-5 h-5 shrink-0" />
+            <span class="transition-all duration-300 overflow-hidden" :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Analitik</span>
+          </div>
+          <ChevronDownIcon v-if="isExpanded" class="w-4 h-4 transition-transform duration-200" :class="showAnalitik ? 'rotate-180' : ''" />
+        </div>
+        <div v-show="showAnalitik && isExpanded" class="space-y-0.5 pl-2">
+          <NavItem v-for="item in filteredAnalitikItems" :key="item.path" :item="item" :is-expanded="isExpanded" active-class="lms-active" />
+        </div>
+        <div v-show="!isExpanded" class="space-y-0.5">
+          <NavItem v-for="item in filteredAnalitikItems" :key="`ac-${item.path}`" :item="item" :is-expanded="false" active-class="lms-active" />
         </div>
       </div>
 
@@ -126,55 +144,6 @@
             :item="item"
             :is-expanded="false"
             active-class="journey-active"
-          />
-        </div>
-      </div>
-
-      <!-- ── ASSESSMENT SECTION ── -->
-      <div class="mb-4">
-        <div
-          class="flex items-center px-3 h-9 text-xs font-bold uppercase tracking-wider mb-1 cursor-pointer rounded-lg transition-all duration-200"
-          :class="[
-            isExpanded ? 'justify-between' : 'justify-center',
-            showAssessment ? 'text-[#B70000]' : 'text-gray-400 hover:text-[#B70000]'
-          ]"
-          @click="toggleAssessment"
-        >
-          <div class="flex items-center gap-3">
-            <ClipboardDocumentListIcon class="w-5 h-5 shrink-0" />
-            <span
-              class="transition-all duration-300 overflow-hidden"
-              :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'"
-            >
-              Assessment
-            </span>
-          </div>
-          <ChevronDownIcon
-            v-if="isExpanded"
-            class="w-4 h-4 transition-transform duration-200"
-            :class="showAssessment ? 'rotate-180' : ''"
-          />
-        </div>
-
-        <!-- Expanded submenu -->
-        <div v-show="showAssessment && isExpanded" class="space-y-0.5 pl-2">
-          <NavItem
-            v-for="item in filteredAssessmentItems"
-            :key="item.path"
-            :item="item"
-            :is-expanded="isExpanded"
-            active-class="assessment-active"
-          />
-        </div>
-
-        <!-- Collapsed: icons only -->
-        <div v-show="!isExpanded" class="space-y-0.5">
-          <NavItem
-            v-for="item in filteredAssessmentItems"
-            :key="`c-${item.path}`"
-            :item="item"
-            :is-expanded="false"
-            active-class="assessment-active"
           />
         </div>
       </div>
@@ -598,6 +567,47 @@ const filteredAssessmentItems = computed(() => {
     )
   }
 })
+
+// ── IA baru: 3 grup berbasis peran (desktop) ──────────────────────────
+const belajarItems = [
+  { name: 'Beranda', icon: AcademicCapIcon, path: '/dashboard/lms', adminOnly: false },
+  { name: 'Kursus', icon: BookOpenIcon, path: '/dashboard/lms/courses', adminOnly: false },
+  { name: 'Quiz Saya', icon: ClipboardDocumentListIcon, path: '/dashboard/quiz', adminOnly: false },
+  { name: 'Riwayat Quiz', icon: ClockIcon, path: '/dashboard/quiz/history', adminOnly: false },
+  { name: 'Kompetensi', icon: StarIcon, path: '/dashboard/lms/competencies', adminOnly: false },
+  { name: 'Learning Path', icon: MapIcon, path: '/dashboard/lms/learning-paths', adminOnly: false },
+  { name: 'Lencana', icon: TrophyIcon, path: '/dashboard/lms/badges', adminOnly: false },
+]
+const kelolaItems = [
+  { name: 'Modul & Section', icon: PuzzlePieceIcon, path: '/dashboard/lms/modules', adminOnly: true },
+  { name: 'Kategori', icon: TagIcon, path: '/dashboard/lms/categories', adminOnly: true },
+  { name: 'Bank Quiz', icon: RectangleStackIcon, path: '/dashboard/quiz/manage', adminOnly: true },
+  { name: 'Program Quiz', icon: BuildingOffice2Icon, path: '/dashboard/quiz/program', adminOnly: true },
+]
+const analitikItems = [
+  { name: 'Ringkasan Akademi', icon: ChartBarSquareIcon, path: '/dashboard/analytics', adminOnly: true },
+  { name: 'Karyawan', icon: UsersIcon, path: '/dashboard/lms/employees', adminOnly: true },
+  { name: 'Analitik LMS', icon: PresentationChartLineIcon, path: '/dashboard/lms/analytics', adminOnly: true },
+  { name: 'Dashboard Quiz', icon: ChartBarSquareIcon, path: '/dashboard/quiz/admin', adminOnly: true },
+]
+const _isAdmin = () => authStore.user?.is_admin
+const filteredBelajarItems = computed(() => belajarItems)
+const filteredKelolaItems = computed(() => _isAdmin() ? kelolaItems : [])
+const filteredAnalitikItems = computed(() => _isAdmin() ? analitikItems : [])
+
+const showBelajar = ref(true)
+const showKelola = ref(false)
+const showAnalitik = ref(false)
+const toggleBelajar = () => { if (isExpanded.value) showBelajar.value = !showBelajar.value }
+const toggleKelola = () => { if (isExpanded.value) showKelola.value = !showKelola.value }
+const toggleAnalitik = () => { if (isExpanded.value) showAnalitik.value = !showAnalitik.value }
+
+function _groupActive(items) {
+  return items.some(i => route.path === i.path || route.path.startsWith(i.path + '/'))
+}
+const belajarActive = computed(() => _groupActive(belajarItems))
+const kelolaActive = computed(() => _groupActive(kelolaItems))
+const analitikActive = computed(() => _groupActive(analitikItems))
 
 const handleMouseEnter = () => { isExpanded.value = true }
 const handleMouseLeave = () => { isExpanded.value = false; showDropdown.value = false }

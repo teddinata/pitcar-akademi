@@ -17,6 +17,64 @@ body {
   }
 }
 
+/* ============================================================
+   Claymorphism theme — shared reusable classes.
+   Base surface #f0f1f5; soft double shadow (dark BR, light TL).
+   Terapkan bertahap: bungkus kartu dengan .clay-card, tombol
+   dengan .clay-btn / .clay-btn-primary, input/well dengan .clay-inset.
+   ============================================================ */
+@layer components {
+  .clay-surface { background: #f0f1f5; }
+
+  .clay-card {
+    background: #f0f1f5;
+    border-radius: 1.5rem;
+    box-shadow: 8px 8px 20px rgba(174, 174, 192, 0.45),
+                -8px -8px 20px rgba(255, 255, 255, 0.9);
+  }
+
+  .clay-card-sm {
+    background: #f0f1f5;
+    border-radius: 1.25rem;
+    box-shadow: 5px 5px 12px rgba(174, 174, 192, 0.4),
+                -5px -5px 12px rgba(255, 255, 255, 0.85);
+  }
+
+  .clay-inset {
+    background: #f0f1f5;
+    border-radius: 1rem;
+    box-shadow: inset 4px 4px 8px rgba(174, 174, 192, 0.5),
+                inset -4px -4px 8px rgba(255, 255, 255, 0.9);
+  }
+
+  .clay-btn {
+    border-radius: 1rem;
+    font-weight: 600;
+    background: #f0f1f5;
+    color: #374151;
+    transition: all 0.15s ease;
+    box-shadow: 5px 5px 12px rgba(174, 174, 192, 0.45),
+                -5px -5px 12px rgba(255, 255, 255, 0.9);
+  }
+  .clay-btn:hover { filter: brightness(0.99); }
+  .clay-btn:active {
+    box-shadow: inset 3px 3px 7px rgba(174, 174, 192, 0.6),
+                inset -3px -3px 7px rgba(255, 255, 255, 0.9);
+  }
+
+  .clay-btn-primary {
+    border-radius: 1rem;
+    font-weight: 700;
+    color: #fff;
+    background: #B70000;
+    transition: all 0.15s ease;
+    box-shadow: 5px 5px 14px rgba(183, 0, 0, 0.35),
+                -3px -3px 8px rgba(255, 255, 255, 0.5);
+  }
+  .clay-btn-primary:active { box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.28); }
+  .clay-btn-primary:disabled { opacity: 0.5; }
+}
+
 /* Global Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 6px;

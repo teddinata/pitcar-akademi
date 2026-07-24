@@ -77,6 +77,9 @@ export const quizApi = {
   programSummary: (programId) => call(`/web/quiz/program/${programId}/summary`),
   programStart: (programId) => call(`/web/quiz/program/${programId}/start`),
   programSubmit: (payload) => call('/web/quiz/program/submit', payload),
+  programAvailableBanks: (programId) => call(`/web/quiz/program/${programId}/available-banks`),
+  programAttachBanks: (programId, bankIds) =>
+    call(`/web/quiz/program/${programId}/attach-banks`, { bank_ids: bankIds }),
 
   // ── SESSION DETAIL (ADMIN) ───────────────────────────────────────────
   adminSessionDetail: (sessionId) =>

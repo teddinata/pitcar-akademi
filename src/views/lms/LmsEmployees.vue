@@ -117,12 +117,19 @@
         <table class="w-full text-sm">
           <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
-              <th class="px-4 py-3 text-left font-medium">Karyawan</th>
-              <th class="px-4 py-3 text-center font-medium">Departemen</th>
-              <th class="px-4 py-3 text-center font-medium">Enrolled</th>
-              <th class="px-4 py-3 text-center font-medium">Selesai</th>
-              <th class="px-4 py-3 text-center font-medium">Compliance</th>
-              <th class="px-4 py-3 text-center font-medium">Aksi</th>
+              <th rowspan="2" class="px-4 py-3 text-left font-medium align-bottom">Karyawan</th>
+              <th rowspan="2" class="px-4 py-3 text-center font-medium align-bottom">Departemen</th>
+              <th colspan="3" class="px-4 py-2 text-center font-semibold text-blue-600 border-b border-gray-100">Kursus LMS</th>
+              <th colspan="3" class="px-4 py-2 text-center font-semibold text-purple-600 border-b border-gray-100">Quiz SOP</th>
+              <th rowspan="2" class="px-4 py-3 text-center font-medium align-bottom">Aksi</th>
+            </tr>
+            <tr>
+              <th class="px-3 py-2 text-center font-medium">Enrolled</th>
+              <th class="px-3 py-2 text-center font-medium">Selesai</th>
+              <th class="px-3 py-2 text-center font-medium">Compliance</th>
+              <th class="px-3 py-2 text-center font-medium">Assigned</th>
+              <th class="px-3 py-2 text-center font-medium">Selesai</th>
+              <th class="px-3 py-2 text-center font-medium">%</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
@@ -132,13 +139,25 @@
                 <p class="text-xs text-gray-400 mt-0.5">{{ e.job_title }}</p>
               </td>
               <td class="px-4 py-3 text-center text-gray-500 text-xs">{{ e.department }}</td>
-              <td class="px-4 py-3 text-center text-blue-600 font-medium">{{ e.total_enrolled }}</td>
-              <td class="px-4 py-3 text-center text-green-600 font-medium">{{ e.completed }}</td>
-              <td class="px-4 py-3 text-center">
+              <td class="px-3 py-3 text-center text-blue-600 font-medium">{{ e.total_enrolled }}</td>
+              <td class="px-3 py-3 text-center text-green-600 font-medium">{{ e.completed }}</td>
+              <td class="px-3 py-3 text-center">
                 <span class="text-xs font-semibold px-2 py-1 rounded-full"
                   :class="e.compliance_rate >= 80 ? 'bg-green-100 text-green-700' : e.compliance_rate >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-500'">
                   {{ e.compliance_rate ?? 0 }}%
                 </span>
+              </td>
+              <td class="px-3 py-3 text-center text-gray-700 font-medium">
+                {{ e.quiz_assigned ?? 0 }}
+                <span v-if="e.quiz_overdue" class="ml-1 text-xs text-red-500" :title="e.quiz_overdue + ' terlambat'">⚠{{ e.quiz_overdue }}</span>
+              </td>
+              <td class="px-3 py-3 text-center text-green-600 font-medium">{{ e.quiz_done ?? 0 }}</td>
+              <td class="px-3 py-3 text-center">
+                <span v-if="e.quiz_completion !== null && e.quiz_completion !== undefined" class="text-xs font-semibold px-2 py-1 rounded-full"
+                  :class="e.quiz_completion >= 80 ? 'bg-green-100 text-green-700' : e.quiz_completion >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-500'">
+                  {{ e.quiz_completion }}%
+                </span>
+                <span v-else class="text-xs text-gray-300">—</span>
               </td>
               <td class="px-4 py-3 text-center">
                 <button
@@ -200,6 +219,40 @@
             </p>
           </div>
         </div>
+        <!-- Quiz SOP Periodik -->
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-800">Quiz SOP Periodik</h3>
+            <span v-if="data.quiz_summary" class="text-xs font-semibold px-2 py-0.5 rounded-full"
+              :class="(data.quiz_summary.completion ?? 0) >= 80 ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'">
+              {{ data.quiz_summary.done }}/{{ data.quiz_summary.assigned }} selesai
+              <template v-if="data.quiz_summary.completion !== null"> · {{ data.quiz_summary.completion }}%</template>
+            </span>
+          </div>
+          <div v-if="data.quiz_assignments?.length" class="divide-y divide-gray-50">
+            <div v-for="q in data.quiz_assignments" :key="q.id" class="px-5 py-3 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-medium text-gray-800 text-sm truncate">{{ q.quiz_name }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  <span v-if="q.period">Periode {{ q.period }}</span>
+                  <span v-if="q.deadline"> · Deadline {{ q.deadline }}</span>
+                  <span v-if="q.score !== null"> · Skor {{ Math.round(q.score) }}%</span>
+                </p>
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
+                :class="{
+                  'bg-green-50 text-green-700': q.state === 'done',
+                  'bg-blue-50 text-blue-600': q.state === 'in_progress',
+                  'bg-gray-100 text-gray-500': q.state === 'pending',
+                  'bg-red-50 text-red-600': q.state === 'overdue',
+                  'bg-gray-50 text-gray-400': q.state === 'excluded',
+                }"
+              >{{ { pending: 'Belum', in_progress: 'Sedang', done: 'Selesai', overdue: 'Terlambat', excluded: 'Dikecualikan' }[q.state] || q.state }}</span>
+            </div>
+          </div>
+          <div v-else class="px-5 py-6 text-center text-sm text-gray-400">Belum ada quiz SOP yang di-assign.</div>
+        </div>
+
         <!-- Kursus Sedang Berjalan -->
         <div v-if="data.current_enrollments?.length" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100">
