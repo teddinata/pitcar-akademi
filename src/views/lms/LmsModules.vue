@@ -184,10 +184,13 @@
                 <select v-model="form.quiz_bank_id" class="w-full border border-purple-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300">
                   <option :value="null">— Pilih quiz dari bank —</option>
                   <option v-for="q in courseQuizBanks" :key="q.id" :value="q.id">
-                    {{ q.name }} ({{ q.question_count }} soal · {{ quizStateLabel(q.state) }})
+                    {{ q.is_course_bank ? '📘' : '🗂️' }} {{ q.name }} ({{ q.question_count }} soal · {{ quizStateLabel(q.state) }})
                   </option>
                 </select>
                 <p v-if="quizBanksLoading" class="text-xs text-purple-400 mt-1">Memuat daftar quiz...</p>
+                <p v-else-if="quizBanksError" class="text-xs text-red-500 mt-1">{{ quizBanksError }}</p>
+                <p v-else-if="!courseQuizBanks.length" class="text-xs text-amber-600 mt-1">Belum ada quiz sama sekali. Buat quiz baru di bawah, atau buat di menu Bank Quiz dulu.</p>
+                <p v-else class="text-xs text-purple-400 mt-1">🗂️ = quiz SOP · 📘 = quiz kursus. Quiz harus berstatus "Aktif" agar bisa dikerjakan peserta.</p>
               </div>
 
               <!-- Create new quiz bank inline -->
@@ -523,6 +526,7 @@ const formSections = ref([])
 // Course quiz banks for the assessment picker
 const courseQuizBanks = ref([])
 const quizBanksLoading = ref(false)
+const quizBanksError = ref('')
 const newQuizName = ref('')
 const creatingQuiz = ref(false)
 
@@ -562,11 +566,16 @@ async function loadFormSections(courseId) {
 
 async function loadCourseQuizBanks() {
   quizBanksLoading.value = true
+  quizBanksError.value = ''
   try {
-    const res = await quizApi.adminList({ is_course_bank: true, limit: 200 })
+    // Tampilkan SEMUA quiz bank yang ada (course maupun SOP) supaya quiz yang
+    // sudah dibuat di menu Quiz Bank bisa langsung dipakai di modul kursus.
+    const res = await quizApi.adminList({ limit: 200 })
     courseQuizBanks.value = res?.quizzes ?? []
-  } catch { courseQuizBanks.value = [] }
-  finally { quizBanksLoading.value = false }
+  } catch (e) {
+    courseQuizBanks.value = []
+    quizBanksError.value = e.message || 'Gagal memuat daftar quiz'
+  } finally { quizBanksLoading.value = false }
 }
 
 function onFormCourseChange() {
