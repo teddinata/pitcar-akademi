@@ -137,7 +137,7 @@
               <td class="px-4 py-3">
                 <p class="font-medium text-gray-800">{{ e.name }}</p>
                 <p class="text-xs text-gray-400 mt-0.5">{{ e.job_title }}</p>
-                <p v-if="e.last_enrollment_date" class="text-[10px] text-blue-500 mt-0.5">Enroll terakhir: {{ fmtDate(e.last_enrollment_date) }}</p>
+                <p v-if="e.last_activity_date" class="text-[10px] text-blue-500 mt-0.5">Aktivitas terakhir: {{ fmtDate(e.last_activity_date) }}</p>
               </td>
               <td class="px-4 py-3 text-center text-gray-500 text-xs">{{ e.department }}</td>
               <td class="px-3 py-3 text-center text-blue-600 font-medium">{{ e.total_enrolled }}</td>

@@ -25,8 +25,8 @@
           <p class="text-3xl font-bold text-blue-600 mt-1">{{ lms.enrollments }}</p>
         </div>
         <div class="clay-card p-5">
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Karyawan</p>
-          <p class="text-3xl font-bold text-gray-800 mt-1">{{ lms.totalEmployees }}</p>
+          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Karyawan Enroll LMS</p>
+          <p class="text-3xl font-bold text-gray-800 mt-1">{{ lms.enrolledUsers }}<span class="text-base text-gray-400">/{{ lms.totalEmployees }}</span></p>
         </div>
         <div class="clay-card p-5">
           <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Kursus Selesai</p>
@@ -102,7 +102,7 @@ import { UsersIcon, PresentationChartLineIcon, ChartBarSquareIcon } from '@heroi
 
 const loading = ref(true)
 const partialError = ref(false)
-const lms = ref({ courses: 0, enrollments: 0, completed: 0, totalEmployees: 0 })
+const lms = ref({ courses: 0, enrollments: 0, completed: 0, totalEmployees: 0, enrolledUsers: 0 })
 const quiz = ref({ submissions: 0, passRate: 0, avgScore: 0, retraining: 0 })
 
 async function safe(fn) {
@@ -121,7 +121,10 @@ onMounted(async () => {
   if (courseRes?.pagination) lms.value.courses = courseRes.pagination.total ?? 0
   if (enrollRes?.pagination) lms.value.enrollments = enrollRes.pagination.total ?? 0
   if (doneRes?.pagination) lms.value.completed = doneRes.pagination.total ?? 0
-  if (compRes) lms.value.totalEmployees = compRes.total_employees ?? 0
+  if (compRes) {
+    lms.value.totalEmployees = compRes.total_employees ?? 0
+    lms.value.enrolledUsers = compRes.enrolled_users ?? 0
+  }
   if (quizRes?.summary) {
     const s = quizRes.summary
     quiz.value.submissions = s.total_submissions ?? 0
