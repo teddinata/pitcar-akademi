@@ -39,6 +39,10 @@ export const lmsApi = {
     call('/web/v1/lms/courses', { operation: 'update', ...params }),
   courseDelete: (params) =>
     call('/web/v1/lms/courses', { operation: 'delete', ...params }),
+  courseArchive: (params) =>
+    call('/web/v1/lms/courses', { operation: 'archive', ...params }),
+  courseUnarchive: (params) =>
+    call('/web/v1/lms/courses', { operation: 'unarchive', ...params }),
   coursePublish: (params) =>
     call('/web/v1/lms/courses', { operation: 'publish', ...params }),
   courseEnroll: (params) =>

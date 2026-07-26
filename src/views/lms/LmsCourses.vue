@@ -44,6 +44,16 @@
         <option :value="true">Published</option>
         <option :value="false">Draft</option>
       </select>
+      <select
+        v-if="authStore.user?.is_admin"
+        v-model="filters.archived"
+        @change="load"
+        class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+      >
+        <option value="">Kursus Aktif</option>
+        <option value="only">Diarsipkan</option>
+        <option value="all">Semua (+ Arsip)</option>
+      </select>
     </div>
 
     <!-- Loading -->
@@ -76,6 +86,7 @@
           <div class="flex items-start justify-between gap-2 mb-2">
             <h3 class="font-semibold text-gray-900 text-sm leading-snug">{{ course.name }}</h3>
             <div class="flex flex-col items-end gap-1 shrink-0">
+              <span v-if="course.active === false" class="text-[10px] px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full font-bold">📦 Arsip</span>
               <span v-if="!course.is_published" class="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold border border-amber-200">Draft</span>
               <span v-if="statusOf(course) === 'completed'" class="text-[10px] px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-bold">✓ Selesai</span>
               <span v-else-if="statusOf(course) === 'in_progress'" class="text-[10px] px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full font-bold">Sedang</span>
@@ -110,55 +121,73 @@
           </div>
 
           <div class="flex gap-2 mt-auto">
-            <!-- Not enrolled -->
-            <button
-              v-if="!enr(course)"
-              @click="enrollCourse(course)"
-              :disabled="enrolling === course.id"
-              class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >{{ enrolling === course.id ? 'Mendaftar...' : 'Daftar' }}</button>
-            <!-- not_started -->
-            <button
-              v-else-if="statusOf(course) === 'not_started'"
-              @click="goLearn(course)"
-              class="flex-1 py-2 bg-green-600 text-white rounded-xl text-xs font-semibold hover:bg-green-700 transition-colors"
-            >Mulai Belajar</button>
-            <!-- in_progress -->
-            <button
-              v-else-if="statusOf(course) === 'in_progress'"
-              @click="goLearn(course)"
-              class="flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-colors"
-            >Lanjutkan →</button>
-            <!-- completed → tetap bisa diakses (tinjau ulang) -->
-            <button
-              v-else-if="statusOf(course) === 'completed'"
-              @click="goLearn(course)"
-              class="flex-1 py-2 rounded-xl text-xs font-semibold text-green-700 bg-green-50 border border-green-300 hover:bg-green-100 transition-colors flex items-center justify-center gap-1.5"
-            >
-              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-              Belajar Lagi
-            </button>
-            <template v-if="authStore.user?.is_admin">
+            <!-- ARSIP: aksi pulihkan / hapus permanen -->
+            <template v-if="course.active === false">
               <button
-                @click="openEditModal(course)"
-                class="px-3 py-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
-              >
-                <PencilIcon class="w-3.5 h-3.5" />
-              </button>
+                v-if="authStore.user?.is_admin"
+                @click="unarchiveCourse(course)"
+                class="flex-1 py-2 bg-green-600 text-white rounded-xl text-xs font-semibold hover:bg-green-700 transition-colors"
+              >↩ Pulihkan</button>
               <button
-                @click="togglePublish(course)"
-                class="px-3 py-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
-                :title="course.is_published ? 'Unpublish' : 'Publish'"
-              >
-                <EyeIcon v-if="course.is_published" class="w-3.5 h-3.5 text-green-500" />
-                <EyeSlashIcon v-else class="w-3.5 h-3.5 text-gray-400" />
-              </button>
-              <button
+                v-if="authStore.user?.is_admin"
                 @click="deleteCourse(course)"
                 class="px-3 py-1.5 border border-red-100 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+                title="Hapus permanen (hanya jika tanpa enrollment)"
               >
                 <TrashIcon class="w-3.5 h-3.5" />
               </button>
+            </template>
+
+            <!-- AKTIF: aksi belajar + kelola -->
+            <template v-else>
+              <!-- Not enrolled -->
+              <button
+                v-if="!enr(course)"
+                @click="enrollCourse(course)"
+                :disabled="enrolling === course.id"
+                class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >{{ enrolling === course.id ? 'Mendaftar...' : 'Daftar' }}</button>
+              <button
+                v-else-if="statusOf(course) === 'not_started'"
+                @click="goLearn(course)"
+                class="flex-1 py-2 bg-green-600 text-white rounded-xl text-xs font-semibold hover:bg-green-700 transition-colors"
+              >Mulai Belajar</button>
+              <button
+                v-else-if="statusOf(course) === 'in_progress'"
+                @click="goLearn(course)"
+                class="flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-colors"
+              >Lanjutkan →</button>
+              <button
+                v-else-if="statusOf(course) === 'completed'"
+                @click="goLearn(course)"
+                class="flex-1 py-2 rounded-xl text-xs font-semibold text-green-700 bg-green-50 border border-green-300 hover:bg-green-100 transition-colors flex items-center justify-center gap-1.5"
+              >
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                Belajar Lagi
+              </button>
+              <template v-if="authStore.user?.is_admin">
+                <button
+                  @click="openEditModal(course)"
+                  class="px-3 py-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
+                >
+                  <PencilIcon class="w-3.5 h-3.5" />
+                </button>
+                <button
+                  @click="togglePublish(course)"
+                  class="px-3 py-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
+                  :title="course.is_published ? 'Unpublish' : 'Publish'"
+                >
+                  <EyeIcon v-if="course.is_published" class="w-3.5 h-3.5 text-green-500" />
+                  <EyeSlashIcon v-else class="w-3.5 h-3.5 text-gray-400" />
+                </button>
+                <button
+                  @click="archiveCourse(course)"
+                  class="px-3 py-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                  title="Arsipkan"
+                >
+                  <ArchiveBoxIcon class="w-3.5 h-3.5" />
+                </button>
+              </template>
             </template>
           </div>
         </div>
@@ -187,7 +216,7 @@
         class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
         @click.self="closeModal"
       >
-        <div class="clay-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="glass-modal w-full max-w-lg max-h-[90vh] overflow-y-auto">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900">{{ editTarget ? 'Edit Kursus' : 'Tambah Kursus' }}</h2>
             <button @click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
@@ -320,7 +349,7 @@ import { useAuthStore } from '../../stores/auth'
 import { lmsApi } from '../../services/lmsApi'
 import {
   BookOpenIcon, PlusIcon, PencilIcon, TrashIcon,
-  EyeIcon, EyeSlashIcon, XMarkIcon,
+  EyeIcon, EyeSlashIcon, XMarkIcon, ArchiveBoxIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -338,7 +367,7 @@ const editTarget = ref(null)
 const saving = ref(false)
 const modalError = ref('')
 
-const filters = reactive({ search: '', difficulty_level: '', is_published: null })
+const filters = reactive({ search: '', difficulty_level: '', is_published: null, archived: '' })
 const form = reactive({
   name: '', code: '', category_id: null, description: '',
   short_description: '', difficulty_level: 'basic',
@@ -401,6 +430,7 @@ async function load() {
     if (filters.search) params.search = filters.search
     if (filters.difficulty_level) params.difficulty_level = filters.difficulty_level
     if (filters.is_published !== null) params.is_published = filters.is_published
+    if (filters.archived) params.archived = filters.archived
     const res = await lmsApi.courseSearch(params)
     courses.value = res?.courses ?? []
     const p = res?.pagination ?? {}
@@ -473,13 +503,34 @@ async function togglePublish(course) {
 }
 
 async function deleteCourse(course) {
-  if (!confirm(`Hapus kursus "${course.name}"?`)) return
+  if (!confirm(`Hapus PERMANEN kursus "${course.name}"? Tidak bisa dibatalkan. (Hanya bisa kalau tanpa enrollment — kalau ada peserta, gunakan Arsipkan.)`)) return
   try {
     await lmsApi.courseDelete({ course_id: course.id })
-    showToast('Kursus dihapus')
+    showToast('Kursus dihapus permanen')
     load()
   } catch (e) {
     showToast(e.message || 'Gagal menghapus kursus')
+  }
+}
+
+async function archiveCourse(course) {
+  if (!confirm(`Arsipkan kursus "${course.name}"? Kursus disembunyikan tapi data & enrollment tetap tersimpan.`)) return
+  try {
+    await lmsApi.courseArchive({ course_id: course.id })
+    showToast('Kursus diarsipkan')
+    load()
+  } catch (e) {
+    showToast(e.message || 'Gagal mengarsipkan kursus')
+  }
+}
+
+async function unarchiveCourse(course) {
+  try {
+    await lmsApi.courseUnarchive({ course_id: course.id })
+    showToast('Kursus dipulihkan')
+    load()
+  } catch (e) {
+    showToast(e.message || 'Gagal memulihkan kursus')
   }
 }
 
