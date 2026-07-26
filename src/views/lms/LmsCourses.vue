@@ -75,7 +75,11 @@
         <div class="p-4 flex-1 flex flex-col">
           <div class="flex items-start justify-between gap-2 mb-2">
             <h3 class="font-semibold text-gray-900 text-sm leading-snug">{{ course.name }}</h3>
-            <span v-if="!course.is_published" class="shrink-0 text-[10px] px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold border border-amber-200">Draft</span>
+            <div class="flex flex-col items-end gap-1 shrink-0">
+              <span v-if="!course.is_published" class="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold border border-amber-200">Draft</span>
+              <span v-if="statusOf(course) === 'completed'" class="text-[10px] px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-bold">✓ Selesai</span>
+              <span v-else-if="statusOf(course) === 'in_progress'" class="text-[10px] px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full font-bold">Sedang</span>
+            </div>
           </div>
           <p class="text-xs text-gray-400 mb-1">{{ course.category || '—' }}</p>
           <p class="text-xs text-gray-500 line-clamp-2 mb-3 flex-1">{{ course.description || 'Tidak ada deskripsi' }}</p>
@@ -87,37 +91,53 @@
             <span>{{ course.duration_hours }}j · {{ course.module_count }} modul</span>
           </div>
 
-          <div class="flex items-center gap-2 text-xs text-gray-400 mb-4">
+          <div class="flex items-center gap-2 text-xs text-gray-400 mb-3">
             <span>{{ course.enrollment_count }} peserta</span>
             <span>·</span>
             <span>{{ course.completion_rate }}% selesai</span>
           </div>
 
+          <!-- Progres pribadi (kalau sudah enroll) -->
+          <div v-if="enr(course)" class="mb-4">
+            <div class="h-1.5 bg-black/5 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all"
+                :class="statusOf(course) === 'completed' ? 'bg-green-500' : 'bg-indigo-500'"
+                :style="{ width: Math.round(enr(course).progress_percentage || 0) + '%' }"
+              ></div>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1">Progresmu: {{ Math.round(enr(course).progress_percentage || 0) }}%</p>
+          </div>
+
           <div class="flex gap-2 mt-auto">
             <!-- Not enrolled -->
             <button
-              v-if="!enrollmentMap[course.name]"
+              v-if="!enr(course)"
               @click="enrollCourse(course)"
               :disabled="enrolling === course.id"
-              class="flex-1 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              class="flex-1 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
             >{{ enrolling === course.id ? 'Mendaftar...' : 'Daftar' }}</button>
             <!-- not_started -->
             <button
-              v-else-if="enrollmentMap[course.name]?.status === 'not_started'"
+              v-else-if="statusOf(course) === 'not_started'"
               @click="goLearn(course)"
-              class="flex-1 py-1.5 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors"
+              class="flex-1 py-2 bg-green-600 text-white rounded-xl text-xs font-semibold hover:bg-green-700 transition-colors"
             >Mulai Belajar</button>
             <!-- in_progress -->
             <button
-              v-else-if="enrollmentMap[course.name]?.status === 'in_progress'"
+              v-else-if="statusOf(course) === 'in_progress'"
               @click="goLearn(course)"
-              class="flex-1 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors"
+              class="flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-colors"
             >Lanjutkan →</button>
-            <!-- completed -->
-            <div
-              v-else-if="enrollmentMap[course.name]?.status === 'completed'"
-              class="flex-1 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-semibold text-center border border-green-200"
-            >✓ Selesai</div>
+            <!-- completed → tetap bisa diakses (tinjau ulang) -->
+            <button
+              v-else-if="statusOf(course) === 'completed'"
+              @click="goLearn(course)"
+              class="flex-1 py-2 rounded-xl text-xs font-semibold text-green-700 bg-green-50 border border-green-300 hover:bg-green-100 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+              Belajar Lagi
+            </button>
             <template v-if="authStore.user?.is_admin">
               <button
                 @click="openEditModal(course)"
@@ -409,6 +429,14 @@ async function loadEnrollmentMap() {
   } catch (_) {
     // non-critical, enrollment status just won't show
   }
+}
+
+// Enrollment milik user untuk course ini (atau undefined)
+function enr(course) {
+  return enrollmentMap.value[course.name]
+}
+function statusOf(course) {
+  return enrollmentMap.value[course.name]?.status
 }
 
 function goLearn(course) {
