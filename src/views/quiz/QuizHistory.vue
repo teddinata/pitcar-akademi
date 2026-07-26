@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen clay-surface">
     <!-- Header -->
     <div class="bg-gradient-to-r from-[#B70000] to-[#950000] px-6 pt-8 pb-12 text-white">
       <button @click="router.push('/dashboard/quiz')" class="flex items-center gap-2 text-red-200 text-sm mb-4 hover:text-white transition-colors">
@@ -87,7 +87,7 @@
           v-for="item in filteredHistory"
           :key="item.result_id"
           @click="router.push(`/dashboard/quiz/result/${item.result_id}`)"
-          class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md transition-all active:scale-[0.99]"
+          class="clay-card p-4 cursor-pointer hover:shadow-md transition-all active:scale-[0.99]"
         >
           <div class="flex items-start gap-3">
             <div

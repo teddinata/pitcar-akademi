@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-full bg-gray-50">
     <!-- Header -->
-    <div class="bg-white border-b border-gray-200 px-6 py-4">
+    <div class="glass-header px-6 py-4">
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-xl font-bold text-gray-900">Manajemen Quiz Program</h1>
@@ -293,7 +293,7 @@
     <!-- Program Monitoring Modal -->
     <Teleport to="body">
       <div v-if="monitoringTarget" class="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto" @click.self="monitoringTarget = null">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl my-4" @click.stop>
+        <div class="clay-card w-full max-w-5xl my-4" @click.stop>
 
           <!-- Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -361,7 +361,7 @@
             <!-- Matrix table -->
             <div class="overflow-auto max-h-[60vh]">
               <table class="w-full text-xs min-w-max">
-                <thead class="sticky top-0 bg-white border-b border-gray-100 z-10">
+                <thead class="sticky top-0 glass-header z-10">
                   <tr>
                     <th class="px-4 py-3 text-left font-semibold text-gray-600 min-w-[180px]">Karyawan</th>
                     <th class="px-3 py-3 text-center font-semibold text-gray-500 min-w-[28px]">•</th>

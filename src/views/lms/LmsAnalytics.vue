@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900">Analitik LMS</h1>
       <p class="text-sm text-gray-500 mt-1">Laporan dan analisis pembelajaran</p>
@@ -11,15 +11,15 @@
         v-for="tab in tabs"
         :key="tab.key"
         @click="switchTab(tab.key)"
-        class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all"
-        :class="activeTab === tab.key ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'"
+        class="px-4 py-2 text-sm whitespace-nowrap clay-pill"
+        :class="activeTab === tab.key ? 'clay-pill-active' : ''"
       >
         {{ tab.label }}
       </button>
     </div>
 
     <!-- Filter row -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5 flex flex-wrap gap-3 items-start">
+    <div class="clay-card p-4 mb-5 flex flex-wrap gap-3 items-start">
 
       <!-- Per Kursus -->
       <template v-if="activeTab === 'course'">
@@ -103,7 +103,7 @@
         <StatCard label="Completion Rate" :value="(data.completion_rate ?? 0) + '%'" color="purple" />
         <StatCard label="Skor Rata-rata" :value="data.average_score ?? 0" color="yellow" />
       </div>
-      <div v-if="data.course_breakdown?.length" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-if="data.course_breakdown?.length" class="clay-card overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="font-semibold text-gray-800">Breakdown per Kursus</h2>
         </div>
@@ -142,7 +142,7 @@
         <StatCard label="Total Poin" :value="data.total_points ?? 0" color="purple" />
         <StatCard label="Lencana" :value="data.total_badges ?? 0" color="yellow" />
       </div>
-      <div v-if="data.user_list?.length" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-if="data.user_list?.length" class="clay-card overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="font-semibold text-gray-800">Detail per Karyawan</h2>
         </div>
@@ -173,7 +173,7 @@
 
     <!-- ── DEPARTMENT ANALYTICS ── -->
     <template v-else-if="activeTab === 'department'">
-      <div v-if="data.departments?.length" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-if="data.departments?.length" class="clay-card overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="font-semibold text-gray-800">Analytics per Departemen</h2>
         </div>
@@ -207,7 +207,7 @@
 
     <!-- ── TREND ANALYSIS ── -->
     <template v-else-if="activeTab === 'trend'">
-      <div v-if="data.trends?.length" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-if="data.trends?.length" class="clay-card overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="font-semibold text-gray-800">Trend — {{ metricLabel }}</h2>
         </div>
@@ -269,7 +269,7 @@ const StatCard = defineComponent({
       blue: 'text-blue-600', green: 'text-green-600',
       purple: 'text-purple-600', yellow: 'text-yellow-600',
     }
-    return () => h('div', { class: 'bg-white rounded-xl p-4 border border-gray-100 shadow-sm' }, [
+    return () => h('div', { class: 'clay-card-sm p-4' }, [
       h('p', { class: 'text-xs text-gray-500 font-medium uppercase tracking-wider' }, props.label),
       h('p', { class: `text-2xl font-bold mt-1 ${colorMap[props.color] || 'text-gray-800'}` }, String(props.value)),
     ])

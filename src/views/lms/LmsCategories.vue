@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Kategori Kursus</h1>
@@ -15,7 +15,7 @@
     </div>
 
     <!-- Search -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5">
+    <div class="clay-card p-4 mb-5">
       <input
         v-model="searchQuery"
         @input="debouncedLoad"
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div v-else class="clay-card overflow-hidden">
       <table class="w-full text-sm">
         <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
           <tr>
@@ -81,7 +81,7 @@
     <!-- Create/Edit Modal -->
     <Teleport to="body">
       <div v-if="showModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="closeModal">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div class="clay-card w-full max-w-md">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900">{{ editTarget ? 'Edit Kategori' : 'Tambah Kategori' }}</h2>
             <button @click="closeModal"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>

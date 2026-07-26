@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen clay-surface p-4 md:p-6" style="background:#f0f1f5">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-800">Ringkasan Akademi</h1>
       <p class="text-sm text-gray-500 mt-1">Pantau kursus LMS dan quiz SOP dalam satu tampilan</p>
@@ -25,12 +25,12 @@
           <p class="text-3xl font-bold text-blue-600 mt-1">{{ lms.enrollments }}</p>
         </div>
         <div class="clay-card p-5">
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Karyawan Compliant</p>
-          <p class="text-3xl font-bold text-green-600 mt-1">{{ lms.compliant }}<span class="text-base text-gray-400">/{{ lms.totalEmployees }}</span></p>
+          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Karyawan</p>
+          <p class="text-3xl font-bold text-gray-800 mt-1">{{ lms.totalEmployees }}</p>
         </div>
         <div class="clay-card p-5">
-          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Compliance Rate</p>
-          <p class="text-3xl font-bold mt-1" :class="lms.complianceRate >= 80 ? 'text-green-600' : 'text-amber-600'">{{ lms.complianceRate }}%</p>
+          <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Kursus Selesai</p>
+          <p class="text-3xl font-bold text-green-600 mt-1">{{ lms.completed }}<span class="text-base text-gray-400">/{{ lms.enrollments }}</span></p>
         </div>
       </div>
 
@@ -102,7 +102,7 @@ import { UsersIcon, PresentationChartLineIcon, ChartBarSquareIcon } from '@heroi
 
 const loading = ref(true)
 const partialError = ref(false)
-const lms = ref({ courses: 0, enrollments: 0, compliant: 0, totalEmployees: 0, complianceRate: 0 })
+const lms = ref({ courses: 0, enrollments: 0, completed: 0, totalEmployees: 0 })
 const quiz = ref({ submissions: 0, passRate: 0, avgScore: 0, retraining: 0 })
 
 async function safe(fn) {
@@ -110,22 +110,18 @@ async function safe(fn) {
 }
 
 onMounted(async () => {
-  const [courseRes, enrollRes, compRes, quizRes] = await Promise.all([
+  const [courseRes, enrollRes, doneRes, compRes, quizRes] = await Promise.all([
     safe(() => lmsApi.courseSearch({ limit: 1 })),
     safe(() => lmsApi.enrollmentSearch({ limit: 1 })),
+    safe(() => lmsApi.enrollmentSearch({ status: 'completed', limit: 1 })),
     safe(() => lmsApi.employeeComplianceReport({})),
     safe(() => quizApi.dashboard({})),
   ])
 
   if (courseRes?.pagination) lms.value.courses = courseRes.pagination.total ?? 0
   if (enrollRes?.pagination) lms.value.enrollments = enrollRes.pagination.total ?? 0
-  if (compRes) {
-    lms.value.compliant = compRes.compliant_employees ?? 0
-    lms.value.totalEmployees = compRes.total_employees ?? 0
-    lms.value.complianceRate = compRes.total_employees
-      ? Math.round(100 * (compRes.compliant_employees ?? 0) / compRes.total_employees)
-      : 0
-  }
+  if (doneRes?.pagination) lms.value.completed = doneRes.pagination.total ?? 0
+  if (compRes) lms.value.totalEmployees = compRes.total_employees ?? 0
   if (quizRes?.summary) {
     const s = quizRes.summary
     quiz.value.submissions = s.total_submissions ?? 0

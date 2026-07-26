@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen clay-surface">
     <!-- Loading -->
     <div v-if="loading" class="flex flex-col items-center justify-center min-h-screen gap-3">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B70000]"></div>

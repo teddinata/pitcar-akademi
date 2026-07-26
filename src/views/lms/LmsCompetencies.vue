@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Kompetensi</h1>
@@ -13,8 +13,8 @@
         v-for="tab in tabs"
         :key="tab.key"
         @click="activeTab = tab.key; load()"
-        class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all"
-        :class="activeTab === tab.key ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'"
+        class="px-4 py-2 text-sm whitespace-nowrap clay-pill"
+        :class="activeTab === tab.key ? 'clay-pill-active' : ''"
       >
         {{ tab.label }}
       </button>
@@ -40,7 +40,7 @@
         <div
           v-for="c in items"
           :key="c.id"
-          class="bg-white rounded-xl border border-gray-100 shadow-sm p-4"
+          class="clay-card p-4"
         >
           <div class="flex items-start justify-between gap-2 mb-2">
             <h3 class="font-semibold text-gray-900 text-sm">{{ c.name }}</h3>
@@ -65,7 +65,7 @@
 
     <!-- Search/All Competencies -->
     <template v-else-if="activeTab === 'all'">
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5 flex flex-wrap gap-3">
+      <div class="clay-card p-4 mb-5 flex flex-wrap gap-3">
         <input
           v-model="searchQuery"
           @input="debouncedLoad"
@@ -87,7 +87,7 @@
         <StarIcon class="w-12 h-12 text-gray-300 mx-auto mb-3" />
         <p class="text-gray-500 font-medium">Tidak ada kompetensi ditemukan</p>
       </div>
-      <div v-else class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-else class="clay-card overflow-hidden">
         <table class="w-full text-sm">
           <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
@@ -126,7 +126,7 @@
         <TrophyIcon class="w-12 h-12 text-gray-300 mx-auto mb-3" />
         <p class="text-gray-500 font-medium">Belum ada data leaderboard</p>
       </div>
-      <div v-else class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-else class="clay-card overflow-hidden">
         <div class="divide-y divide-gray-50">
           <div
             v-for="(entry, i) in items"
@@ -153,7 +153,7 @@
 
     <!-- User Competencies (admin) -->
     <template v-else-if="activeTab === 'users'">
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5 flex gap-3">
+      <div class="clay-card p-4 mb-5 flex gap-3">
         <input
           v-model="searchQuery"
           @input="debouncedLoad"
@@ -164,7 +164,7 @@
       <div v-if="!items.length" class="bg-white rounded-xl p-12 text-center border border-gray-100 shadow-sm">
         <p class="text-gray-500 font-medium">Tidak ada data</p>
       </div>
-      <div v-else class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-else class="clay-card overflow-hidden">
         <table class="w-full text-sm">
           <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
             <tr>
@@ -189,7 +189,7 @@
     <!-- Validate Modal -->
     <Teleport to="body">
       <div v-if="validateTarget" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="validateTarget = null">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+        <div class="clay-card w-full max-w-sm">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900">Validasi Kompetensi</h2>
             <button @click="validateTarget = null"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>

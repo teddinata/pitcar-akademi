@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-4 md:p-6" style="background:#f0f1f5">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <!-- Header -->
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-800">Dashboard LMS</h1>
@@ -143,7 +143,7 @@
           <p class="text-2xl font-bold mt-1" :class="stat.color">{{ stat.value }}</p>
         </div>
       </div>
-      <div v-if="data?.team_members?.length" class="clay-card overflow-hidden">
+      <div v-if="data?.team_stats?.length" class="clay-card overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
           <h2 class="font-semibold text-gray-800">Anggota Tim</h2>
         </div>
@@ -152,22 +152,20 @@
             <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
                 <th class="px-4 py-3 text-left font-medium">Nama</th>
-                <th class="px-4 py-3 text-center font-medium">Terdaftar</th>
+                <th class="px-4 py-3 text-center font-medium">Enroll</th>
                 <th class="px-4 py-3 text-center font-medium">Selesai</th>
-                <th class="px-4 py-3 text-center font-medium">Progress</th>
+                <th class="px-4 py-3 text-center font-medium">Jam Belajar</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
-              <tr v-for="m in data.team_members" :key="m.id" class="hover:bg-gray-50 transition-colors">
-                <td class="px-4 py-3 font-medium text-gray-800">{{ m.name }}</td>
-                <td class="px-4 py-3 text-center text-gray-600">{{ m.enrolled }}</td>
-                <td class="px-4 py-3 text-center text-green-600 font-medium">{{ m.completed }}</td>
+              <tr v-for="m in data.team_stats" :key="m.employee_id" class="hover:bg-gray-50 transition-colors">
                 <td class="px-4 py-3">
-                  <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-500 rounded-full" :style="{ width: (m.completion_rate || 0) + '%' }"></div>
-                  </div>
-                  <p class="text-xs text-gray-400 text-center mt-1">{{ m.completion_rate || 0 }}%</p>
+                  <p class="font-medium text-gray-800">{{ m.name }}</p>
+                  <p class="text-xs text-gray-400">{{ m.job_title }}</p>
                 </td>
+                <td class="px-4 py-3 text-center text-blue-600 font-medium">{{ m.total_enrolled }}</td>
+                <td class="px-4 py-3 text-center text-green-600 font-medium">{{ m.completed_courses }}</td>
+                <td class="px-4 py-3 text-center text-gray-600">{{ m.learning_hours }}j</td>
               </tr>
             </tbody>
           </table>
@@ -280,10 +278,10 @@ async function load() {
 }
 
 const managerStats = computed(() => [
-  { label: 'Total Tim', value: data.value?.total_members ?? 0, color: 'text-blue-600' },
-  { label: 'Aktif Belajar', value: data.value?.active_learners ?? 0, color: 'text-green-600' },
-  { label: 'Completion Rate', value: (data.value?.team_completion_rate ?? 0) + '%', color: 'text-purple-600' },
-  { label: 'Kursus Wajib Pending', value: data.value?.pending_mandatory ?? 0, color: 'text-red-500' },
+  { label: 'Total Tim', value: data.value?.team_overview?.total_team_members ?? 0, color: 'text-blue-600' },
+  { label: 'Sudah Enroll', value: data.value?.team_overview?.enrolled_users ?? 0, color: 'text-green-600' },
+  { label: 'Total Enrollment', value: data.value?.team_overview?.total_enrollments ?? 0, color: 'text-purple-600' },
+  { label: 'Aktif Belajar', value: data.value?.team_overview?.active_learners ?? 0, color: 'text-[#B70000]' },
 ])
 
 const companyStats = computed(() => [

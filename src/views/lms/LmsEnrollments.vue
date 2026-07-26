@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Filters (admin all view) -->
-    <div v-if="viewMode === 'all' && authStore.user?.is_admin" class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5 flex flex-wrap gap-3">
+    <div v-if="viewMode === 'all' && authStore.user?.is_admin" class="clay-card p-4 mb-5 flex flex-wrap gap-3">
       <select
         v-model="filters.status"
         @change="load"
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Desktop Table -->
-    <div v-else class="hidden md:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-4">
+    <div v-else class="hidden md:block clay-card overflow-hidden mb-4">
       <table class="w-full text-sm">
         <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
           <tr>
@@ -175,7 +175,7 @@
 
     <!-- Mobile Cards -->
     <div class="md:hidden space-y-3 mb-4">
-      <div v-for="e in enrollments" :key="e.id" class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+      <div v-for="e in enrollments" :key="e.id" class="clay-card p-4">
         <div class="flex items-start justify-between gap-2 mb-2">
           <p class="font-semibold text-gray-900 text-sm">{{ e.course_name }}</p>
           <span class="shrink-0 text-xs px-2 py-0.5 rounded-full font-medium" :class="statusClass(e.status)">{{ statusLabel(e.status) }}</span>
@@ -205,7 +205,7 @@
     <!-- Bulk Enroll Modal -->
     <Teleport to="body">
       <div v-if="showBulkModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showBulkModal = false">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div class="clay-card w-full max-w-md">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900">Bulk Enrollment</h2>
             <button @click="showBulkModal = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>

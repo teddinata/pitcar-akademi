@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Lencana</h1>
@@ -13,8 +13,8 @@
         v-for="tab in tabs"
         :key="tab.key"
         @click="activeTab = tab.key; load()"
-        class="px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all"
-        :class="activeTab === tab.key ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'"
+        class="px-4 py-2 text-sm whitespace-nowrap clay-pill"
+        :class="activeTab === tab.key ? 'clay-pill-active' : ''"
       >
         {{ tab.label }}
       </button>
@@ -41,7 +41,7 @@
         <div
           v-for="b in items"
           :key="b.id"
-          class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center hover:shadow-md transition-shadow"
+          class="clay-card p-4 text-center hover:shadow-md transition-shadow"
         >
           <div class="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl shadow-inner"
             :class="badgeBg(b.badge_type)">
@@ -64,7 +64,7 @@
         <div
           v-for="b in items"
           :key="b.id"
-          class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center hover:shadow-md transition-shadow"
+          class="clay-card p-4 text-center hover:shadow-md transition-shadow"
         >
           <div class="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl shadow-inner"
             :class="badgeBg(b.badge_type)">
@@ -89,7 +89,7 @@
       <div v-if="!items.length" class="bg-white rounded-xl p-12 text-center border border-gray-100 shadow-sm">
         <p class="text-gray-500 font-medium">Belum ada data leaderboard</p>
       </div>
-      <div v-else class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-else class="clay-card overflow-hidden">
         <div class="divide-y divide-gray-50">
           <div
             v-for="(entry, i) in items"
@@ -132,7 +132,7 @@
         <p class="text-gray-500 font-medium">Belum ada lencana</p>
         <button @click="openCreateBadgeModal" class="mt-3 px-4 py-2 bg-yellow-500 text-white text-sm font-semibold rounded-lg hover:bg-yellow-600">Buat Pertama</button>
       </div>
-      <div v-else class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div v-else class="clay-card overflow-hidden">
         <div class="divide-y divide-gray-50">
           <div
             v-for="b in items"
@@ -173,7 +173,7 @@
     <!-- Award Modal (admin) -->
     <Teleport to="body">
       <div v-if="awardTarget" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="awardTarget = null">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+        <div class="clay-card w-full max-w-sm">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900">Berikan Lencana</h2>
             <button @click="awardTarget = null"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
@@ -199,7 +199,7 @@
     <!-- Badge Create/Edit Modal -->
     <Teleport to="body">
       <div v-if="badgeForm.open" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="badgeForm.open = false">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div class="clay-card w-full max-w-md max-h-[90vh] overflow-y-auto">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
             <h2 class="font-bold text-gray-900">{{ badgeForm.id ? 'Edit Lencana' : 'Buat Lencana Baru' }}</h2>
             <button @click="badgeForm.open = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>

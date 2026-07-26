@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col">
+  <div class="min-h-screen clay-surface flex flex-col">
     <!-- Header -->
     <div class="bg-gradient-to-r from-[#B70000] to-[#950000] shadow-md">
       <div class="max-w-3xl mx-auto w-full px-4 pt-6 pb-6 text-white">

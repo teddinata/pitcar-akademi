@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen clay-surface">
     <!-- Header -->
-    <div class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="glass-header">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-start gap-3 sm:gap-4">
@@ -104,7 +104,7 @@
 
       <!-- Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="clay-card p-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,7 +118,7 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="clay-card p-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -132,7 +132,7 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="clay-card p-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,7 +146,7 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="clay-card p-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,7 +162,7 @@
       </div>
 
       <!-- Description -->
-      <div v-if="program.description" class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <div v-if="program.description" class="clay-card p-4">
         <p class="text-sm text-gray-600">{{ program.description }}</p>
       </div>
 
@@ -216,7 +216,7 @@
       </div>
 
       <!-- Quiz Banks List -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="clay-card overflow-hidden">
         <div class="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 class="font-bold text-gray-900">Quiz Banks</h2>
@@ -376,7 +376,7 @@
     </div>
     <!-- ── MONITORING PESERTA ──────────────────────────────────────── -->
     <div v-if="program" class="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="clay-card overflow-hidden">
         <!-- Section header -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>

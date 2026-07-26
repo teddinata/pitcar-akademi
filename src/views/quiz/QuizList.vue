@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 pb-12">
+  <div class="min-h-screen clay-surface pb-12">
     <!-- Header -->
     <div class="bg-gradient-to-r from-[#B70000] to-[#950000] px-6 pt-8 pb-12 text-white">
       <h1 class="text-2xl font-bold">Assessment SOP</h1>
@@ -57,7 +57,7 @@
         <div
           v-for="prog in programs"
           :key="prog.id"
-          class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+          class="clay-card overflow-hidden"
         >
           <!-- Program Card Header (Gradient & Metadata) -->
           <div class="px-5 py-4 bg-gradient-to-r from-slate-50 to-blue-50/50 border-b border-gray-100 flex items-center justify-between">
@@ -168,7 +168,7 @@
             v-for="quiz in standaloneQuizzes"
             :key="quiz.id"
             @click="handleQuizClick(quiz)"
-            class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer transition-all active:scale-[0.985] hover:shadow-md"
+            class="clay-card p-4 cursor-pointer transition-all active:scale-[0.985] hover:shadow-md"
           >
             <!-- Status badge + title -->
             <div class="flex items-start gap-3">

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-4 md:p-6" style="background:#f0f1f5">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900">Karyawan LMS</h1>
       <p class="text-sm text-gray-500 mt-1">Manajemen karyawan dan integrasi LMS</p>
@@ -126,7 +126,7 @@
             <tr>
               <th class="px-3 py-2 text-center font-medium">Enrolled</th>
               <th class="px-3 py-2 text-center font-medium">Selesai</th>
-              <th class="px-3 py-2 text-center font-medium">Compliance</th>
+              <th class="px-3 py-2 text-center font-medium">% Selesai</th>
               <th class="px-3 py-2 text-center font-medium">Assigned</th>
               <th class="px-3 py-2 text-center font-medium">Selesai</th>
               <th class="px-3 py-2 text-center font-medium">%</th>
@@ -137,15 +137,17 @@
               <td class="px-4 py-3">
                 <p class="font-medium text-gray-800">{{ e.name }}</p>
                 <p class="text-xs text-gray-400 mt-0.5">{{ e.job_title }}</p>
+                <p v-if="e.last_enrollment_date" class="text-[10px] text-blue-500 mt-0.5">Enroll terakhir: {{ fmtDate(e.last_enrollment_date) }}</p>
               </td>
               <td class="px-4 py-3 text-center text-gray-500 text-xs">{{ e.department }}</td>
               <td class="px-3 py-3 text-center text-blue-600 font-medium">{{ e.total_enrolled }}</td>
               <td class="px-3 py-3 text-center text-green-600 font-medium">{{ e.completed }}</td>
               <td class="px-3 py-3 text-center">
-                <span class="text-xs font-semibold px-2 py-1 rounded-full"
-                  :class="e.compliance_rate >= 80 ? 'bg-green-100 text-green-700' : e.compliance_rate >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-500'">
-                  {{ e.compliance_rate ?? 0 }}%
+                <span v-if="courseCompletion(e) !== null" class="text-xs font-semibold px-2 py-1 rounded-full"
+                  :class="courseCompletion(e) >= 80 ? 'bg-green-100 text-green-700' : courseCompletion(e) >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-500'">
+                  {{ courseCompletion(e) }}%
                 </span>
+                <span v-else class="text-xs text-gray-300">—</span>
               </td>
               <td class="px-3 py-3 text-center text-gray-700 font-medium">
                 {{ e.quiz_assigned ?? 0 }}
@@ -221,9 +223,9 @@
             <p class="text-2xl font-bold text-purple-600 mt-1">{{ data.total_points ?? 0 }}</p>
           </div>
           <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-center">
-            <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Compliance</p>
-            <p class="text-2xl font-bold mt-1" :class="(data.compliance_rate ?? 0) >= 80 ? 'text-green-600' : 'text-red-500'">
-              {{ data.compliance_rate ?? 0 }}%
+            <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">% Selesai</p>
+            <p class="text-2xl font-bold mt-1" :class="profileCompletion >= 80 ? 'text-green-600' : 'text-amber-600'">
+              {{ profileCompletion }}%
             </p>
           </div>
         </div>
@@ -247,15 +249,22 @@
                   <span v-if="q.score !== null"> · Skor {{ Math.round(q.score) }}%</span>
                 </p>
               </div>
-              <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
-                :class="{
-                  'bg-green-50 text-green-700': q.state === 'done',
-                  'bg-blue-50 text-blue-600': q.state === 'in_progress',
-                  'bg-gray-100 text-gray-500': q.state === 'pending',
-                  'bg-red-50 text-red-600': q.state === 'overdue',
-                  'bg-gray-50 text-gray-400': q.state === 'excluded',
-                }"
-              >{{ { pending: 'Belum', in_progress: 'Sedang', done: 'Selesai', overdue: 'Terlambat', excluded: 'Dikecualikan' }[q.state] || q.state }}</span>
+              <div class="flex items-center gap-2 shrink-0">
+                <button
+                  v-if="q.session_id"
+                  @click="openSession(q.session_id)"
+                  class="text-xs font-semibold text-[#B70000] hover:underline"
+                >Lihat jawaban →</button>
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                  :class="{
+                    'bg-green-50 text-green-700': q.state === 'done',
+                    'bg-blue-50 text-blue-600': q.state === 'in_progress',
+                    'bg-gray-100 text-gray-500': q.state === 'pending',
+                    'bg-red-50 text-red-600': q.state === 'overdue',
+                    'bg-gray-50 text-gray-400': q.state === 'excluded',
+                  }"
+                >{{ { pending: 'Belum', in_progress: 'Sedang', done: 'Selesai', overdue: 'Terlambat', excluded: 'Dikecualikan' }[q.state] || q.state }}</span>
+              </div>
             </div>
           </div>
           <div v-else class="px-5 py-6 text-center text-sm text-gray-400">Belum ada quiz SOP yang di-assign.</div>
@@ -464,7 +473,7 @@
     <!-- Quiz Detail Modal (claymorphism) -->
     <Teleport to="body">
       <div v-if="quizModal.open" class="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4" @click.self="quizModal.open = false">
-        <div class="w-full max-w-xl max-h-[88vh] flex flex-col rounded-3xl p-6" style="background:#f0f1f5; box-shadow:12px 12px 28px rgba(174,174,192,0.55),-12px -12px 28px rgba(255,255,255,0.95)">
+        <div class="w-full max-w-xl max-h-[88vh] flex flex-col rounded-3xl p-6" style="background:rgba(255,255,255,0.6); -webkit-backdrop-filter:blur(22px) saturate(160%); backdrop-filter:blur(22px) saturate(160%); border:1px solid rgba(255,255,255,0.6); box-shadow:0 24px 60px rgba(31,38,135,0.28)">
           <!-- Header -->
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -477,7 +486,7 @@
                 <p class="text-xs text-gray-500">Nilai Quiz SOP</p>
               </div>
             </div>
-            <button @click="quizModal.open = false" class="w-9 h-9 flex items-center justify-center rounded-2xl text-gray-500" style="background:#f0f1f5; box-shadow:3px 3px 6px rgba(174,174,192,0.5),-3px -3px 6px rgba(255,255,255,0.9)">✕</button>
+            <button @click="quizModal.open = false" class="w-9 h-9 flex items-center justify-center rounded-2xl text-gray-600 clay-btn">✕</button>
           </div>
 
           <div v-if="quizModal.loading" class="py-12 text-center text-gray-400 text-sm">Memuat data...</div>
@@ -485,15 +494,15 @@
           <template v-else>
             <!-- Summary cards -->
             <div class="grid grid-cols-3 gap-3 mb-5">
-              <div class="rounded-2xl p-3 text-center" style="background:#f0f1f5; box-shadow:inset 3px 3px 7px rgba(174,174,192,0.55),inset -3px -3px 7px rgba(255,255,255,0.9)">
+              <div class="rounded-2xl p-3 text-center" style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.5); box-shadow:inset 0 2px 6px rgba(31,38,135,0.10)">
                 <p class="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Assigned</p>
                 <p class="text-2xl font-extrabold text-gray-800 mt-0.5">{{ quizModal.summary.assigned }}</p>
               </div>
-              <div class="rounded-2xl p-3 text-center" style="background:#f0f1f5; box-shadow:inset 3px 3px 7px rgba(174,174,192,0.55),inset -3px -3px 7px rgba(255,255,255,0.9)">
+              <div class="rounded-2xl p-3 text-center" style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.5); box-shadow:inset 0 2px 6px rgba(31,38,135,0.10)">
                 <p class="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Selesai</p>
                 <p class="text-2xl font-extrabold text-emerald-600 mt-0.5">{{ quizModal.summary.done }}</p>
               </div>
-              <div class="rounded-2xl p-3 text-center" style="background:#f0f1f5; box-shadow:inset 3px 3px 7px rgba(174,174,192,0.55),inset -3px -3px 7px rgba(255,255,255,0.9)">
+              <div class="rounded-2xl p-3 text-center" style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.5); box-shadow:inset 0 2px 6px rgba(31,38,135,0.10)">
                 <p class="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Completion</p>
                 <p class="text-2xl font-extrabold mt-0.5" :class="(quizModal.summary.completion ?? 0) >= 80 ? 'text-emerald-600' : 'text-amber-500'">{{ quizModal.summary.completion ?? 0 }}%</p>
               </div>
@@ -506,7 +515,7 @@
                 v-for="q in quizModal.assignments"
                 :key="q.id"
                 class="rounded-2xl p-4 flex items-center gap-4"
-                style="background:#f0f1f5; box-shadow:5px 5px 12px rgba(174,174,192,0.4),-5px -5px 12px rgba(255,255,255,0.85)"
+                style="background:rgba(255,255,255,0.45); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.55); box-shadow:0 6px 20px rgba(31,38,135,0.10)"
               >
                 <!-- Score dial -->
                 <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0"
@@ -534,6 +543,12 @@
                     <span v-else-if="q.is_passed === false && q.state === 'done'" class="text-[10px] font-bold text-red-500">✗ Belum Lulus</span>
                   </div>
                 </div>
+                <button
+                  v-if="q.session_id"
+                  @click="openSession(q.session_id)"
+                  class="shrink-0 px-3 py-1.5 text-xs font-semibold text-[#B70000] rounded-xl clay-btn"
+                  title="Lihat jawaban karyawan"
+                >Lihat jawaban →</button>
               </div>
             </div>
           </template>
@@ -549,9 +564,12 @@
 </template>
 
 <script setup>
-import { ref, defineComponent, h, watch, onMounted } from 'vue'
+import { ref, computed, defineComponent, h, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { lmsApi } from '../../services/lmsApi'
 import { UsersIcon } from '@heroicons/vue/24/outline'
+
+const router = useRouter()
 
 const EmployeePicker = defineComponent({
   name: 'EmployeePicker',
@@ -746,6 +764,29 @@ async function doAutoEnroll() {
 }
 
 function showToast(msg) { toast.value = msg; setTimeout(() => { toast.value = '' }, 3000) }
+
+// Buka detail sesi quiz (jawaban + hasil karyawan)
+function openSession(sessionId) {
+  if (sessionId) router.push(`/dashboard/quiz/session/${sessionId}`)
+}
+
+// Format tanggal (ambil bagian tanggal saja dari "YYYY-MM-DD HH:MM:SS")
+function fmtDate(dt) {
+  if (!dt) return ''
+  return String(dt).split(' ')[0]
+}
+
+// % Selesai per karyawan = kursus selesai ÷ kursus enroll (pengganti compliance)
+function courseCompletion(e) {
+  const enrolled = e.total_enrolled || 0
+  if (!enrolled) return null
+  return Math.round((e.completed || 0) / enrolled * 100)
+}
+const profileCompletion = computed(() => {
+  const enrolled = data.value?.total_enrolled || 0
+  if (!enrolled) return 0
+  return Math.round((data.value?.total_completed || 0) / enrolled * 100)
+})
 
 // ── Quiz detail modal ─────────────────────────────────────────────────
 const quizModal = ref({ open: false, loading: false, name: '', summary: {}, assignments: [] })

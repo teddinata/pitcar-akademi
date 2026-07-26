@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Learning Path</h1>
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Search -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5">
+    <div class="clay-card p-4 mb-5">
       <input
         v-model="searchQuery"
         @input="debouncedLoad"
@@ -45,7 +45,7 @@
       <div
         v-for="p in paths"
         :key="p.id"
-        class="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col"
+        class="clay-card hover:shadow-md transition-shadow flex flex-col"
       >
         <div class="p-4 flex-1 flex flex-col">
           <h3 class="font-semibold text-gray-900 text-sm mb-1">{{ p.name }}</h3>
@@ -96,7 +96,7 @@
     <!-- Progress Modal -->
     <Teleport to="body">
       <div v-if="progressTarget" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="progressTarget = null">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto">
+        <div class="clay-card w-full max-w-md max-h-[80vh] overflow-y-auto">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900">Progress: {{ progressTarget.name }}</h2>
             <button @click="progressTarget = null"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
@@ -131,7 +131,7 @@
     <!-- Create/Edit Modal -->
     <Teleport to="body">
       <div v-if="showModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="closeModal">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div class="clay-card w-full max-w-md max-h-[90vh] overflow-y-auto">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900">{{ editTarget ? 'Edit Learning Path' : 'Tambah Learning Path' }}</h2>
             <button @click="closeModal"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>

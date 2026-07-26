@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen clay-surface">
     <!-- Loading -->
     <div v-if="loading" class="flex flex-col items-center justify-center min-h-screen gap-3">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B70000]"></div>
@@ -8,7 +8,7 @@
 
     <template v-else-if="detail">
       <!-- Header bar -->
-      <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div class="glass-header sticky top-0 z-10">
         <div class="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
           <button @click="goBack" class="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-all active:scale-95">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

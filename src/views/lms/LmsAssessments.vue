@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Penilaian</h1>
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5 flex flex-wrap gap-3">
+    <div class="clay-card p-4 mb-5 flex flex-wrap gap-3">
       <select
         v-model="filters.course_id"
         @change="load"
@@ -57,7 +57,7 @@
       <div
         v-for="a in assessments"
         :key="a.id"
-        class="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col"
+        class="clay-card hover:shadow-md transition-shadow overflow-hidden flex flex-col"
       >
         <div class="p-4 flex-1 flex flex-col">
           <div class="flex items-start justify-between gap-2 mb-2">
@@ -108,7 +108,7 @@
     <!-- Take Assessment Modal -->
     <Teleport to="body">
       <div v-if="activeAssessment" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" @click.self="activeAssessment = null">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="clay-card w-full max-w-2xl max-h-[90vh] overflow-y-auto">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
             <h2 class="font-bold text-gray-900">{{ activeAssessment.name }}</h2>
             <button @click="activeAssessment = null; answers = {}"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
@@ -161,7 +161,7 @@
     <!-- Results Modal -->
     <Teleport to="body">
       <div v-if="resultsTarget" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="resultsTarget = null">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
+        <div class="clay-card w-full max-w-lg max-h-[80vh] overflow-y-auto">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900">Hasil Penilaian</h2>
             <button @click="resultsTarget = null"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
@@ -188,7 +188,7 @@
     <!-- Create/Edit Modal -->
     <Teleport to="body">
       <div v-if="showModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showModal = false">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div class="clay-card w-full max-w-md max-h-[90vh] overflow-y-auto">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
             <h2 class="font-bold text-gray-900">{{ editTarget ? 'Edit Penilaian' : 'Tambah Penilaian' }}</h2>
             <button @click="showModal = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>

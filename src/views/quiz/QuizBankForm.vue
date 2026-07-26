@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50">
     <!-- Top bar with gradient -->
-    <div class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-20">
+    <div class="glass-header sticky top-0 z-20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-start gap-3 sm:gap-4">
@@ -108,7 +108,7 @@
     <div v-else class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
 
       <!-- ── SECTION 1: INFO DASAR ── -->
-      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+      <section class="clay-card overflow-hidden hover:shadow-md transition-shadow">
         <div class="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
@@ -388,7 +388,7 @@
       </section>
 
       <!-- ── SECTION 2: TARGET PESERTA ── -->
-      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+      <section class="clay-card overflow-hidden hover:shadow-md transition-shadow">
         <div class="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
@@ -479,7 +479,7 @@
       </section>
 
       <!-- ── SECTION 3: PENGATURAN QUIZ ── -->
-      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+      <section class="clay-card overflow-hidden hover:shadow-md transition-shadow">
         <div class="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-gradient-to-br from-green-600 to-emerald-600 rounded-lg flex items-center justify-center">
@@ -570,7 +570,7 @@
       </section>
 
       <!-- ── SECTION 4: BANK SOAL ── -->
-      <section class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <section class="clay-card overflow-hidden">
         <div class="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 class="font-semibold text-gray-900 text-sm">Bank Soal</h2>

@@ -310,7 +310,7 @@
         </div>
 
         <!-- Breakdown of each SOP -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden">
+        <div class="clay-card/80 overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100/80 bg-slate-50/50">
             <h3 class="font-bold text-gray-900 text-sm">Rincian Hasil per SOP</h3>
           </div>

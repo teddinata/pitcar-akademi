@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-4 md:p-6" style="background:#f0f1f5">
+  <div class="min-h-screen clay-surface p-4 md:p-6">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -167,7 +167,7 @@
         class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
         @click.self="closeModal"
       >
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="clay-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900">{{ editTarget ? 'Edit Kursus' : 'Tambah Kursus' }}</h2>
             <button @click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">

@@ -174,18 +174,27 @@
           <div v-else class="flex-1 min-h-0 relative">
             <!-- YouTube: rendered by YT IFrame API (tracks actual playback position) -->
             <div v-if="isYouTube" ref="ytContainer" class="absolute inset-0 w-full h-full bg-black"></div>
-            <!-- Other embeds: Google Drive, PDF, etc. -->
+            <!-- Other embeds: Google Drive, PDF URL, etc. -->
             <iframe
               v-else-if="activeEmbedUrl"
               :src="activeEmbedUrl"
               class="absolute inset-0 w-full h-full border-0"
               allow="autoplay; fullscreen; encrypted-media"
             ></iframe>
+            <!-- Uploaded file (PDF/gambar) via blob — aman, tidak memuat SPA -->
+            <iframe
+              v-else-if="fileUrl"
+              :src="fileUrl"
+              class="absolute inset-0 w-full h-full border-0 bg-white"
+            ></iframe>
+            <div v-else-if="fileLoading" class="absolute inset-0 flex items-center justify-center">
+              <div class="w-9 h-9 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
             <div v-else class="absolute inset-0 flex flex-col items-center justify-center gap-4 text-gray-400">
               <DocumentIcon class="w-16 h-16 opacity-30" />
               <div class="text-center">
                 <p class="text-lg font-medium text-gray-300">{{ activeModule.name }}</p>
-                <p class="text-sm text-gray-500 mt-1">Konten belum tersedia · Admin perlu menambahkan URL</p>
+                <p class="text-sm text-gray-500 mt-1">{{ fileError || 'Konten belum tersedia · Admin perlu menambahkan URL atau upload file' }}</p>
               </div>
               <button
                 v-if="!modulesDone.has(activeModule.id)"
@@ -491,10 +500,41 @@ const activeEmbedUrl = computed(() => {
   if (!m) return null
   const url = m.content_url
   if (url && !isYouTube.value) return getEmbedUrl(url)
-  // Fallback: konten di-upload sebagai file (PDF/gambar/dll) → sajikan inline
-  if (!url && m.has_content_file) return `/web/v1/lms/module/${m.id}/content`
   return null
 })
+
+// Konten yang di-upload sebagai file (PDF/gambar) diambil sebagai blob dulu,
+// lalu diverifikasi content-type-nya. Ini mencegah bug "sidebar dobel" —
+// dulu iframe langsung ke route file; kalau route mengembalikan SPA (mis.
+// modul belum di-upgrade / fallback index.html), seluruh aplikasi ikut
+// termuat di dalam iframe. Sekarang HTML ditolak, hanya file asli yang tampil.
+const fileUrl = ref(null)
+const fileLoading = ref(false)
+const fileError = ref('')
+let _lastObjectUrl = null
+
+async function loadModuleFile(m) {
+  if (_lastObjectUrl) { URL.revokeObjectURL(_lastObjectUrl); _lastObjectUrl = null }
+  fileUrl.value = null
+  fileError.value = ''
+  if (!m || m.content_url || !m.has_content_file || m.content_type === 'assessment') return
+  fileLoading.value = true
+  try {
+    const resp = await fetch(`/web/v1/lms/module/${m.id}/content`, { credentials: 'include' })
+    const ct = (resp.headers.get('content-type') || '').toLowerCase()
+    if (!resp.ok || ct.includes('text/html')) {
+      fileError.value = 'Konten belum bisa ditampilkan. Pastikan file sudah diupload & coba refresh.'
+      return
+    }
+    const blob = await resp.blob()
+    _lastObjectUrl = URL.createObjectURL(blob)
+    fileUrl.value = _lastObjectUrl
+  } catch (e) {
+    fileError.value = 'Gagal memuat konten file.'
+  } finally {
+    fileLoading.value = false
+  }
+}
 
 function getEmbedUrl(url) {
   if (!url) return null
@@ -747,6 +787,7 @@ watch(activeModule, (mod) => {
   if (mod?.content_type === 'assessment') loadQuiz(mod)
   warnedOnce.value = false
   startVideoTracking()
+  loadModuleFile(mod)
 })
 
 async function init() {
@@ -797,5 +838,8 @@ async function init() {
 }
 
 onMounted(init)
-onUnmounted(cleanupVideoTracking)
+onUnmounted(() => {
+  cleanupVideoTracking()
+  if (_lastObjectUrl) { URL.revokeObjectURL(_lastObjectUrl); _lastObjectUrl = null }
+})
 </script>
