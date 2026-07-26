@@ -323,15 +323,33 @@
               <div v-if="profileExpandedId === e.id && e.module_progress?.length" class="bg-gray-50 border-t border-gray-100 px-5 py-3 space-y-2">
                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Detail Per Modul</p>
                 <div v-for="mp in e.module_progress" :key="mp.module_name" class="flex items-center gap-3">
-                  <span class="text-xs text-gray-600 w-44 truncate shrink-0">{{ mp.module_name }}</span>
-                  <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-28">
-                    <div
-                      class="h-full rounded-full transition-all"
-                      :class="mp.video_watch_percentage >= 90 ? 'bg-green-500' : mp.video_watch_percentage >= 50 ? 'bg-yellow-400' : 'bg-red-400'"
-                      :style="{ width: (mp.video_watch_percentage || 0) + '%' }"
-                    ></div>
-                  </div>
-                  <span class="text-xs tabular-nums w-8 text-right text-gray-500">{{ mp.video_watch_percentage }}%</span>
+                  <span class="text-xs text-gray-600 w-44 truncate shrink-0 flex items-center gap-1">
+                    <span v-if="mp.is_quiz" class="text-[9px] px-1 py-0.5 rounded bg-purple-100 text-purple-700 font-bold">QUIZ</span>
+                    {{ mp.module_name }}
+                  </span>
+
+                  <!-- Quiz module: skor + link jawaban -->
+                  <template v-if="mp.is_quiz">
+                    <div class="flex-1 flex items-center gap-2 max-w-40">
+                      <span class="text-sm font-bold tabular-nums"
+                        :class="mp.quiz_passed === false ? 'text-red-500' : (mp.quiz_score >= 80 ? 'text-green-600' : 'text-amber-600')">
+                        {{ Math.round(mp.quiz_score || 0) }}%
+                      </span>
+                      <button v-if="mp.quiz_session_id" @click="openSession(mp.quiz_session_id)" class="text-[10px] font-semibold text-[#B70000] hover:underline">Lihat jawaban →</button>
+                    </div>
+                  </template>
+                  <!-- Non-quiz module: bar tonton -->
+                  <template v-else>
+                    <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-28">
+                      <div
+                        class="h-full rounded-full transition-all"
+                        :class="mp.video_watch_percentage >= 90 ? 'bg-green-500' : mp.video_watch_percentage >= 50 ? 'bg-yellow-400' : 'bg-red-400'"
+                        :style="{ width: (mp.video_watch_percentage || 0) + '%' }"
+                      ></div>
+                    </div>
+                    <span class="text-xs tabular-nums w-8 text-right text-gray-500">{{ mp.video_watch_percentage }}%</span>
+                  </template>
+
                   <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
                     :class="{
                       'bg-green-50 text-green-700': mp.status === 'completed',
@@ -340,7 +358,7 @@
                       'bg-gray-100 text-gray-400': mp.status === 'not_started',
                     }"
                   >{{ { completed: 'Selesai', skipped: 'Diskip', in_progress: 'Sedang', not_started: 'Belum' }[mp.status] || mp.status }}</span>
-                  <span v-if="mp.best_score > 0" class="text-xs text-purple-600 shrink-0">{{ mp.best_score }}%</span>
+                  <span v-if="!mp.is_quiz && mp.best_score > 0" class="text-xs text-purple-600 shrink-0">{{ mp.best_score }}%</span>
                 </div>
               </div>
               <div v-else-if="profileExpandedId === e.id" class="bg-gray-50 border-t border-gray-100 px-5 py-3 text-xs text-gray-400">
