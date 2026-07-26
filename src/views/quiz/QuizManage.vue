@@ -21,7 +21,7 @@
 
           <!-- Import Excel -->
           <button
-            @click="showImportModal = true"
+            @click="openImportModal"
             class="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 text-sm font-semibold hover:bg-blue-100 transition-colors min-h-[44px]"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -666,6 +666,26 @@
             </div>
           </div>
 
+          <!-- Target Jabatan -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Target Jabatan (siapa yang di-assign)</label>
+            <label class="flex items-center gap-2 mb-2 cursor-pointer">
+              <input type="checkbox" v-model="importAssignAll" class="w-4 h-4 text-blue-600 rounded" />
+              <span class="text-sm text-gray-700">Assign ke <strong>semua jabatan</strong></span>
+            </label>
+            <div v-if="!importAssignAll">
+              <p v-if="importPositionsLoading" class="text-xs text-gray-400">Memuat jabatan...</p>
+              <div v-else class="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1">
+                <p v-if="!importPositions.length" class="text-xs text-gray-400 px-1">Tidak ada data jabatan.</p>
+                <label v-for="p in importPositions" :key="p.id" class="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-gray-50 cursor-pointer">
+                  <input type="checkbox" :value="p.id" v-model="importJobIds" class="w-4 h-4 text-blue-600 rounded" />
+                  <span class="text-sm text-gray-700">{{ p.name }}<span v-if="p.department_name" class="text-xs text-gray-400"> · {{ p.department_name }}</span></span>
+                </label>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">Pilih satu atau beberapa jabatan. Tidak perlu lagi mengisi ID di Excel.</p>
+            </div>
+          </div>
+
           <!-- Error Message -->
           <div v-if="importError" class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
             {{ importError }}
@@ -683,7 +703,7 @@
             </button>
             <button
               @click="doImport"
-              :disabled="!importFile || importing"
+              :disabled="!importFile || importing || (!importAssignAll && !importJobIds.length)"
               class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
             >
               {{ importing ? 'Mengimport...' : 'Import' }}
@@ -838,6 +858,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { quizApi } from '../../services/quizApi'
+import { employeeApi } from '../../services/employeeApi'
 
 const router = useRouter()
 const loading = ref(true)
@@ -968,6 +989,34 @@ const importing = ref(false)
 const importError = ref('')
 const importSuccess = ref('')
 const fileInput = ref(null)
+// Target jabatan untuk import (dipilih di UI, tidak perlu lagi isi ID di Excel)
+const importAssignAll = ref(false)
+const importJobIds = ref([])
+const importPositions = ref([])
+const importPositionsLoading = ref(false)
+
+async function openImportModal() {
+  showImportModal.value = true
+  importError.value = ''
+  importSuccess.value = ''
+  importAssignAll.value = false
+  importJobIds.value = []
+  if (!importPositions.value.length) {
+    importPositionsLoading.value = true
+    try {
+      const res = await employeeApi.masters()
+      importPositions.value = (res?.positions || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        department_name: p.department?.name || p.department_name || '',
+      }))
+    } catch (_) {
+      importPositions.value = []
+    } finally {
+      importPositionsLoading.value = false
+    }
+  }
+}
 
 const periods = (() => {
   const list = []
@@ -1099,6 +1148,8 @@ async function doImport() {
       file_data: base64,
       filename: importFile.value.name,
       import_mode: importMode.value,
+      assign_all_jobs: importAssignAll.value,
+      job_ids: importAssignAll.value ? [] : importJobIds.value,
     })
 
     // Show success
@@ -1133,6 +1184,8 @@ function closeImportModal() {
   showImportModal.value = false
   importFile.value = null
   importMode.value = 'create_draft'
+  importAssignAll.value = false
+  importJobIds.value = []
   importError.value = ''
   importSuccess.value = ''
   if (fileInput.value) {
