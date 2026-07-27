@@ -126,7 +126,7 @@
             <tr>
               <th class="px-3 py-2 text-center font-medium">Enrolled</th>
               <th class="px-3 py-2 text-center font-medium">Selesai</th>
-              <th class="px-3 py-2 text-center font-medium">% Selesai</th>
+              <th class="px-3 py-2 text-center font-medium">Progress</th>
               <th class="px-3 py-2 text-center font-medium">Assigned</th>
               <th class="px-3 py-2 text-center font-medium">Selesai</th>
               <th class="px-3 py-2 text-center font-medium">%</th>
@@ -142,12 +142,17 @@
               <td class="px-4 py-3 text-center text-gray-500 text-xs">{{ e.department }}</td>
               <td class="px-3 py-3 text-center text-blue-600 font-medium">{{ e.total_enrolled }}</td>
               <td class="px-3 py-3 text-center text-green-600 font-medium">{{ e.completed }}</td>
-              <td class="px-3 py-3 text-center">
-                <span v-if="courseCompletion(e) !== null" class="text-xs font-semibold px-2 py-1 rounded-full"
-                  :class="courseCompletion(e) >= 80 ? 'bg-green-100 text-green-700' : courseCompletion(e) >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-500'">
-                  {{ courseCompletion(e) }}%
-                </span>
-                <span v-else class="text-xs text-gray-300">—</span>
+              <td class="px-3 py-3">
+                <div v-if="e.total_enrolled" class="flex items-center gap-2 justify-center">
+                  <div class="w-16 h-1.5 bg-black/10 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all"
+                      :class="(e.avg_progress ?? 0) >= 80 ? 'bg-green-500' : (e.avg_progress ?? 0) >= 40 ? 'bg-amber-400' : 'bg-red-400'"
+                      :style="{ width: Math.round(e.avg_progress ?? 0) + '%' }"></div>
+                  </div>
+                  <span class="text-xs font-semibold tabular-nums w-9 text-right"
+                    :class="(e.avg_progress ?? 0) >= 80 ? 'text-green-600' : 'text-gray-600'">{{ Math.round(e.avg_progress ?? 0) }}%</span>
+                </div>
+                <span v-else class="text-xs text-gray-300 block text-center">—</span>
               </td>
               <td class="px-3 py-3 text-center text-gray-700 font-medium">
                 {{ e.quiz_assigned ?? 0 }}
@@ -528,7 +533,8 @@
 
             <!-- Quiz list -->
             <div class="flex-1 overflow-y-auto space-y-3 pr-1">
-              <div v-if="!quizModal.assignments.length" class="py-8 text-center text-sm text-gray-400">Belum ada quiz yang di-assign.</div>
+              <p class="text-[11px] font-bold text-purple-600 uppercase tracking-wide">Quiz SOP Periodik</p>
+              <div v-if="!quizModal.assignments.length" class="py-4 text-center text-sm text-gray-400">Belum ada quiz SOP yang di-assign.</div>
               <div
                 v-for="q in quizModal.assignments"
                 :key="q.id"
@@ -564,6 +570,45 @@
                 <button
                   v-if="q.session_id"
                   @click="openSession(q.session_id)"
+                  class="shrink-0 px-3 py-1.5 text-xs font-semibold text-[#B70000] rounded-xl clay-btn"
+                  title="Lihat jawaban karyawan"
+                >Lihat jawaban →</button>
+              </div>
+
+              <!-- Quiz Kursus (in-course) — terpisah dari SOP, muncul untuk siapa pun yg mengerjakan -->
+              <div class="flex items-center justify-between pt-3 mt-1 border-t border-white/40">
+                <p class="text-[11px] font-bold text-blue-600 uppercase tracking-wide">📘 Quiz Kursus</p>
+                <span v-if="quizModal.courseQuizzes.length" class="text-[11px] font-semibold text-gray-500">
+                  {{ quizModal.courseSummary.done }}/{{ quizModal.courseSummary.total }} dikerjakan
+                </span>
+              </div>
+              <div v-if="!quizModal.courseQuizzes.length" class="py-4 text-center text-sm text-gray-400">Belum mengerjakan quiz di kursus.</div>
+              <div
+                v-for="cq in quizModal.courseQuizzes"
+                :key="'cq-' + cq.session_id"
+                class="rounded-2xl p-4 flex items-center gap-4"
+                style="background:rgba(255,255,255,0.45); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.55); box-shadow:0 6px 20px rgba(31,38,135,0.10)"
+              >
+                <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0" :style="scoreDialStyleCourse(cq)">
+                  <span class="text-lg font-extrabold leading-none">{{ cq.score !== null && cq.score !== undefined ? Math.round(cq.score) : '–' }}</span>
+                  <span class="text-[9px] font-semibold opacity-80 mt-0.5">skor</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-gray-800 text-sm truncate">{{ cq.quiz_name }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5 truncate">
+                    <span v-if="cq.course_name">{{ cq.course_name }}</span>
+                    <span v-if="cq.module_name"> · {{ cq.module_name }}</span>
+                  </p>
+                  <div class="flex items-center gap-2 mt-1.5">
+                    <span v-if="cq.essay_pending" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">Menunggu esai</span>
+                    <span v-else class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700">Selesai</span>
+                    <span v-if="cq.is_passed === true" class="text-[10px] font-bold text-emerald-600">✓ Lulus</span>
+                    <span v-else-if="cq.is_passed === false && !cq.essay_pending" class="text-[10px] font-bold text-red-500">✗ Belum Lulus</span>
+                  </div>
+                </div>
+                <button
+                  v-if="cq.session_id"
+                  @click="openSession(cq.session_id)"
                   class="shrink-0 px-3 py-1.5 text-xs font-semibold text-[#B70000] rounded-xl clay-btn"
                   title="Lihat jawaban karyawan"
                 >Lihat jawaban →</button>
@@ -807,20 +852,34 @@ const profileCompletion = computed(() => {
 })
 
 // ── Quiz detail modal ─────────────────────────────────────────────────
-const quizModal = ref({ open: false, loading: false, name: '', summary: {}, assignments: [] })
+const quizModal = ref({ open: false, loading: false, name: '', summary: {}, assignments: [], courseSummary: {}, courseQuizzes: [] })
 
 async function openQuizDetail(userId, name) {
-  quizModal.value = { open: true, loading: true, name, summary: {}, assignments: [] }
+  quizModal.value = { open: true, loading: true, name, summary: {}, assignments: [], courseSummary: {}, courseQuizzes: [] }
   try {
     const res = await lmsApi.employeeProfile({ user_id: userId })
     quizModal.value.summary = res?.quiz_summary || { assigned: 0, done: 0, completion: 0 }
     quizModal.value.assignments = res?.quiz_assignments || []
+    quizModal.value.courseSummary = res?.course_quiz_summary || { total: 0, done: 0, pending: 0 }
+    quizModal.value.courseQuizzes = res?.course_quizzes || []
   } catch (e) {
     showToast(e.message || 'Gagal memuat nilai quiz')
     quizModal.value.summary = { assigned: 0, done: 0, completion: 0 }
   } finally {
     quizModal.value.loading = false
   }
+}
+
+// Dial skor untuk quiz kursus (pakai essay_pending, bukan state)
+function scoreDialStyleCourse(cq) {
+  const inset = 'box-shadow:inset 3px 3px 6px rgba(0,0,0,0.12),inset -2px -2px 6px rgba(255,255,255,0.5);'
+  if (cq.score === null || cq.score === undefined || cq.essay_pending) {
+    return `background:#e2e4ea; color:#9ca3af; ${inset}`
+  }
+  const s = cq.score
+  if (cq.is_passed || s >= 80) return `background:linear-gradient(135deg,#34d399,#10b981); color:#fff; ${inset}`
+  if (s >= 60) return `background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#fff; ${inset}`
+  return `background:linear-gradient(135deg,#f87171,#ef4444); color:#fff; ${inset}`
 }
 
 // Warna dial skor: hijau (lulus/tinggi), amber (sedang), merah (rendah), abu (belum)
