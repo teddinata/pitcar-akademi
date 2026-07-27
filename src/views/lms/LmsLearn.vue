@@ -81,6 +81,25 @@
                   <p v-if="quizData.instructions" class="text-orange-100 text-sm mt-1">{{ quizData.instructions }}</p>
                 </div>
                 <div class="p-6">
+                  <!-- Hasil percobaan sebelumnya (kalau sudah pernah dikerjakan) -->
+                  <div
+                    v-if="quizData.last_result"
+                    class="mb-5 rounded-xl border p-4"
+                    :class="quizData.last_result.essay_pending ? 'bg-amber-50 border-amber-200' : (quizData.last_result.is_passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200')"
+                  >
+                    <p class="text-xs text-gray-500">Hasil terakhir kamu</p>
+                    <p class="text-2xl font-bold mt-0.5"
+                      :class="quizData.last_result.essay_pending ? 'text-amber-600' : (quizData.last_result.is_passed ? 'text-green-600' : 'text-red-500')">
+                      {{ Math.round(quizData.last_result.score || 0) }}%
+                      <span class="text-sm font-semibold">
+                        · {{ quizData.last_result.essay_pending ? 'Menunggu penilaian esai' : (quizData.last_result.is_passed ? 'Lulus' : 'Belum lulus') }}
+                      </span>
+                    </p>
+                    <p v-if="quizData.attempts_remaining !== null" class="text-xs text-gray-500 mt-1">
+                      Sisa percobaan: {{ quizData.attempts_remaining }}
+                    </p>
+                  </div>
+
                   <div class="grid grid-cols-2 gap-3 mb-6">
                     <div class="bg-gray-50 rounded-xl p-3">
                       <p class="text-xs text-gray-400">Jumlah Soal</p>
@@ -99,14 +118,26 @@
                       <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ quizData.max_attempts || '∞' }}</p>
                     </div>
                   </div>
-                  <button @click="startQuiz" class="w-full py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors">
-                    Mulai Quiz
+                  <button
+                    v-if="quizData.attempts_remaining === null || quizData.attempts_remaining > 0"
+                    @click="startQuiz"
+                    class="w-full py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors"
+                  >
+                    {{ quizData.attempts_used ? 'Kerjakan Lagi' : 'Mulai Quiz' }}
                   </button>
+                  <p v-else class="text-center text-sm text-gray-400 py-2">Batas percobaan tercapai</p>
                 </div>
               </div>
             </div>
             <!-- Taking screen -->
             <div v-else-if="quizState === 'taking'" class="max-w-2xl mx-auto py-6 px-4">
+              <!-- Timer -->
+              <div v-if="quizTimeLeft > 0" class="sticky top-0 z-10 mb-4 flex items-center justify-center gap-2 py-2.5 rounded-xl border shadow-sm"
+                :class="quizTimeLeft <= 30 ? 'bg-red-50 border-red-200' : 'bg-white border-orange-200'">
+                <span class="text-lg">⏱</span>
+                <span class="font-mono font-bold text-lg tabular-nums" :class="quizTimeLeft <= 30 ? 'text-red-600' : 'text-orange-600'">{{ fmtTimer(quizTimeLeft) }}</span>
+                <span class="text-xs text-gray-400">sisa waktu</span>
+              </div>
               <div class="space-y-4 mb-6">
                 <div v-for="(q, qi) in quizData.questions" :key="q.id" class="bg-white rounded-xl border border-gray-200 p-5">
                   <div class="flex items-start gap-3 mb-4">
@@ -457,6 +488,27 @@ const quizLoading = ref(false)
 const quizSubmitting = ref(false)
 const quizSessionId = ref(null)
 const bestQuizScore = ref(0) // tracks highest score across all quizzes in this enrollment
+const quizTimeLeft = ref(0)  // sisa waktu (detik) saat mengerjakan
+let _quizTimer = null
+
+function fmtTimer(sec) {
+  const s = Math.max(0, Math.floor(sec))
+  const m = Math.floor(s / 60)
+  return `${m}:${String(s % 60).padStart(2, '0')}`
+}
+function stopQuizTimer() { if (_quizTimer) { clearInterval(_quizTimer); _quizTimer = null } }
+function startQuizTimer(seconds) {
+  stopQuizTimer()
+  quizTimeLeft.value = seconds || 0
+  if (!seconds) return  // 0 = tanpa batas waktu
+  _quizTimer = setInterval(() => {
+    quizTimeLeft.value -= 1
+    if (quizTimeLeft.value <= 0) {
+      stopQuizTimer()
+      if (quizState.value === 'taking') submitQuiz()  // auto-submit saat waktu habis
+    }
+  }, 1000)
+}
 
 // Completion modals
 const badgeModal = reactive({ show: false, badges: [] })
@@ -716,7 +768,9 @@ async function loadQuiz(mod) {
       max_attempts: res?.module?.max_attempts ?? 0,
       has_essay: quiz.has_essay,
       state: quiz.state,
+      attempts_used: res?.attempts_used ?? 0,
       attempts_remaining: res?.attempts_remaining,
+      last_result: res?.last_result || null,
       questions: [],
     }
   } catch (e) {
@@ -741,6 +795,7 @@ async function startQuiz() {
     quizData.value = { ...quizData.value, questions }
     answers.value = {}
     quizState.value = 'taking'
+    startQuizTimer(res?.duration_seconds || 0)
   } catch (e) {
     showToast(e.message || 'Gagal memulai quiz')
   } finally {
@@ -750,6 +805,7 @@ async function startQuiz() {
 
 async function submitQuiz() {
   if (!quizData.value || !enrollment.value || !quizSessionId.value) return
+  stopQuizTimer()
   quizSubmitting.value = true
   try {
     const answersData = (quizData.value.questions || []).map(q => {
@@ -769,8 +825,9 @@ async function submitQuiz() {
     }
     quizState.value = 'result'
     if ((res?.score ?? 0) > bestQuizScore.value) bestQuizScore.value = res.score
-    // Mark module done when passed OR when essay pending (progress recorded server-side)
-    if (res?.is_passed) modulesDone.value = new Set([...modulesDone.value, activeModule.value.id])
+    // Modul quiz dianggap SELESAI begitu dikerjakan (lulus/tidak); hanya
+    // esai yang belum dinilai yang belum ditandai selesai.
+    if (!res?.essay_pending) modulesDone.value = new Set([...modulesDone.value, activeModule.value.id])
   } catch (e) {
     showToast(e.message || 'Gagal mengirim jawaban')
   } finally {
@@ -784,6 +841,7 @@ function retryQuiz() {
 }
 
 watch(activeModule, (mod) => {
+  stopQuizTimer()
   if (mod?.content_type === 'assessment') loadQuiz(mod)
   warnedOnce.value = false
   startVideoTracking()
@@ -840,6 +898,7 @@ async function init() {
 onMounted(init)
 onUnmounted(() => {
   cleanupVideoTracking()
+  stopQuizTimer()
   if (_lastObjectUrl) { URL.revokeObjectURL(_lastObjectUrl); _lastObjectUrl = null }
 })
 </script>

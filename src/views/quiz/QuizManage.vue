@@ -602,9 +602,9 @@
     <!-- Import Excel Modal -->
     <Teleport to="body">
       <div v-if="showImportModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="closeImportModal">
-        <div class="bg-white rounded-2xl w-full max-w-lg p-6 space-y-5">
+        <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
           <!-- Header -->
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between px-6 pt-6 pb-3 shrink-0 border-b border-gray-100">
             <h3 class="text-lg font-bold text-gray-900">Import Quiz Bank dari Excel</h3>
             <button @click="closeImportModal" class="p-1 rounded-lg hover:bg-gray-100">
               <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -613,6 +613,8 @@
             </button>
           </div>
 
+          <!-- Scrollable body -->
+          <div class="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           <!-- Info -->
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
             <div class="flex gap-3">
@@ -695,9 +697,10 @@
           <div v-if="importSuccess" class="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700">
             {{ importSuccess }}
           </div>
+          </div><!-- /scrollable body -->
 
-          <!-- Actions -->
-          <div class="flex gap-3 pt-2">
+          <!-- Actions (footer tetap terlihat) -->
+          <div class="flex gap-3 px-6 py-4 border-t border-gray-100 shrink-0">
             <button @click="closeImportModal" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">
               Batal
             </button>

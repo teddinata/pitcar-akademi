@@ -80,6 +80,10 @@
               </svg>
               {{ s.quiz.name }}
             </span>
+            <span v-if="s.source === 'course'" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">
+              📘 Kursus{{ s.course_name ? ': ' + s.course_name : '' }}
+            </span>
+            <span v-else class="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-bold">Quiz SOP</span>
             <span class="flex items-center gap-1">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -355,21 +355,32 @@
 
       <!-- Per-quiz breakdown -->
       <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div class="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
           <h2 class="font-bold text-gray-900 text-base">Breakdown per Quiz</h2>
-          <span class="text-xs font-semibold text-red-650 bg-red-50 px-2.5 py-1 rounded-full">{{ dashData.quiz_breakdown?.length || 0 }} SOP</span>
+          <div class="flex items-center gap-1.5">
+            <button
+              v-for="opt in [{k:'all',l:'Semua'},{k:'sop',l:'SOP'},{k:'course',l:'📘 Kursus'}]"
+              :key="opt.k"
+              @click="sourceFilter = opt.k"
+              class="text-xs font-semibold px-2.5 py-1 rounded-full transition-colors"
+              :class="sourceFilter === opt.k ? 'bg-[#B70000] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+            >{{ opt.l }}</button>
+          </div>
         </div>
 
         <!-- Mobile Card List View (< md) -->
         <div class="block md:hidden divide-y divide-gray-100">
-          <div 
-            v-for="quiz in dashData.quiz_breakdown"
+          <div
+            v-for="quiz in filteredQuizBreakdown"
             :key="quiz.quiz_id"
             class="p-5 space-y-3 hover:bg-gray-50/50 transition-colors"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
-                <h3 class="font-bold text-gray-900 text-sm leading-snug truncate">{{ quiz.quiz_name }}</h3>
+                <h3 class="font-bold text-gray-900 text-sm leading-snug truncate">
+                  <span v-if="quiz.is_course_bank" class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold mr-1">📘 Kursus</span>
+                  {{ quiz.quiz_name }}
+                </h3>
                 <p class="text-[10px] font-semibold text-gray-400 mt-0.5 truncate">
                   {{ quiz.quiz_code }}
                   <span v-if="quiz.program_name" class="text-red-500 font-bold ml-1">· {{ quiz.program_name }}</span>
@@ -429,12 +440,15 @@
             </thead>
             <tbody class="divide-y divide-gray-50">
               <tr
-                v-for="quiz in dashData.quiz_breakdown"
+                v-for="quiz in filteredQuizBreakdown"
                 :key="quiz.quiz_id"
                 class="hover:bg-gray-50 transition-colors"
               >
                 <td class="px-6 py-4">
-                  <p class="font-medium text-gray-900 leading-snug">{{ quiz.quiz_name }}</p>
+                  <p class="font-medium text-gray-900 leading-snug">
+                    <span v-if="quiz.is_course_bank" class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold mr-1 align-middle">📘 Kursus</span>
+                    {{ quiz.quiz_name }}
+                  </p>
                   <p class="text-xs text-gray-400 mt-0.5">
                     {{ quiz.quiz_code }}
                     <span v-if="quiz.program_name" class="text-red-600 font-semibold ml-1">· {{ quiz.program_name }}</span>
@@ -468,9 +482,9 @@
                   </div>
                 </td>
               </tr>
-              <tr v-if="!dashData.quiz_breakdown?.length">
+              <tr v-if="!filteredQuizBreakdown.length">
                 <td colspan="7" class="px-6 py-12 text-center text-gray-400">
-                  Belum ada data untuk periode ini
+                  Belum ada data untuk filter ini
                 </td>
               </tr>
             </tbody>
@@ -479,16 +493,16 @@
       </div>
 
       <!-- Flagged employees -->
-      <div v-if="dashData.flagged_employees?.length" class="bg-white rounded-3xl shadow-sm border border-red-100 overflow-hidden">
+      <div v-if="filteredFlagged.length" class="bg-white rounded-3xl shadow-sm border border-red-100 overflow-hidden">
         <div class="px-6 py-4 border-b border-red-100 flex items-center gap-2">
           <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
           </svg>
-          <h2 class="font-bold text-red-800 text-sm md:text-base">Karyawan Perlu Retraining & Pembinaan ({{ dashData.flagged_employees.length }})</h2>
+          <h2 class="font-bold text-red-800 text-sm md:text-base">Karyawan Perlu Retraining & Pembinaan ({{ filteredFlagged.length }})</h2>
         </div>
         <div class="divide-y divide-gray-55">
           <div
-            v-for="emp in dashData.flagged_employees"
+            v-for="emp in filteredFlagged"
             :key="`${emp.employee_id}-${emp.quiz_name}`"
             class="p-5 md:px-6 md:py-4"
           >
@@ -496,6 +510,7 @@
               <div class="flex-1 min-w-0">
                 <p class="font-bold text-gray-900 text-sm md:text-base">{{ emp.employee_name }}</p>
                 <p class="text-xs md:text-sm text-gray-500 mt-1 font-semibold">
+                  <span v-if="emp.is_course_bank" class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold mr-1">📘 Kursus</span>
                   {{ emp.quiz_name }}
                   <span v-if="emp.program_name" class="text-red-600 font-extrabold ml-1">· {{ emp.program_name }}</span>
                 </p>
@@ -533,7 +548,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { quizApi } from '../../services/quizApi'
 
@@ -541,6 +556,18 @@ const router = useRouter()
 const loading = ref(true)
 const accessDenied = ref(false)
 const dashData = ref(null)
+const sourceFilter = ref('all') // all | sop | course
+
+const filteredQuizBreakdown = computed(() => {
+  const list = dashData.value?.quiz_breakdown || []
+  if (sourceFilter.value === 'all') return list
+  return list.filter(q => sourceFilter.value === 'course' ? q.is_course_bank : !q.is_course_bank)
+})
+const filteredFlagged = computed(() => {
+  const list = dashData.value?.flagged_employees || []
+  if (sourceFilter.value === 'all') return list
+  return list.filter(e => sourceFilter.value === 'course' ? e.is_course_bank : !e.is_course_bank)
+})
 const selectedMonth = ref('')
 const selectedYear = ref('')
 
