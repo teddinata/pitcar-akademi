@@ -120,14 +120,14 @@
               <th rowspan="2" class="px-4 py-3 text-left font-medium align-bottom">Karyawan</th>
               <th rowspan="2" class="px-4 py-3 text-center font-medium align-bottom">Departemen</th>
               <th colspan="3" class="px-4 py-2 text-center font-semibold text-blue-600 border-b border-gray-100">Kursus LMS</th>
-              <th colspan="3" class="px-4 py-2 text-center font-semibold text-purple-600 border-b border-gray-100">Quiz SOP</th>
+              <th colspan="3" class="px-4 py-2 text-center font-semibold text-blue-500 border-b border-gray-100">📘 Quiz Kursus</th>
               <th rowspan="2" class="px-4 py-3 text-center font-medium align-bottom">Aksi</th>
             </tr>
             <tr>
               <th class="px-3 py-2 text-center font-medium">Enrolled</th>
               <th class="px-3 py-2 text-center font-medium">Selesai</th>
               <th class="px-3 py-2 text-center font-medium">Progress</th>
-              <th class="px-3 py-2 text-center font-medium">Assigned</th>
+              <th class="px-3 py-2 text-center font-medium">Total</th>
               <th class="px-3 py-2 text-center font-medium">Selesai</th>
               <th class="px-3 py-2 text-center font-medium">%</th>
             </tr>
@@ -154,15 +154,12 @@
                 </div>
                 <span v-else class="text-xs text-gray-300 block text-center">—</span>
               </td>
-              <td class="px-3 py-3 text-center text-gray-700 font-medium">
-                {{ e.quiz_assigned ?? 0 }}
-                <span v-if="e.quiz_overdue" class="ml-1 text-xs text-red-500" :title="e.quiz_overdue + ' terlambat'">⚠{{ e.quiz_overdue }}</span>
-              </td>
-              <td class="px-3 py-3 text-center text-green-600 font-medium">{{ e.quiz_done ?? 0 }}</td>
+              <td class="px-3 py-3 text-center text-gray-700 font-medium">{{ e.course_quiz_total ?? 0 }}</td>
+              <td class="px-3 py-3 text-center text-green-600 font-medium">{{ e.course_quiz_done ?? 0 }}</td>
               <td class="px-3 py-3 text-center">
-                <span v-if="e.quiz_completion !== null && e.quiz_completion !== undefined" class="text-xs font-semibold px-2 py-1 rounded-full"
-                  :class="e.quiz_completion >= 80 ? 'bg-green-100 text-green-700' : e.quiz_completion >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-500'">
-                  {{ e.quiz_completion }}%
+                <span v-if="e.course_quiz_completion !== null && e.course_quiz_completion !== undefined" class="text-xs font-semibold px-2 py-1 rounded-full"
+                  :class="e.course_quiz_completion >= 80 ? 'bg-green-100 text-green-700' : e.course_quiz_completion >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-500'">
+                  {{ e.course_quiz_completion }}%
                 </span>
                 <span v-else class="text-xs text-gray-300">—</span>
               </td>
@@ -234,60 +231,64 @@
             </p>
           </div>
         </div>
-        <!-- Quiz SOP Periodik -->
-        <div class="clay-card overflow-hidden">
-          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 class="font-semibold text-gray-800">Quiz SOP Periodik</h3>
-            <span v-if="data.quiz_summary" class="text-xs font-semibold px-2 py-0.5 rounded-full"
-              :class="(data.quiz_summary.completion ?? 0) >= 80 ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'">
-              {{ data.quiz_summary.done }}/{{ data.quiz_summary.assigned }} selesai
-              <template v-if="data.quiz_summary.completion !== null"> · {{ data.quiz_summary.completion }}%</template>
-            </span>
-          </div>
-          <div v-if="data.quiz_assignments?.length" class="divide-y divide-gray-50">
-            <div v-for="q in data.quiz_assignments" :key="q.id" class="px-5 py-3 flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <p class="font-medium text-gray-800 text-sm truncate">{{ q.quiz_name }}</p>
-                <p class="text-xs text-gray-400 mt-0.5">
-                  <span v-if="q.period">Periode {{ q.period }}</span>
-                  <span v-if="q.deadline"> · Deadline {{ q.deadline }}</span>
-                  <span v-if="q.score !== null"> · Skor {{ Math.round(q.score) }}%</span>
-                </p>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <button
-                  v-if="q.session_id"
-                  @click="openSession(q.session_id)"
-                  class="text-xs font-semibold text-[#B70000] hover:underline"
-                >Lihat jawaban →</button>
-                <span class="text-xs px-2 py-0.5 rounded-full font-medium"
-                  :class="{
-                    'bg-green-50 text-green-700': q.state === 'done',
-                    'bg-blue-50 text-blue-600': q.state === 'in_progress',
-                    'bg-gray-100 text-gray-500': q.state === 'pending',
-                    'bg-red-50 text-red-600': q.state === 'overdue',
-                    'bg-gray-50 text-gray-400': q.state === 'excluded',
-                  }"
-                >{{ { pending: 'Belum', in_progress: 'Sedang', done: 'Selesai', overdue: 'Terlambat', excluded: 'Dikecualikan' }[q.state] || q.state }}</span>
-              </div>
-            </div>
-          </div>
-          <div v-else class="px-5 py-6 text-center text-sm text-gray-400">Belum ada quiz SOP yang di-assign.</div>
-        </div>
-
-        <!-- Kursus Sedang Berjalan -->
+        <!-- Kursus Sedang Berjalan (expandable → detail per modul + quiz + skip) -->
         <div v-if="data.current_enrollments?.length" class="clay-card overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100">
             <h3 class="font-semibold text-gray-800">Kursus Sedang Berjalan</h3>
           </div>
           <div class="divide-y divide-gray-50">
-            <div v-for="e in data.current_enrollments" :key="e.id" class="px-5 py-3">
-              <div class="flex justify-between items-center mb-1">
-                <p class="font-medium text-gray-800 text-sm">{{ e.course_name }}</p>
-                <span class="text-xs text-gray-400">{{ e.progress }}%</span>
+            <div v-for="e in data.current_enrollments" :key="e.id">
+              <div
+                class="px-5 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                @click="profileExpandedId = profileExpandedId === e.id ? null : e.id"
+              >
+                <div class="flex justify-between items-center mb-1">
+                  <p class="font-medium text-gray-800 text-sm">{{ e.course_name }}</p>
+                  <span class="text-xs text-gray-400 flex items-center gap-2">{{ e.progress }}%
+                    <span class="select-none">{{ profileExpandedId === e.id ? '▲' : '▼' }}</span>
+                  </span>
+                </div>
+                <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-500 rounded-full" :style="{ width: (e.progress || 0) + '%' }"></div>
+                </div>
               </div>
-              <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full bg-blue-500 rounded-full" :style="{ width: (e.progress || 0) + '%' }"></div>
+              <!-- Expanded module detail -->
+              <div v-if="profileExpandedId === e.id && e.module_progress?.length" class="bg-gray-50 border-t border-gray-100 px-5 py-3 space-y-2">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Detail Per Modul</p>
+                <div v-for="mp in e.module_progress" :key="mp.module_name" class="flex items-center gap-3">
+                  <span class="text-xs text-gray-600 w-44 truncate shrink-0 flex items-center gap-1">
+                    <span v-if="mp.is_quiz" class="text-[9px] px-1 py-0.5 rounded bg-purple-100 text-purple-700 font-bold">QUIZ</span>
+                    {{ mp.module_name }}
+                  </span>
+                  <template v-if="mp.is_quiz">
+                    <div class="flex-1 flex items-center gap-2 max-w-40">
+                      <span class="text-sm font-bold tabular-nums"
+                        :class="mp.quiz_passed === false ? 'text-red-500' : (mp.quiz_score >= 80 ? 'text-green-600' : 'text-amber-600')">
+                        {{ Math.round(mp.quiz_score || 0) }}%
+                      </span>
+                      <button v-if="mp.quiz_session_id" @click="openSession(mp.quiz_session_id)" class="text-[10px] font-semibold text-[#B70000] hover:underline">Lihat jawaban →</button>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-28">
+                      <div class="h-full rounded-full transition-all"
+                        :class="mp.video_watch_percentage >= 90 ? 'bg-green-500' : mp.video_watch_percentage >= 50 ? 'bg-yellow-400' : 'bg-red-400'"
+                        :style="{ width: (mp.video_watch_percentage || 0) + '%' }"></div>
+                    </div>
+                    <span class="text-xs tabular-nums w-8 text-right text-gray-500">{{ mp.video_watch_percentage }}%</span>
+                  </template>
+                  <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
+                    :class="{
+                      'bg-green-50 text-green-700': mp.status === 'completed',
+                      'bg-orange-50 text-orange-600': mp.status === 'skipped',
+                      'bg-blue-50 text-blue-600': mp.status === 'in_progress',
+                      'bg-gray-100 text-gray-400': mp.status === 'not_started',
+                    }"
+                  >{{ { completed: 'Selesai', skipped: 'Diskip', in_progress: 'Sedang', not_started: 'Belum' }[mp.status] || mp.status }}</span>
+                </div>
+              </div>
+              <div v-else-if="profileExpandedId === e.id" class="bg-gray-50 border-t border-gray-100 px-5 py-3 text-xs text-gray-400">
+                Belum ada detail modul.
               </div>
             </div>
           </div>
@@ -375,6 +376,47 @@
 
         <div v-if="!data.current_enrollments?.length && !data.completed_enrollments?.length" class="clay-card p-5 text-center text-gray-400 text-sm">
           Tidak ada riwayat kursus
+        </div>
+
+        <!-- Quiz SOP Periodik (paling bawah — prioritas LMS kursus di atas) -->
+        <div class="clay-card overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-800">Quiz SOP Periodik</h3>
+            <span v-if="data.quiz_summary" class="text-xs font-semibold px-2 py-0.5 rounded-full"
+              :class="(data.quiz_summary.completion ?? 0) >= 80 ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'">
+              {{ data.quiz_summary.done }}/{{ data.quiz_summary.assigned }} selesai
+              <template v-if="data.quiz_summary.completion !== null"> · {{ data.quiz_summary.completion }}%</template>
+            </span>
+          </div>
+          <div v-if="data.quiz_assignments?.length" class="divide-y divide-gray-50">
+            <div v-for="q in data.quiz_assignments" :key="q.id" class="px-5 py-3 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-medium text-gray-800 text-sm truncate">{{ q.quiz_name }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  <span v-if="q.period">Periode {{ q.period }}</span>
+                  <span v-if="q.deadline"> · Deadline {{ q.deadline }}</span>
+                  <span v-if="q.score !== null"> · Skor {{ Math.round(q.score) }}%</span>
+                </p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button
+                  v-if="q.session_id"
+                  @click="openSession(q.session_id)"
+                  class="text-xs font-semibold text-[#B70000] hover:underline"
+                >Lihat jawaban →</button>
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                  :class="{
+                    'bg-green-50 text-green-700': q.state === 'done',
+                    'bg-blue-50 text-blue-600': q.state === 'in_progress',
+                    'bg-gray-100 text-gray-500': q.state === 'pending',
+                    'bg-red-50 text-red-600': q.state === 'overdue',
+                    'bg-gray-50 text-gray-400': q.state === 'excluded',
+                  }"
+                >{{ { pending: 'Belum', in_progress: 'Sedang', done: 'Selesai', overdue: 'Terlambat', excluded: 'Dikecualikan' }[q.state] || q.state }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-else class="px-5 py-6 text-center text-sm text-gray-400">Belum ada quiz SOP yang di-assign.</div>
         </div>
       </div>
     </template>
