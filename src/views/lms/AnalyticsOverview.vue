@@ -89,6 +89,45 @@
         </router-link>
       </div>
 
+      <!-- ── RANKING KARYAWAN (berdasarkan kursus selesai) ── -->
+      <div class="clay-card overflow-hidden mt-8">
+        <div class="px-5 py-4 border-b border-white/40 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">🏆 Ranking Karyawan</h2>
+          <span class="text-xs text-gray-500">Berdasarkan kursus selesai</span>
+        </div>
+        <div v-if="!leaderboard.length" class="py-8 text-center text-sm text-gray-400">Belum ada data ranking.</div>
+        <div v-else class="divide-y divide-white/40">
+          <router-link
+            v-for="r in leaderboard"
+            :key="r.user_id"
+            :to="'/dashboard/lms/employees'"
+            class="flex items-center gap-3 px-5 py-3 hover:bg-white/40 transition-colors"
+          >
+            <!-- Rank badge -->
+            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-extrabold shrink-0"
+              :class="r.rank === 1 ? 'bg-yellow-100 text-yellow-700' : r.rank === 2 ? 'bg-gray-200 text-gray-600' : r.rank === 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'">
+              <span v-if="r.rank <= 3">{{ ['🥇','🥈','🥉'][r.rank - 1] }}</span>
+              <span v-else>{{ r.rank }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-gray-800 text-sm truncate">{{ r.name }}</p>
+              <p class="text-xs text-gray-400 truncate">{{ r.job_title || '—' }}<span v-if="r.department"> · {{ r.department }}</span></p>
+            </div>
+            <!-- Stats -->
+            <div class="text-right shrink-0">
+              <p class="text-sm font-extrabold text-green-600 leading-none">{{ r.completed }}<span class="text-xs font-semibold text-gray-400">/{{ r.enrolled }}</span></p>
+              <p class="text-[10px] text-gray-400 mt-0.5">kursus selesai</p>
+            </div>
+            <div class="w-14 shrink-0 hidden sm:block">
+              <div class="h-1.5 bg-black/10 rounded-full overflow-hidden">
+                <div class="h-full rounded-full bg-indigo-500" :style="{ width: Math.round(r.avg_progress || 0) + '%' }"></div>
+              </div>
+              <p class="text-[9px] text-gray-400 mt-0.5 text-right">{{ Math.round(r.avg_progress || 0) }}%</p>
+            </div>
+          </router-link>
+        </div>
+      </div>
+
       <p v-if="partialError" class="mt-6 text-xs text-amber-600">Sebagian data gagal dimuat — angka mungkin tidak lengkap.</p>
     </template>
   </div>
@@ -104,19 +143,23 @@ const loading = ref(true)
 const partialError = ref(false)
 const lms = ref({ courses: 0, enrollments: 0, completed: 0, totalEmployees: 0, enrolledUsers: 0 })
 const quiz = ref({ submissions: 0, passRate: 0, avgScore: 0, retraining: 0 })
+const leaderboard = ref([])
 
 async function safe(fn) {
   try { return await fn() } catch { partialError.value = true; return null }
 }
 
 onMounted(async () => {
-  const [courseRes, enrollRes, doneRes, compRes, quizRes] = await Promise.all([
+  const [courseRes, enrollRes, doneRes, compRes, quizRes, lbRes] = await Promise.all([
     safe(() => lmsApi.courseSearch({ limit: 1 })),
     safe(() => lmsApi.enrollmentSearch({ limit: 1 })),
     safe(() => lmsApi.enrollmentSearch({ status: 'completed', limit: 1 })),
     safe(() => lmsApi.employeeComplianceReport({})),
     safe(() => quizApi.dashboard({})),
+    safe(() => lmsApi.employeeLeaderboard({ limit: 10 })),
   ])
+
+  if (lbRes?.leaderboard) leaderboard.value = lbRes.leaderboard
 
   if (courseRes?.pagination) lms.value.courses = courseRes.pagination.total ?? 0
   if (enrollRes?.pagination) lms.value.enrollments = enrollRes.pagination.total ?? 0

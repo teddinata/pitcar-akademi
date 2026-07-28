@@ -272,10 +272,10 @@
                   <template v-else>
                     <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-28">
                       <div class="h-full rounded-full transition-all"
-                        :class="mp.video_watch_percentage >= 90 ? 'bg-green-500' : mp.video_watch_percentage >= 50 ? 'bg-yellow-400' : 'bg-red-400'"
-                        :style="{ width: (mp.video_watch_percentage || 0) + '%' }"></div>
+                        :class="modProgress(mp) >= 90 ? 'bg-green-500' : modProgress(mp) >= 50 ? 'bg-yellow-400' : 'bg-red-400'"
+                        :style="{ width: modProgress(mp) + '%' }"></div>
                     </div>
-                    <span class="text-xs tabular-nums w-8 text-right text-gray-500">{{ mp.video_watch_percentage }}%</span>
+                    <span class="text-xs tabular-nums w-8 text-right text-gray-500">{{ modProgress(mp) }}%</span>
                   </template>
                   <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
                     :class="{
@@ -344,16 +344,16 @@
                       <button v-if="mp.quiz_session_id" @click="openSession(mp.quiz_session_id)" class="text-[10px] font-semibold text-[#B70000] hover:underline">Lihat jawaban →</button>
                     </div>
                   </template>
-                  <!-- Non-quiz module: bar tonton -->
+                  <!-- Non-quiz module: bar progres -->
                   <template v-else>
                     <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-28">
                       <div
                         class="h-full rounded-full transition-all"
-                        :class="mp.video_watch_percentage >= 90 ? 'bg-green-500' : mp.video_watch_percentage >= 50 ? 'bg-yellow-400' : 'bg-red-400'"
-                        :style="{ width: (mp.video_watch_percentage || 0) + '%' }"
+                        :class="modProgress(mp) >= 90 ? 'bg-green-500' : modProgress(mp) >= 50 ? 'bg-yellow-400' : 'bg-red-400'"
+                        :style="{ width: modProgress(mp) + '%' }"
                       ></div>
                     </div>
-                    <span class="text-xs tabular-nums w-8 text-right text-gray-500">{{ mp.video_watch_percentage }}%</span>
+                    <span class="text-xs tabular-nums w-8 text-right text-gray-500">{{ modProgress(mp) }}%</span>
                   </template>
 
                   <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
@@ -535,57 +535,92 @@
       </div>
     </template>
 
-    <!-- Quiz Detail Modal (claymorphism) -->
+    <!-- Quiz Detail Modal -->
     <Teleport to="body">
-      <div v-if="quizModal.open" class="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4" @click.self="quizModal.open = false">
-        <div class="w-full max-w-xl max-h-[88vh] flex flex-col rounded-3xl p-6" style="background:rgba(255,255,255,0.6); -webkit-backdrop-filter:blur(22px) saturate(160%); backdrop-filter:blur(22px) saturate(160%); border:1px solid rgba(255,255,255,0.6); box-shadow:0 24px 60px rgba(31,38,135,0.28)">
-          <!-- Header -->
-          <div class="flex items-center justify-between mb-4">
+      <div v-if="quizModal.open" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4" style="-webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px)" @click.self="quizModal.open = false">
+        <div class="w-full max-w-xl max-h-[88vh] flex flex-col rounded-3xl overflow-hidden bg-white shadow-2xl">
+          <!-- Header band (gradient engaging) -->
+          <div class="relative px-6 pt-5 pb-4 text-white shrink-0" style="background:linear-gradient(135deg,#B70000 0%,#e11d48 55%,#fb7185 100%)">
+            <button @click="quizModal.open = false" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors">✕</button>
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shrink-0"
-                style="background:linear-gradient(135deg,#B70000,#ff5252); box-shadow:4px 4px 10px rgba(183,0,0,0.35),-2px -2px 6px rgba(255,255,255,0.6)">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-extrabold text-lg shrink-0 bg-white/20 border border-white/30">
                 {{ (quizModal.name || 'U').charAt(0).toUpperCase() }}
               </div>
-              <div>
-                <h3 class="text-lg font-bold text-gray-800 leading-tight">{{ quizModal.name }}</h3>
-                <p class="text-xs text-gray-500">Nilai Quiz SOP</p>
+              <div class="min-w-0">
+                <h3 class="text-lg font-bold leading-tight truncate">{{ quizModal.name }}</h3>
+                <p class="text-xs text-white/80">Rangkuman Nilai Quiz</p>
               </div>
             </div>
-            <button @click="quizModal.open = false" class="w-9 h-9 flex items-center justify-center rounded-2xl text-gray-600 clay-btn">✕</button>
+            <!-- mini stats -->
+            <div v-if="!quizModal.loading" class="flex gap-2 mt-4">
+              <div class="flex-1 rounded-xl px-3 py-2 bg-white/15 border border-white/20">
+                <p class="text-[10px] uppercase tracking-wide text-white/80 font-semibold">📘 Quiz Kursus</p>
+                <p class="text-lg font-extrabold leading-tight">{{ quizModal.courseSummary.done ?? 0 }}<span class="text-xs font-semibold text-white/70">/{{ quizModal.courseSummary.total ?? 0 }}</span></p>
+              </div>
+              <div class="flex-1 rounded-xl px-3 py-2 bg-white/15 border border-white/20">
+                <p class="text-[10px] uppercase tracking-wide text-white/80 font-semibold">Quiz SOP</p>
+                <p class="text-lg font-extrabold leading-tight">{{ quizModal.summary.done ?? 0 }}<span class="text-xs font-semibold text-white/70">/{{ quizModal.summary.assigned ?? 0 }}</span></p>
+              </div>
+            </div>
           </div>
 
           <div v-if="quizModal.loading" class="py-12 text-center text-gray-400 text-sm">Memuat data...</div>
 
           <template v-else>
-            <!-- Summary cards -->
-            <div class="grid grid-cols-3 gap-3 mb-5">
-              <div class="rounded-2xl p-3 text-center" style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.5); box-shadow:inset 0 2px 6px rgba(31,38,135,0.10)">
-                <p class="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Assigned</p>
-                <p class="text-2xl font-extrabold text-gray-800 mt-0.5">{{ quizModal.summary.assigned }}</p>
-              </div>
-              <div class="rounded-2xl p-3 text-center" style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.5); box-shadow:inset 0 2px 6px rgba(31,38,135,0.10)">
-                <p class="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Selesai</p>
-                <p class="text-2xl font-extrabold text-emerald-600 mt-0.5">{{ quizModal.summary.done }}</p>
-              </div>
-              <div class="rounded-2xl p-3 text-center" style="background:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.5); box-shadow:inset 0 2px 6px rgba(31,38,135,0.10)">
-                <p class="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Completion</p>
-                <p class="text-2xl font-extrabold mt-0.5" :class="(quizModal.summary.completion ?? 0) >= 80 ? 'text-emerald-600' : 'text-amber-500'">{{ quizModal.summary.completion ?? 0 }}%</p>
-              </div>
-            </div>
+            <div class="flex-1 overflow-y-auto p-5 space-y-3" style="background:linear-gradient(180deg,#eff6ff 0%,#ffffff 22%)">
 
-            <!-- Quiz list -->
-            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
-              <p class="text-[11px] font-bold text-purple-600 uppercase tracking-wide">Quiz SOP Periodik</p>
-              <div v-if="!quizModal.assignments.length" class="py-4 text-center text-sm text-gray-400">Belum ada quiz SOP yang di-assign.</div>
+              <!-- ── QUIZ KURSUS (atas) ── -->
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-extrabold text-blue-600 uppercase tracking-wide flex items-center gap-1">📘 Quiz Kursus</p>
+                <span v-if="quizModal.courseQuizzes.length" class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  {{ quizModal.courseSummary.done }}/{{ quizModal.courseSummary.total }} dikerjakan
+                </span>
+              </div>
+              <div v-if="!quizModal.courseQuizzes.length" class="py-4 text-center text-sm text-gray-400 bg-blue-50/50 rounded-2xl">Belum mengerjakan quiz di kursus.</div>
+              <div
+                v-for="cq in quizModal.courseQuizzes"
+                :key="'cq-' + cq.session_id"
+                class="rounded-2xl p-4 flex items-center gap-4 bg-white border-l-4 border-blue-400 shadow-sm border border-gray-100"
+              >
+                <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0" :style="scoreDialStyleCourse(cq)">
+                  <span class="text-lg font-extrabold leading-none">{{ cq.score !== null && cq.score !== undefined ? Math.round(cq.score) : '–' }}</span>
+                  <span class="text-[9px] font-semibold opacity-80 mt-0.5">skor</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-gray-800 text-sm truncate">{{ cq.quiz_name }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5 truncate">
+                    <span v-if="cq.course_name">{{ cq.course_name }}</span>
+                    <span v-if="cq.module_name"> · {{ cq.module_name }}</span>
+                  </p>
+                  <div class="flex items-center gap-2 mt-1.5">
+                    <span v-if="cq.essay_pending" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">Menunggu esai</span>
+                    <span v-else class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700">Selesai</span>
+                    <span v-if="cq.is_passed === true" class="text-[10px] font-bold text-emerald-600">✓ Lulus</span>
+                    <span v-else-if="cq.is_passed === false && !cq.essay_pending" class="text-[10px] font-bold text-red-500">✗ Belum Lulus</span>
+                  </div>
+                </div>
+                <button
+                  v-if="cq.session_id"
+                  @click="openSession(cq.session_id)"
+                  class="shrink-0 px-3 py-1.5 text-xs font-semibold text-white bg-[#B70000] rounded-xl hover:bg-[#950000] transition-colors"
+                  title="Lihat jawaban karyawan"
+                >Lihat jawaban →</button>
+              </div>
+
+              <!-- ── QUIZ SOP PERIODIK (bawah) ── -->
+              <div class="flex items-center justify-between pt-4 mt-2 border-t border-gray-100">
+                <p class="text-xs font-extrabold text-amber-600 uppercase tracking-wide">Quiz SOP Periodik</p>
+                <span v-if="quizModal.assignments.length" class="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                  {{ quizModal.summary.done }}/{{ quizModal.summary.assigned }} · {{ quizModal.summary.completion ?? 0 }}%
+                </span>
+              </div>
+              <div v-if="!quizModal.assignments.length" class="py-4 text-center text-sm text-gray-400 bg-amber-50/40 rounded-2xl">Belum ada quiz SOP yang di-assign.</div>
               <div
                 v-for="q in quizModal.assignments"
                 :key="q.id"
-                class="rounded-2xl p-4 flex items-center gap-4"
-                style="background:rgba(255,255,255,0.45); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.55); box-shadow:0 6px 20px rgba(31,38,135,0.10)"
+                class="rounded-2xl p-4 flex items-center gap-4 bg-white border-l-4 border-amber-400 shadow-sm border border-gray-100"
               >
-                <!-- Score dial -->
-                <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0"
-                  :style="scoreDialStyle(q)">
+                <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0" :style="scoreDialStyle(q)">
                   <span class="text-lg font-extrabold leading-none">{{ q.score !== null && q.score !== undefined ? Math.round(q.score) : '–' }}</span>
                   <span class="text-[9px] font-semibold opacity-80 mt-0.5">skor</span>
                 </div>
@@ -612,46 +647,7 @@
                 <button
                   v-if="q.session_id"
                   @click="openSession(q.session_id)"
-                  class="shrink-0 px-3 py-1.5 text-xs font-semibold text-[#B70000] rounded-xl clay-btn"
-                  title="Lihat jawaban karyawan"
-                >Lihat jawaban →</button>
-              </div>
-
-              <!-- Quiz Kursus (in-course) — terpisah dari SOP, muncul untuk siapa pun yg mengerjakan -->
-              <div class="flex items-center justify-between pt-3 mt-1 border-t border-white/40">
-                <p class="text-[11px] font-bold text-blue-600 uppercase tracking-wide">📘 Quiz Kursus</p>
-                <span v-if="quizModal.courseQuizzes.length" class="text-[11px] font-semibold text-gray-500">
-                  {{ quizModal.courseSummary.done }}/{{ quizModal.courseSummary.total }} dikerjakan
-                </span>
-              </div>
-              <div v-if="!quizModal.courseQuizzes.length" class="py-4 text-center text-sm text-gray-400">Belum mengerjakan quiz di kursus.</div>
-              <div
-                v-for="cq in quizModal.courseQuizzes"
-                :key="'cq-' + cq.session_id"
-                class="rounded-2xl p-4 flex items-center gap-4"
-                style="background:rgba(255,255,255,0.45); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.55); box-shadow:0 6px 20px rgba(31,38,135,0.10)"
-              >
-                <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0" :style="scoreDialStyleCourse(cq)">
-                  <span class="text-lg font-extrabold leading-none">{{ cq.score !== null && cq.score !== undefined ? Math.round(cq.score) : '–' }}</span>
-                  <span class="text-[9px] font-semibold opacity-80 mt-0.5">skor</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="font-bold text-gray-800 text-sm truncate">{{ cq.quiz_name }}</p>
-                  <p class="text-xs text-gray-500 mt-0.5 truncate">
-                    <span v-if="cq.course_name">{{ cq.course_name }}</span>
-                    <span v-if="cq.module_name"> · {{ cq.module_name }}</span>
-                  </p>
-                  <div class="flex items-center gap-2 mt-1.5">
-                    <span v-if="cq.essay_pending" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700">Menunggu esai</span>
-                    <span v-else class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700">Selesai</span>
-                    <span v-if="cq.is_passed === true" class="text-[10px] font-bold text-emerald-600">✓ Lulus</span>
-                    <span v-else-if="cq.is_passed === false && !cq.essay_pending" class="text-[10px] font-bold text-red-500">✗ Belum Lulus</span>
-                  </div>
-                </div>
-                <button
-                  v-if="cq.session_id"
-                  @click="openSession(cq.session_id)"
-                  class="shrink-0 px-3 py-1.5 text-xs font-semibold text-[#B70000] rounded-xl clay-btn"
+                  class="shrink-0 px-3 py-1.5 text-xs font-semibold text-white bg-amber-500 rounded-xl hover:bg-amber-600 transition-colors"
                   title="Lihat jawaban karyawan"
                 >Lihat jawaban →</button>
               </div>
@@ -774,6 +770,16 @@ const filterDeptId = ref(null)
 const filterUserId = ref(null)
 const profileUserId = ref(null)
 const profileExpandedId = ref(null)
+
+// Progres per modul non-quiz: modul selesai = 100% apapun tipenya
+// (dokumen/PDF/teks/video). Fallback ke video_watch_percentage bila
+// backend belum mengirim field `progress` (belum di-redeploy).
+function modProgress(mp) {
+  if (mp?.progress != null) return Math.round(mp.progress)
+  if (mp?.status === 'completed') return 100
+  return Math.round(mp?.video_watch_percentage || 0)
+}
+
 const autoEnrollUserId = ref(null)
 const autoEnrolling = ref(false)
 const autoEnrollResult = ref(null)

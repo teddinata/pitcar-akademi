@@ -186,6 +186,20 @@
               <p v-if="gradings[essay.answer_id] !== undefined" class="text-xs text-purple-600 mt-1.5">
                 Poin didapat: {{ Math.round(essay.weight * gradings[essay.answer_id] / 100) }} / {{ essay.weight }}
               </p>
+
+              <!-- Tanggapan trainer (opsional, tampil ke karyawan) -->
+              <div class="mt-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Tanggapan / jawaban benar
+                  <span class="text-gray-400 font-normal ml-1">(opsional, akan dilihat karyawan)</span>
+                </label>
+                <textarea
+                  v-model="feedbacks[essay.answer_id]"
+                  rows="2"
+                  placeholder="Tulis evaluasi atau contoh jawaban benar untuk karyawan…"
+                  class="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-400 transition-colors resize-y"
+                ></textarea>
+              </div>
             </div>
           </div>
         </div>
@@ -256,6 +270,7 @@ const loading = ref(true)
 const sessions = ref([])
 const gradingSession = ref(null)
 const gradings = ref({})   // answerId → score (0-100)
+const feedbacks = ref({})  // answerId → tanggapan trainer (string)
 const submitting = ref(false)
 const submitError = ref('')
 const showSuccess = ref(false)
@@ -287,10 +302,12 @@ async function load() {
 function openGrading(session) {
   gradingSession.value = session
   gradings.value = {}
+  feedbacks.value = {}
   submitError.value = ''
-  // Pre-fill already-graded essays
+  // Pre-fill already-graded essays + tanggapan yang sudah ada
   session.essays.forEach(e => {
     if (e.graded) gradings.value[e.answer_id] = e.essay_score
+    if (e.trainer_feedback) feedbacks.value[e.answer_id] = e.trainer_feedback
   })
 }
 
@@ -307,6 +324,7 @@ async function submitGradings() {
     const gradingsList = Object.entries(gradings.value).map(([aid, score]) => ({
       answer_id: parseInt(aid),
       score,
+      feedback: feedbacks.value[aid] || '',
     }))
     const data = await quizApi.gradeEssays(gradingSession.value.session_id, gradingsList)
     lastResult.value = data

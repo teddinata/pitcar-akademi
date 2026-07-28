@@ -157,12 +157,12 @@
                   <div class="flex gap-2">
                     <span class="text-gray-400 w-20 shrink-0">Jawaban kamu:</span>
                     <span :class="ans.is_correct ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-                      {{ ans.chosen_answer || '(tidak dijawab)' }}
+                      {{ ans.chosen_text || ans.chosen_answer || '(tidak dijawab)' }}
                     </span>
                   </div>
-                  <div v-if="!ans.is_correct && ans.correct_answer" class="flex gap-2">
+                  <div v-if="!ans.is_correct && (ans.correct_text || ans.correct_answer)" class="flex gap-2">
                     <span class="text-gray-400 w-20 shrink-0">Jawaban benar:</span>
-                    <span class="text-green-700 font-semibold">{{ ans.correct_answer }}</span>
+                    <span class="text-green-700 font-semibold">{{ ans.correct_text || ans.correct_answer }}</span>
                   </div>
                   <div v-if="ans.explanation" class="mt-2 p-2 bg-blue-50 rounded-lg text-blue-700 leading-relaxed">
                     {{ ans.explanation }}
@@ -173,6 +173,17 @@
                   </div>
                 </div>
               </template>
+
+              <!-- Tanggapan / evaluasi trainer -->
+              <div v-if="ans.trainer_feedback" class="ml-7 mt-2 p-3 rounded-lg bg-indigo-50 border border-indigo-100">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-indigo-500 mb-1 flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 20l1.3-3.9A7.96 7.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Tanggapan Trainer
+                </p>
+                <p class="text-xs text-indigo-800 leading-relaxed whitespace-pre-wrap">{{ ans.trainer_feedback }}</p>
+              </div>
             </div>
           </div>
         </div>

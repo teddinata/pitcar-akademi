@@ -229,17 +229,30 @@
                   </div>
                 </div>
               </template>
+
+              <!-- Tanggapan trainer (semua tipe soal, tampil ke karyawan) -->
+              <div class="ml-7 mt-2.5">
+                <label class="block text-[10px] font-bold uppercase tracking-wide text-indigo-500 mb-1">
+                  Tanggapan / evaluasi trainer
+                </label>
+                <textarea
+                  v-model="pendingFeedback[ans.answer_id]"
+                  rows="2"
+                  placeholder="Tulis tanggapan / contoh jawaban benar untuk karyawan…"
+                  class="w-full px-3 py-2 text-xs border border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-y bg-indigo-50/40"
+                ></textarea>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Save essay grades button (shows if any pending scores) -->
-        <div v-if="hasPendingScores" class="sticky bottom-4">
+        <!-- Save button (shows if any pending scores OR feedback changes) -->
+        <div v-if="hasPendingScores || hasFeedbackChanges" class="sticky bottom-4">
           <button @click="saveEssayGrades" :disabled="saving"
             class="w-full py-3.5 rounded-2xl font-bold text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
             :class="saving ? 'bg-purple-400' : 'bg-gradient-to-r from-purple-600 to-purple-700'">
             <div v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            <span>{{ saving ? 'Menyimpan...' : `Simpan Nilai Esai (${pendingScoreCount} soal)` }}</span>
+            <span>{{ saving ? 'Menyimpan...' : saveButtonLabel }}</span>
           </button>
         </div>
 
@@ -249,7 +262,7 @@
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
           </svg>
-          Nilai esai berhasil disimpan
+          Perubahan berhasil disimpan
         </div>
 
         <div class="pb-6"></div>
@@ -281,6 +294,9 @@ const detail = ref(null)
 
 // essay scores waiting to be saved: { answerId: score }
 const pendingScores = ref({})
+// trainer feedback per answer: { answerId: text }
+const pendingFeedback = ref({})
+const initialFeedback = ref({})   // snapshot untuk deteksi perubahan
 
 const correctCount = computed(() =>
   detail.value?.answers?.filter(a => a.question_type !== 'essay' && a.is_correct).length ?? 0
@@ -293,6 +309,18 @@ const essayCount = computed(() =>
 )
 const hasPendingScores = computed(() => Object.keys(pendingScores.value).length > 0)
 const pendingScoreCount = computed(() => Object.keys(pendingScores.value).length)
+
+const changedFeedbackIds = computed(() =>
+  Object.keys(pendingFeedback.value).filter(
+    id => (pendingFeedback.value[id] || '') !== (initialFeedback.value[id] || '')
+  )
+)
+const hasFeedbackChanges = computed(() => changedFeedbackIds.value.length > 0)
+
+const saveButtonLabel = computed(() => {
+  if (hasPendingScores.value) return `Simpan Nilai & Tanggapan`
+  return `Simpan Tanggapan (${changedFeedbackIds.value.length})`
+})
 
 function initials(name) {
   if (!name) return '?'
@@ -333,22 +361,28 @@ function setEssayScore(answerId, val) {
 }
 
 async function saveEssayGrades() {
-  if (!hasPendingScores.value) return
+  if (!hasPendingScores.value && !hasFeedbackChanges.value) return
   saving.value = true
   try {
-    // Build gradings list: { answer_id, score }
-    const gradings = Object.entries(pendingScores.value).map(([id, score]) => ({
-      answer_id: parseInt(id),
-      score,
-    }))
-    await quizApi.gradeEssays(sessionId, gradings)
+    // Gabung skor esai + tanggapan trainer per answer_id
+    const map = {}
+    for (const [id, score] of Object.entries(pendingScores.value)) {
+      map[id] = { answer_id: parseInt(id), score }
+    }
+    for (const id of changedFeedbackIds.value) {
+      map[id] = {
+        ...(map[id] || { answer_id: parseInt(id) }),
+        feedback: pendingFeedback.value[id] || '',
+      }
+    }
+    await quizApi.gradeEssays(sessionId, Object.values(map))
     pendingScores.value = {}
     saveSuccess.value = true
     setTimeout(() => { saveSuccess.value = false }, 3000)
-    // Reload to show updated scores
+    // Reload to show updated scores & feedback
     await loadDetail()
   } catch (e) {
-    alert('Gagal menyimpan nilai: ' + e.message)
+    alert('Gagal menyimpan: ' + e.message)
   } finally {
     saving.value = false
   }
@@ -360,6 +394,11 @@ async function loadDetail() {
   try {
     const data = await quizApi.adminSessionDetail(sessionId)
     detail.value = data
+    // Prefill tanggapan trainer + snapshot untuk deteksi perubahan
+    const fb = {}
+    ;(data.answers || []).forEach(a => { fb[a.answer_id] = a.trainer_feedback || '' })
+    pendingFeedback.value = { ...fb }
+    initialFeedback.value = { ...fb }
   } catch (e) {
     if (e.code === 'unauthorized') router.push('/login')
     else error.value = e.message

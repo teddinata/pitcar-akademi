@@ -78,47 +78,54 @@
       <div
         v-for="course in courses"
         :key="course.id"
-        class="clay-card hover:shadow-md transition-shadow overflow-hidden flex flex-col"
+        class="clay-card overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
       >
-        <!-- Color band -->
-        <div class="h-2" :class="difficultyBand(course.difficulty_level)"></div>
-        <div class="p-4 flex-1 flex flex-col">
-          <div class="flex items-start justify-between gap-2 mb-2">
-            <h3 class="font-semibold text-gray-900 text-sm leading-snug">{{ course.name }}</h3>
+        <!-- Header tinted per level (glassy, nuansa edukasi) -->
+        <div class="px-4 pt-4 pb-3" :style="difficultyHeaderStyle(course.difficulty_level)">
+          <div class="flex items-start justify-between gap-2 mb-3">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/70 text-gray-600 truncate max-w-[60%]">{{ course.category || 'Umum' }}</span>
             <div class="flex flex-col items-end gap-1 shrink-0">
-              <span v-if="course.active === false" class="text-[10px] px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full font-bold">📦 Arsip</span>
-              <span v-if="!course.is_published" class="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold border border-amber-200">Draft</span>
-              <span v-if="statusOf(course) === 'completed'" class="text-[10px] px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-bold">✓ Selesai</span>
-              <span v-else-if="statusOf(course) === 'in_progress'" class="text-[10px] px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full font-bold">Sedang</span>
+              <span v-if="course.active === false" class="text-[10px] px-2 py-0.5 bg-gray-700/80 text-white rounded-full font-bold">📦 Arsip</span>
+              <span v-if="!course.is_published" class="text-[10px] px-2 py-0.5 bg-amber-500/90 text-white rounded-full font-bold">Draft</span>
+              <span v-if="statusOf(course) === 'completed'" class="text-[10px] px-2 py-0.5 bg-green-600 text-white rounded-full font-bold">✓ Selesai</span>
+              <span v-else-if="statusOf(course) === 'in_progress'" class="text-[10px] px-2 py-0.5 bg-indigo-600 text-white rounded-full font-bold">Sedang</span>
             </div>
           </div>
-          <p class="text-xs text-gray-400 mb-1">{{ course.category || '—' }}</p>
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center shrink-0 shadow-sm">
+              <BookOpenIcon class="w-5 h-5" :class="difficultyText(course.difficulty_level)" />
+            </div>
+            <h3 class="font-bold text-gray-900 text-sm leading-snug line-clamp-2">{{ course.name }}</h3>
+          </div>
+        </div>
+
+        <div class="p-4 pt-3 flex-1 flex flex-col">
           <p class="text-xs text-gray-500 line-clamp-2 mb-3 flex-1">{{ course.description || 'Tidak ada deskripsi' }}</p>
 
-          <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
-            <span class="px-2 py-0.5 rounded-full font-medium" :class="difficultyClass(course.difficulty_level)">
-              {{ course.difficulty_level || 'basic' }}
-            </span>
-            <span>{{ course.duration_hours }}j · {{ course.module_count }} modul</span>
+          <!-- Meta chips -->
+          <div class="flex flex-wrap items-center gap-1.5 mb-3">
+            <span class="text-[10px] font-semibold px-2 py-1 rounded-lg" :class="difficultyClass(course.difficulty_level)">{{ difficultyLabel(course.difficulty_level) }}</span>
+            <span class="text-[10px] font-medium px-2 py-1 rounded-lg bg-gray-100 text-gray-500">⏱ {{ course.duration_hours }}j</span>
+            <span class="text-[10px] font-medium px-2 py-1 rounded-lg bg-gray-100 text-gray-500">📚 {{ course.module_count }} modul</span>
           </div>
 
-          <div class="flex items-center gap-2 text-xs text-gray-400 mb-3">
-            <span>{{ course.enrollment_count }} peserta</span>
-            <span>·</span>
-            <span>{{ course.completion_rate }}% selesai</span>
-          </div>
-
-          <!-- Progres pribadi (kalau sudah enroll) -->
+          <!-- Progres pribadi (kalau enroll) ATAU jumlah peserta -->
           <div v-if="enr(course)" class="mb-4">
-            <div class="h-1.5 bg-black/5 rounded-full overflow-hidden">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-semibold text-gray-500">Progresmu</span>
+              <span class="text-[10px] font-bold" :class="statusOf(course) === 'completed' ? 'text-green-600' : 'text-indigo-600'">{{ Math.round(enr(course).progress_percentage || 0) }}%</span>
+            </div>
+            <div class="h-2 bg-black/5 rounded-full overflow-hidden">
               <div
                 class="h-full rounded-full transition-all"
                 :class="statusOf(course) === 'completed' ? 'bg-green-500' : 'bg-indigo-500'"
                 :style="{ width: Math.round(enr(course).progress_percentage || 0) + '%' }"
               ></div>
             </div>
-            <p class="text-[10px] text-gray-400 mt-1">Progresmu: {{ Math.round(enr(course).progress_percentage || 0) }}%</p>
           </div>
+          <p v-else class="text-[11px] text-gray-400 mb-4 flex items-center gap-1">
+            <UsersIcon class="w-3.5 h-3.5" /> {{ course.enrollment_count }} peserta terdaftar
+          </p>
 
           <div class="flex gap-2 mt-auto">
             <!-- ARSIP: aksi pulihkan / hapus permanen -->
@@ -349,7 +356,7 @@ import { useAuthStore } from '../../stores/auth'
 import { lmsApi } from '../../services/lmsApi'
 import {
   BookOpenIcon, PlusIcon, PencilIcon, TrashIcon,
-  EyeIcon, EyeSlashIcon, XMarkIcon, ArchiveBoxIcon,
+  EyeIcon, EyeSlashIcon, XMarkIcon, ArchiveBoxIcon, UsersIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -607,6 +614,22 @@ function difficultyBand(level) {
 
 function difficultyClass(level) {
   return { basic: 'bg-green-50 text-green-700', intermediate: 'bg-yellow-50 text-yellow-700', advanced: 'bg-red-50 text-red-700' }[level] || 'bg-gray-100 text-gray-600'
+}
+
+// Gradient header lembut per level (nuansa edukasi glassy)
+function difficultyHeaderStyle(level) {
+  const map = {
+    basic: 'linear-gradient(135deg, rgba(52,211,153,0.28), rgba(255,255,255,0.35))',
+    intermediate: 'linear-gradient(135deg, rgba(251,191,36,0.30), rgba(255,255,255,0.35))',
+    advanced: 'linear-gradient(135deg, rgba(244,114,182,0.28), rgba(255,255,255,0.35))',
+  }
+  return `background:${map[level] || 'linear-gradient(135deg, rgba(99,102,241,0.22), rgba(255,255,255,0.35))'}`
+}
+function difficultyText(level) {
+  return { basic: 'text-emerald-600', intermediate: 'text-amber-600', advanced: 'text-rose-600' }[level] || 'text-indigo-600'
+}
+function difficultyLabel(level) {
+  return { basic: 'Dasar', intermediate: 'Menengah', advanced: 'Lanjutan' }[level] || (level || 'Dasar')
 }
 
 onMounted(() => { load(); loadEnrollmentMap() })

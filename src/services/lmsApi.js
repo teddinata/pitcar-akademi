@@ -205,4 +205,6 @@ export const lmsApi = {
     call('/web/v1/lms/employees', { operation: 'departments' }),
   jobPositions: () =>
     call('/web/v1/lms/employees', { operation: 'job_positions' }),
+  employeeLeaderboard: (params = {}) =>
+    call('/web/v1/lms/employees', { operation: 'leaderboard', ...params }),
 }

@@ -147,9 +147,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               SOP Terkait <span class="text-red-500">*</span>
+              <span class="text-xs font-normal text-gray-400">(boleh lebih dari satu)</span>
             </label>
 
-            <!-- Searchable dropdown when list is available -->
+            <!-- Searchable multi-select when list is available -->
             <div v-if="sops.length > 0" class="relative">
               <!-- Backdrop -->
               <div v-if="sopDropdownOpen" class="fixed inset-0 z-20" @click="sopDropdownOpen = false"></div>
@@ -162,25 +163,29 @@
                 class="w-full px-4 py-3 text-sm border-2 rounded-xl text-left flex items-center justify-between transition-all disabled:bg-gray-50 disabled:text-gray-400"
                 :class="sopDropdownOpen ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-200 hover:border-blue-300'"
               >
-                <span :class="selectedSopName ? 'text-gray-900' : 'text-gray-400'">
-                  {{ selectedSopName || '— Pilih SOP —' }}
+                <span :class="quizForm.sop_ids.length ? 'text-gray-900' : 'text-gray-400'">
+                  {{ quizForm.sop_ids.length ? quizForm.sop_ids.length + ' SOP dipilih' : '— Pilih SOP —' }}
                 </span>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  <button
-                    v-if="quizForm.sop_id && canEdit"
-                    type="button"
-                    @click.stop="selectSop(null)"
-                    class="text-gray-300 hover:text-gray-500 transition-colors"
-                  >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="sopDropdownOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <!-- Selected chips -->
+              <div v-if="quizForm.sop_ids.length" class="flex flex-wrap gap-1.5 mt-2">
+                <span
+                  v-for="id in quizForm.sop_ids"
+                  :key="id"
+                  class="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium"
+                >
+                  {{ sopName(id) }}
+                  <button v-if="canEdit" type="button" @click="toggleSop(id)" class="text-blue-400 hover:text-blue-600 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                  <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="sopDropdownOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </button>
+                </span>
+              </div>
 
               <!-- Dropdown panel -->
               <div
@@ -204,27 +209,26 @@
                   </div>
                 </div>
 
-                <!-- Options list -->
+                <!-- Options list (toggle) -->
                 <div class="max-h-52 overflow-y-auto">
-                  <button
-                    type="button"
-                    @click="selectSop(null)"
-                    class="w-full px-4 py-2.5 text-sm text-left text-gray-400 hover:bg-gray-50 transition-colors"
-                  >— Pilih SOP —</button>
                   <button
                     v-for="s in filteredSops"
                     :key="s.id"
                     type="button"
-                    @click="selectSop(s.id)"
-                    class="w-full px-4 py-2.5 text-sm text-left transition-colors flex items-center gap-2"
-                    :class="quizForm.sop_id === s.id
+                    @click="toggleSop(s.id)"
+                    class="w-full px-4 py-2.5 text-sm text-left transition-colors flex items-center gap-2.5"
+                    :class="isSopSelected(s.id)
                       ? 'bg-blue-50 text-blue-700 font-semibold'
                       : 'text-gray-700 hover:bg-blue-50/60'"
                   >
-                    <svg v-if="quizForm.sop_id === s.id" class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span v-else class="w-3.5 shrink-0"></span>
+                    <span
+                      class="w-4 h-4 rounded border flex items-center justify-center shrink-0"
+                      :class="isSopSelected(s.id) ? 'bg-blue-600 border-blue-600' : 'border-gray-300'"
+                    >
+                      <svg v-if="isSopSelected(s.id)" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
                     {{ s.name }}
                     <span v-if="s.code" class="ml-auto text-xs font-mono text-gray-400 shrink-0">{{ s.code }}</span>
                   </button>
@@ -235,12 +239,12 @@
               </div>
             </div>
 
-            <!-- Fallback: manual ID input when SOP list unavailable -->
+            <!-- Fallback: manual comma-separated IDs when SOP list unavailable -->
             <input
               v-else
-              v-model.number="quizForm.sop_id"
-              type="number"
-              placeholder="ID SOP (angka)"
+              v-model="sopIdsManual"
+              type="text"
+              placeholder="ID SOP, pisahkan koma (mis. 2,4,5)"
               :disabled="!canEdit"
               class="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-400 transition-all"
             />
@@ -248,7 +252,7 @@
               <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
               </svg>
-              Daftar SOP tidak tersedia — masukkan ID manual
+              Daftar SOP tidak tersedia — masukkan ID manual (pisahkan koma)
             </p>
           </div>
 
@@ -989,16 +993,31 @@ const filteredSops = computed(() => {
   )
 })
 
-const selectedSopName = computed(() => {
-  if (!quizForm.value.sop_id) return ''
-  return sops.value.find(s => s.id === quizForm.value.sop_id)?.name || ''
-})
-
-function selectSop(id) {
-  quizForm.value.sop_id = id
-  sopDropdownOpen.value = false
+// Multi-SOP: nama SOP dari id (untuk chip)
+function sopName(id) {
+  return sops.value.find(s => s.id === id)?.name || `SOP #${id}`
+}
+function isSopSelected(id) {
+  return quizForm.value.sop_ids.includes(id)
+}
+function toggleSop(id) {
+  const arr = quizForm.value.sop_ids
+  const i = arr.indexOf(id)
+  if (i >= 0) arr.splice(i, 1)
+  else arr.push(id)
   sopSearch.value = ''
 }
+
+// Fallback manual: teks "2,4,5" ⇄ quizForm.sop_ids
+const sopIdsManual = computed({
+  get: () => quizForm.value.sop_ids.join(','),
+  set: (v) => {
+    quizForm.value.sop_ids = String(v || '')
+      .split(',')
+      .map(x => parseInt(x.trim()))
+      .filter(x => !isNaN(x))
+  },
+})
 
 watch(sopDropdownOpen, (open) => {
   if (open) {
@@ -1020,7 +1039,7 @@ const quarterNumber = ref('')
 
 const quizForm = ref({
   name: '',
-  sop_id: null,
+  sop_ids: [],
   description: '',
   period: '',
   period_type: 'monthly',
@@ -1078,7 +1097,7 @@ function stateDotClass(s) {
 function buildQuizParams() {
   const p = {
     name: quizForm.value.name.trim(),
-    sop_id: quizForm.value.sop_id || null,
+    sop_ids: quizForm.value.sop_ids || [],
     description: quizForm.value.description || '',
     period: quizForm.value.period,
     period_type: quizForm.value.period_type,
@@ -1129,7 +1148,7 @@ function validateQuiz() {
   }
 
   if (!quizForm.value.deadline) return 'Deadline wajib diisi.'
-  if (!quizForm.value.sop_id) return 'SOP terkait wajib diisi.'
+  if (!quizForm.value.sop_ids.length) return 'Pilih minimal satu SOP terkait.'
   return null
 }
 
@@ -1436,7 +1455,9 @@ onMounted(async () => {
       currentState.value = rec.state || 'draft'
       quizForm.value = {
         name: rec.name || '',
-        sop_id: rec.sop?.id || rec.sop_id || null,
+        sop_ids: (rec.sops && rec.sops.length)
+          ? rec.sops.map(s => s.id)
+          : (rec.sop?.id ? [rec.sop.id] : []),
         description: rec.description || '',
         period: rec.period || '',
         period_type: rec.period_type || 'monthly',
