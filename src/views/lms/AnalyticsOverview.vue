@@ -89,11 +89,11 @@
         </router-link>
       </div>
 
-      <!-- ── RANKING KARYAWAN (berdasarkan kursus selesai) ── -->
+      <!-- ── RANKING KARYAWAN (berdasarkan nilai quiz kursus) ── -->
       <div class="clay-card overflow-hidden mt-8">
         <div class="px-5 py-4 border-b border-white/40 flex items-center justify-between">
           <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">🏆 Ranking Karyawan</h2>
-          <span class="text-xs text-gray-500">Berdasarkan kursus selesai</span>
+          <span class="text-xs text-gray-500">Berdasarkan nilai quiz kursus</span>
         </div>
         <div v-if="!leaderboard.length" class="py-8 text-center text-sm text-gray-400">Belum ada data ranking.</div>
         <div v-else class="divide-y divide-white/40">
@@ -113,16 +113,21 @@
               <p class="font-semibold text-gray-800 text-sm truncate">{{ r.name }}</p>
               <p class="text-xs text-gray-400 truncate">{{ r.job_title || '—' }}<span v-if="r.department"> · {{ r.department }}</span></p>
             </div>
-            <!-- Stats -->
+            <!-- Stats: nilai quiz kursus -->
             <div class="text-right shrink-0">
-              <p class="text-sm font-extrabold text-green-600 leading-none">{{ r.completed }}<span class="text-xs font-semibold text-gray-400">/{{ r.enrolled }}</span></p>
-              <p class="text-[10px] text-gray-400 mt-0.5">kursus selesai</p>
+              <p class="text-base font-extrabold leading-none"
+                :class="(r.avg_quiz_score || 0) >= 80 ? 'text-green-600' : (r.avg_quiz_score || 0) >= 60 ? 'text-amber-600' : 'text-red-500'">
+                {{ Math.round(r.avg_quiz_score || 0) }}%
+              </p>
+              <p class="text-[10px] text-gray-400 mt-0.5">{{ r.quiz_count }} quiz</p>
             </div>
             <div class="w-14 shrink-0 hidden sm:block">
               <div class="h-1.5 bg-black/10 rounded-full overflow-hidden">
-                <div class="h-full rounded-full bg-indigo-500" :style="{ width: Math.round(r.avg_progress || 0) + '%' }"></div>
+                <div class="h-full rounded-full"
+                  :class="(r.avg_quiz_score || 0) >= 80 ? 'bg-green-500' : (r.avg_quiz_score || 0) >= 60 ? 'bg-amber-400' : 'bg-red-400'"
+                  :style="{ width: Math.round(r.avg_quiz_score || 0) + '%' }"></div>
               </div>
-              <p class="text-[9px] text-gray-400 mt-0.5 text-right">{{ Math.round(r.avg_progress || 0) }}%</p>
+              <p class="text-[9px] text-gray-400 mt-0.5 text-right">rata-rata</p>
             </div>
           </router-link>
         </div>
