@@ -64,6 +64,63 @@
         </div>
       </div>
 
+      <!-- ── GAMIFIKASI ── -->
+      <div v-if="data?.gamification" class="grid md:grid-cols-3 gap-4 mb-6">
+        <!-- Total Poin + rincian sumber -->
+        <div class="clay-card p-5">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-2xl shrink-0">⭐</div>
+            <div>
+              <p class="text-3xl font-black text-amber-600 leading-none">{{ data.gamification.total_points }}</p>
+              <p class="text-xs text-gray-500 font-semibold mt-1">Total Poin</p>
+            </div>
+          </div>
+          <div class="mt-4 space-y-1.5 text-xs">
+            <div class="flex justify-between"><span class="text-gray-500">Dari kursus</span><span class="font-bold text-gray-700">+{{ data.gamification.points_from_courses }}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Nilai lencana</span><span class="font-bold text-gray-700">+{{ data.gamification.points_from_badges }}</span></div>
+          </div>
+        </div>
+
+        <!-- Lencana diraih -->
+        <div class="clay-card p-5 md:col-span-2">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-semibold text-gray-800 text-sm flex items-center gap-2">🏅 Lencana Diraih <span class="text-xs text-gray-400">({{ data.gamification.badge_count }})</span></h2>
+            <router-link to="/dashboard/lms/badges" class="text-xs font-semibold text-blue-600 hover:underline">Semua →</router-link>
+          </div>
+          <div v-if="data.gamification.earned_badges?.length" class="flex flex-wrap gap-2">
+            <div v-for="b in data.gamification.earned_badges" :key="b.id"
+              class="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl border"
+              :style="{ borderColor: b.color + '55', background: b.color + '11' }">
+              <span class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-sm shrink-0" :style="{ background: b.color }">
+                <img v-if="b.icon_url" :src="b.icon_url" class="w-5 h-5 object-contain" alt="" />
+                <span v-else>🏅</span>
+              </span>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-800 leading-none truncate">{{ b.name }}</p>
+                <p class="text-[10px] text-gray-400 mt-0.5">+{{ b.points_awarded }} poin · {{ b.earned_date }}</p>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-sm text-gray-400 py-3 text-center">Belum ada lencana. Selesaikan kursus &amp; quiz untuk meraihnya!</div>
+        </div>
+      </div>
+
+      <!-- Rincian poin per kursus -->
+      <div v-if="data?.gamification?.course_points?.length" class="clay-card overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-gray-100">
+          <h2 class="font-semibold text-gray-800 text-sm">Poin dari Kursus</h2>
+        </div>
+        <div class="divide-y divide-gray-50">
+          <div v-for="(cp, i) in data.gamification.course_points" :key="i" class="px-5 py-3 flex items-center justify-between">
+            <div class="min-w-0">
+              <p class="font-medium text-gray-800 text-sm truncate">{{ cp.course_name }}</p>
+              <p class="text-xs text-gray-400">{{ cp.date }}</p>
+            </div>
+            <span class="text-sm font-extrabold text-emerald-600 shrink-0">+{{ cp.points }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Active Enrollments -->
       <div class="grid md:grid-cols-2 gap-6">
         <div class="clay-card overflow-hidden">

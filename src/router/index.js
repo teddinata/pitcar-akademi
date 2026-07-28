@@ -10,7 +10,7 @@ const routes = [
   },
   {
     path: '',
-    redirect: '/dashboard/quiz',
+    redirect: '/dashboard/lms',
     meta: { requiresAuth: true }
   },
 

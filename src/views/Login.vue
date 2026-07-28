@@ -340,7 +340,7 @@ const handleLogin = async () => {
       formData.value.password
     )
     
-    router.push('/dashboard/quiz')
+    router.push('/dashboard/lms')
   } catch (err) {
     error.value = err.message || 'Login failed. Please check your credentials.'
   } finally {
