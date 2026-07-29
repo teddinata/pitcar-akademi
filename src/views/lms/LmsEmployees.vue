@@ -234,7 +234,7 @@
         <!-- Kursus Sedang Berjalan (expandable → detail per modul + quiz + skip) -->
         <div v-if="data.current_enrollments?.length" class="clay-card overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100">
-            <h3 class="font-semibold text-gray-800">Kursus Sedang Berjalan</h3>
+            <h3 class="font-semibold text-gray-800">Kursus Belum Selesai</h3>
           </div>
           <div class="divide-y divide-gray-50">
             <div v-for="e in data.current_enrollments" :key="e.id">
