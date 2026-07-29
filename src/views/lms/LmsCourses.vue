@@ -107,6 +107,7 @@
             <span class="text-[10px] font-semibold px-2 py-1 rounded-lg" :class="difficultyClass(course.difficulty_level)">{{ difficultyLabel(course.difficulty_level) }}</span>
             <span class="text-[10px] font-medium px-2 py-1 rounded-lg bg-gray-100 text-gray-500">⏱ {{ course.duration_hours }}j</span>
             <span class="text-[10px] font-medium px-2 py-1 rounded-lg bg-gray-100 text-gray-500">📚 {{ course.module_count }} modul</span>
+            <span class="text-[10px] font-medium px-2 py-1 rounded-lg bg-gray-100 text-gray-500 flex items-center gap-1"><UsersIcon class="w-3 h-3" /> {{ course.enrollment_count || 0 }} peserta</span>
           </div>
 
           <!-- Progres pribadi (kalau enroll) ATAU jumlah peserta -->
@@ -123,9 +124,7 @@
               ></div>
             </div>
           </div>
-          <p v-else class="text-[11px] text-gray-400 mb-4 flex items-center gap-1">
-            <UsersIcon class="w-3.5 h-3.5" /> {{ course.enrollment_count }} peserta terdaftar
-          </p>
+          <div v-else class="mb-4"></div>
 
           <div class="flex gap-2 mt-auto">
             <!-- ARSIP: aksi pulihkan / hapus permanen -->

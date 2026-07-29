@@ -153,16 +153,27 @@
                   </span>
                   <p class="text-sm text-gray-800 leading-snug">{{ ans.question_text }}</p>
                 </div>
-                <div class="ml-7 space-y-1 text-xs">
-                  <div class="flex gap-2">
+                <div class="ml-7 space-y-1.5 text-xs">
+                  <!-- Semua pilihan A/B/C/D dengan penanda -->
+                  <div v-if="ans.options?.length" class="space-y-1">
+                    <div
+                      v-for="opt in ans.options"
+                      :key="opt.key"
+                      class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border"
+                      :class="optionClass(opt.key, ans)"
+                    >
+                      <span class="font-bold uppercase w-4 shrink-0">{{ opt.key === 'true' ? 'B' : opt.key === 'false' ? 'S' : opt.key }}.</span>
+                      <span class="flex-1">{{ opt.text }}</span>
+                      <span v-if="opt.key === ans.correct_answer" class="text-green-600 font-bold text-[10px] shrink-0">✓ BENAR</span>
+                      <span v-else-if="opt.key === ans.chosen_answer" class="text-red-500 font-bold text-[10px] shrink-0">PILIHANMU</span>
+                    </div>
+                  </div>
+                  <!-- Fallback bila opsi tak tersedia -->
+                  <div v-else class="flex gap-2">
                     <span class="text-gray-400 w-20 shrink-0">Jawaban kamu:</span>
                     <span :class="ans.is_correct ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
                       {{ ans.chosen_text || ans.chosen_answer || '(tidak dijawab)' }}
                     </span>
-                  </div>
-                  <div v-if="!ans.is_correct && (ans.correct_text || ans.correct_answer)" class="flex gap-2">
-                    <span class="text-gray-400 w-20 shrink-0">Jawaban benar:</span>
-                    <span class="text-green-700 font-semibold">{{ ans.correct_text || ans.correct_answer }}</span>
                   </div>
                   <div v-if="ans.explanation" class="mt-2 p-2 bg-blue-50 rounded-lg text-blue-700 leading-relaxed">
                     {{ ans.explanation }}
@@ -228,6 +239,17 @@ const loading = ref(true)
 const result = ref(null)
 
 const resultId = parseInt(route.params.resultId)
+
+// Warna tiap opsi: hijau = kunci, merah = pilihan salah user
+function optionClass(key, ans) {
+  if (key === ans.correct_answer && key === ans.chosen_answer)
+    return 'bg-green-100 border-green-300 text-green-800'
+  if (key === ans.correct_answer)
+    return 'bg-green-50 border-green-200 text-green-700'
+  if (key === ans.chosen_answer)
+    return 'bg-red-50 border-red-200 text-red-700'
+  return 'bg-gray-50 border-transparent text-gray-600'
+}
 
 async function loadResult() {
   loading.value = true
