@@ -48,6 +48,8 @@ export const quizApi = {
     call(`/web/quiz/admin/quiz/${quizId}/submit-review`),
   adminPublish: (quizId) => call(`/web/quiz/admin/quiz/${quizId}/publish`),
   adminClose: (quizId) => call(`/web/quiz/admin/quiz/${quizId}/close`),
+  // Review/Aktif/Ditutup → Draft supaya soal bisa diedit lagi; force bila sudah ada yang mengerjakan.
+  adminResetDraft: (quizId, params = {}) => call(`/web/quiz/admin/quiz/${quizId}/reset-draft`, params),
   adminCopy: (quizId, params = {}) => call(`/web/quiz/admin/quiz/${quizId}/copy`, params),
 
   // ── SOP LIST ─────────────────────────────────────────────────────────

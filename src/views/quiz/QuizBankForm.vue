@@ -76,6 +76,15 @@
             >
               {{ saving === 'publish' ? 'Memproses...' : '🚀 Publish Quiz' }}
             </button>
+            <!-- Review / Aktif / Ditutup: kembali ke Draft supaya soal bisa diedit lagi -->
+            <button
+              v-if="isEdit && ['review', 'active', 'closed'].includes(currentState)"
+              @click="resetOpen = true"
+              :disabled="!!saving"
+              class="flex-1 sm:flex-none justify-center px-4 py-2.5 text-sm font-semibold border-2 border-rose-200 rounded-xl bg-white text-rose-700 hover:border-rose-400 hover:bg-rose-50 transition-all disabled:opacity-50 shadow-sm min-h-[40px] flex items-center"
+            >
+              ↺ Reset ke Draft
+            </button>
           </div>
         </div>
       </div>
@@ -929,6 +938,30 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Konfirmasi reset ke Draft -->
+    <Teleport to="body">
+      <div v-if="resetOpen" class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="reset-title" @keydown.esc="resetOpen = false">
+        <div class="w-full max-w-md overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
+          <div class="px-5 pb-4 pt-5">
+            <h3 id="reset-title" class="text-base font-bold text-gray-900">Reset quiz ke Draft?</h3>
+            <p class="mt-2 text-sm leading-relaxed text-gray-700">
+              Quiz kembali ke <b>Draft</b> supaya soal dan pengaturannya bisa diedit lagi. Selama Draft, quiz tidak bisa dikerjakan karyawan; publish ulang setelah selesai mengedit.
+            </p>
+            <div v-if="submittedCount" class="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-900 ring-1 ring-amber-200">
+              <b>{{ submittedCount }} karyawan sudah mengerjakan.</b> Hasil mereka tetap tersimpan. Soal yang sudah dijawab tidak bisa dihapus, hanya bisa diubah isinya; mengubah kunci jawaban bisa membuat hasil lama tidak sesuai lagi.
+            </div>
+            <p v-if="resetError" class="mt-3 text-sm font-semibold text-red-700" role="alert">{{ resetError }}</p>
+          </div>
+          <div class="flex flex-col-reverse gap-2 border-t border-gray-100 bg-gray-50 px-5 py-3 sm:flex-row sm:justify-end">
+            <button type="button" class="min-h-[40px] rounded-xl px-4 text-sm font-semibold text-gray-700 hover:bg-gray-100" :disabled="saving === 'reset'" @click="resetOpen = false">Batal</button>
+            <button type="button" class="min-h-[40px] rounded-xl bg-rose-600 px-5 text-sm font-bold text-white hover:bg-rose-700 disabled:opacity-60" :disabled="saving === 'reset'" @click="resetToDraft">
+              {{ saving === 'reset' ? 'Memproses...' : 'Ya, reset ke Draft' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -970,7 +1003,7 @@ const quizId = ref(routeId && routeId !== 'new' ? parseInt(routeId) : null)
 const isEdit = computed(() => !!quizId.value)
 
 const loading = ref(true)
-const saving = ref(null)   // null | 'save' | 'review' | 'publish'
+const saving = ref(null)   // null | 'save' | 'review' | 'publish' | 'reset'
 const saveError = ref('')
 const currentState = ref('draft')
 const quizData = ref(null)
@@ -1200,6 +1233,27 @@ async function submitReview() {
     currentState.value = 'review'
   } catch (e) {
     saveError.value = e.message || 'Gagal submit review.'
+  } finally {
+    saving.value = null
+  }
+}
+
+// Reset ke Draft (juga setelah publish). Bila sudah ada yang mengerjakan,
+// konfirmasi di modal dikirim sebagai force.
+const resetOpen = ref(false)
+const resetError = ref('')
+const submittedCount = computed(() => quizData.value?.submitted_count || 0)
+async function resetToDraft() {
+  saving.value = 'reset'
+  resetError.value = ''
+  try {
+    const res = await quizApi.adminResetDraft(quizId.value, { force: submittedCount.value > 0 })
+    if (res?.quiz) quizData.value = { ...quizData.value, ...res.quiz }
+    currentState.value = 'draft'
+    resetOpen.value = false
+    await loadQuestions()
+  } catch (e) {
+    resetError.value = e.message || 'Gagal reset quiz.'
   } finally {
     saving.value = null
   }
