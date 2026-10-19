@@ -181,6 +181,8 @@ export const lmsApi = {
   // ── ANALYTICS ────────────────────────────────────────────────────────
   courseAnalytics: (params = {}) =>
     call('/web/v1/lms/analytics', { operation: 'course_analytics', ...params }),
+  courseDetailAnalytics: (courseId, params = {}) =>
+    call('/web/v1/lms/analytics', { operation: 'course_detail', course_id: courseId, ...params }),
   userAnalytics: (params = {}) =>
     call('/web/v1/lms/analytics', { operation: 'user_analytics', ...params }),
   departmentAnalytics: (params = {}) =>

@@ -171,6 +171,15 @@
                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
                 Belajar Lagi
               </button>
+              <button
+                v-if="authStore.user?.is_admin || enr(course)"
+                @click="router.push(`/dashboard/lms/courses/${course.id}/analytics`)"
+                class="px-3 py-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                :title="authStore.user?.is_admin ? 'Analitik kursus' : 'Leaderboard'"
+              >
+                <ChartBarIcon v-if="authStore.user?.is_admin" class="w-3.5 h-3.5" />
+                <TrophyIcon v-else class="w-3.5 h-3.5" />
+              </button>
               <template v-if="authStore.user?.is_admin">
                 <button
                   @click="openEditModal(course)"
@@ -355,7 +364,7 @@ import { useAuthStore } from '../../stores/auth'
 import { lmsApi } from '../../services/lmsApi'
 import {
   BookOpenIcon, PlusIcon, PencilIcon, TrashIcon,
-  EyeIcon, EyeSlashIcon, XMarkIcon, ArchiveBoxIcon, UsersIcon,
+  EyeIcon, EyeSlashIcon, XMarkIcon, ArchiveBoxIcon, UsersIcon, ChartBarIcon, TrophyIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()

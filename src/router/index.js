@@ -158,6 +158,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/lms/courses/:courseId/analytics',
+    name: 'LmsCourseAnalytics',
+    component: () => import('../views/lms/LmsCourseAnalytics.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/analytics',
     name: 'AnalyticsOverview',
     component: () => import('../views/lms/AnalyticsOverview.vue'),

@@ -51,7 +51,7 @@
           <p class="text-sm text-gray-500">Gunakan daftar modul di sebelah kanan</p>
           <button
             v-if="modules.length"
-            @click="activeModule = modules[0]"
+            @click="selectModule(preTestPending ? preTestModule : modules[0])"
             class="mt-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
           >Mulai dari Modul 1</button>
         </div>
@@ -305,9 +305,10 @@
             <div
               v-for="mod in group.modules"
               :key="mod.id"
-              @click="activeModule = mod"
+              @click="selectModule(mod)"
               class="flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
-              :class="activeModule?.id === mod.id ? 'bg-blue-50 border-r-2 border-r-blue-600' : 'hover:bg-gray-50'"
+              :class="[activeModule?.id === mod.id ? 'bg-blue-50 border-r-2 border-r-blue-600' : 'hover:bg-gray-50', isLocked(mod) ? 'opacity-50' : '']"
+              :title="isLocked(mod) ? 'Kerjakan pre-test dulu' : ''"
             >
               <div
                 class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 transition-colors"
@@ -323,7 +324,12 @@
                   class="text-sm font-medium leading-snug"
                   :class="activeModule?.id === mod.id ? 'text-blue-700' : 'text-gray-800'"
                 >{{ mod.name }}</p>
-                <p class="text-xs text-gray-400 mt-0.5 capitalize">{{ mod.content_type }} · {{ mod.duration_minutes }}m</p>
+                <p class="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                  <span class="capitalize">{{ mod.content_type }} · {{ mod.duration_minutes }}m</span>
+                  <span v-if="roleOf(mod) === 'pre_test'" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-700">PRE-TEST</span>
+                  <span v-else-if="roleOf(mod) === 'post_test'" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">POST-TEST</span>
+                  <span v-if="isLocked(mod)">🔒</span>
+                </p>
               </div>
             </div>
           </template>
@@ -350,9 +356,9 @@
           <div
             v-for="mod in group.modules"
             :key="mod.id"
-            @click="activeModule = mod; showMobileList = false"
+            @click="selectModule(mod) && (showMobileList = false)"
             class="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
-            :class="activeModule?.id === mod.id ? 'bg-blue-50' : 'hover:bg-gray-50'"
+            :class="[activeModule?.id === mod.id ? 'bg-blue-50' : 'hover:bg-gray-50', isLocked(mod) ? 'opacity-50' : '']"
           >
             <div
               class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
@@ -365,7 +371,12 @@
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-800 truncate">{{ mod.name }}</p>
-              <p class="text-xs text-gray-400 capitalize">{{ mod.content_type }} · {{ mod.duration_minutes }}m</p>
+              <p class="text-xs text-gray-400">
+                <span class="capitalize">{{ mod.content_type }} · {{ mod.duration_minutes }}m</span>
+                <span v-if="roleOf(mod) === 'pre_test'" class="ml-1 text-[10px] font-bold text-sky-700">PRE-TEST</span>
+                <span v-else-if="roleOf(mod) === 'post_test'" class="ml-1 text-[10px] font-bold text-emerald-700">POST-TEST</span>
+                <span v-if="isLocked(mod)" class="ml-1">🔒</span>
+              </p>
             </div>
             <span v-if="modulesDone.has(mod.id)" class="text-xs text-green-600 font-medium shrink-0">✓</span>
           </div>
@@ -540,6 +551,32 @@ const moduleGroups = computed(() => {
   return groups
 })
 
+// Pre-test wajib dikerjakan dulu (sekali submit cukup, lulus/tidak) sebelum
+// modul lain terbuka. Admin tidak dikunci.
+const attemptedIds = ref(new Set())
+function roleOf(mod) {
+  return mod?.content_type === 'assessment' ? (mod.quiz_role || 'quiz') : null
+}
+const preTestModule = computed(() => modules.value.find(m => roleOf(m) === 'pre_test') || null)
+const preTestPending = computed(() => {
+  const pre = preTestModule.value
+  if (!pre || isAdmin.value) return false
+  return !attemptedIds.value.has(pre.id) && !modulesDone.value.has(pre.id)
+})
+function isLocked(mod) {
+  return preTestPending.value && mod.id !== preTestModule.value?.id
+}
+function selectModule(mod) {
+  if (!mod) return false
+  if (isLocked(mod)) {
+    showToast('Kerjakan pre-test dulu untuk membuka modul ini')
+    activeModule.value = preTestModule.value
+    return false
+  }
+  activeModule.value = mod
+  return true
+}
+
 // Global 1-based index of a module across all sections (for numbering)
 function moduleNumber(mod) {
   return modules.value.findIndex(m => m.id === mod.id) + 1
@@ -681,7 +718,7 @@ async function startVideoTracking() {
 
 function nextModule() {
   const idx = activeModuleIndex.value
-  if (idx < modules.value.length - 1) activeModule.value = modules.value[idx + 1]
+  if (idx < modules.value.length - 1) selectModule(modules.value[idx + 1])
 }
 
 async function markDone(mod) {
@@ -825,6 +862,7 @@ async function submitQuiz() {
     }
     quizState.value = 'result'
     if ((res?.score ?? 0) > bestQuizScore.value) bestQuizScore.value = res.score
+    attemptedIds.value = new Set([...attemptedIds.value, activeModule.value.id])
     // Modul quiz dianggap SELESAI begitu dikerjakan (lulus/tidak); hanya
     // esai yang belum dinilai yang belum ditandai selesai.
     if (!res?.essay_pending) modulesDone.value = new Set([...modulesDone.value, activeModule.value.id])
@@ -874,6 +912,9 @@ async function init() {
 
     // Pre-fill completed modules from progress
     if (found.module_progress?.length) {
+      attemptedIds.value = new Set(
+        found.module_progress.filter(p => p.module_id && p.attempts > 0).map(p => p.module_id)
+      )
       const doneNames = new Set(
         found.module_progress
           .filter(p => p.status === 'completed' || p.completion_percentage >= 100)
@@ -886,7 +927,9 @@ async function init() {
 
     // Auto-select: first incomplete module (or first module if all done)
     const firstIncomplete = modules.value.find(m => !modulesDone.value.has(m.id))
-    activeModule.value = firstIncomplete ?? modules.value[0] ?? null
+    activeModule.value = preTestPending.value
+      ? preTestModule.value
+      : (firstIncomplete ?? modules.value[0] ?? null)
     startVideoTracking()
   } catch (e) {
     showToast(e.message || 'Gagal memuat data kursus')

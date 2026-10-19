@@ -156,8 +156,17 @@
         class="px-4 py-2 text-xs text-gray-400 text-center transition-all duration-300"
         :class="isExpanded ? 'opacity-100' : 'opacity-0'"
       >
+        <button
+          type="button"
+          class="relative block mx-auto mb-0.5 text-xs font-semibold text-[#B70000] hover:underline focus:outline-none"
+          @click="bukaChangelog"
+        >
+          Apa yang baru?
+          <span v-if="adaBaru" class="absolute -right-2.5 top-0 h-2 w-2 rounded-full bg-[#B70000]" aria-label="ada catatan baru"></span>
+        </button>
         <span class="font-mono">v{{ version }}</span>
       </div>
+      <ChangelogModal :open="changelogOpen" :current-version="version" @close="changelogOpen = false" />
       <div class="p-3">
         <div class="relative">
           <button
@@ -433,6 +442,10 @@
               {{ authStore.user?.is_admin ? 'Admin' : 'Karyawan' }}
             </span>
             <span class="text-[10px] text-gray-400 font-mono">v{{ version }}</span>
+            <button type="button" class="relative text-[10px] font-semibold text-[#B70000] hover:underline" @click="bukaChangelog">
+              Apa yang baru?
+              <span v-if="adaBaru" class="absolute -right-2 top-0 h-1.5 w-1.5 rounded-full bg-[#B70000]"></span>
+            </button>
           </div>
         </div>
       </div>
@@ -488,6 +501,7 @@ import {
   DocumentTextIcon,
 } from '@heroicons/vue/24/outline'
 import NavItem from './NavItem.vue'
+import ChangelogModal from './ChangelogModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -504,6 +518,17 @@ const showMobileAkun = ref(false)
 const showMobileLms = ref(false)
 
 const version = packageJson.version
+
+// Titik merah di "Apa yang baru?" sampai catatan versi ini dibuka.
+const CHANGELOG_SEEN_KEY = 'akademi:changelog-seen'
+const bacaSeen = () => { try { return localStorage.getItem(CHANGELOG_SEEN_KEY) } catch { return null } }
+const changelogOpen = ref(false)
+const adaBaru = ref(bacaSeen() !== version)
+const bukaChangelog = () => {
+  changelogOpen.value = true
+  adaBaru.value = false
+  try { localStorage.setItem(CHANGELOG_SEEN_KEY, version) } catch { /* abaikan */ }
+}
 
 const lmsLearnerItems = [
   { name: 'Dashboard', icon: AcademicCapIcon, path: '/dashboard/lms', adminOnly: false },

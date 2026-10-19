@@ -91,6 +91,8 @@
                 <template v-if="m.content_type === 'assessment'">
                   <span v-if="m.quiz_bank_name" class="px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">🧩 {{ m.quiz_bank_name }}</span>
                   <span v-else class="px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">Quiz belum diatur</span>
+                  <span v-if="m.quiz_role === 'pre_test'" class="px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700 font-bold">PRE-TEST</span>
+                  <span v-else-if="m.quiz_role === 'post_test'" class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">POST-TEST</span>
                 </template>
                 <span>· {{ m.duration_minutes }} mnt</span>
               </p>
@@ -146,6 +148,8 @@
                 <template v-if="m.content_type === 'assessment'">
                   <span v-if="m.quiz_bank_name" class="px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">🧩 {{ m.quiz_bank_name }}</span>
                   <span v-else class="px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">Quiz belum diatur</span>
+                  <span v-if="m.quiz_role === 'pre_test'" class="px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700 font-bold">PRE-TEST</span>
+                  <span v-else-if="m.quiz_role === 'post_test'" class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">POST-TEST</span>
                 </template>
                 <span>· {{ m.duration_minutes }} mnt</span>
               </p>
@@ -257,6 +261,19 @@
                   </button>
                 </div>
                 <p class="text-xs text-purple-500 mt-1">Setelah dibuat, klik "Kelola Soal" (ikon daftar) untuk menambah soal & publish.</p>
+              </div>
+
+              <div class="border-t border-purple-100 pt-2">
+                <label class="block text-xs font-semibold text-purple-800 mb-1">Peran di Kursus</label>
+                <select v-model="form.quiz_role" class="w-full border border-purple-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300">
+                  <option value="quiz">Quiz biasa</option>
+                  <option value="pre_test">Pre-test (dikerjakan sebelum materi)</option>
+                  <option value="post_test">Post-test (dibandingkan dengan pre-test)</option>
+                </select>
+                <p class="text-xs text-purple-500 mt-1">
+                  Pre-test dinilai dari percobaan pertama dan membuka modul lain setelah dikerjakan. Post-test dinilai dari nilai terbaik.
+                  Satu kursus cukup punya satu pre-test dan satu post-test.
+                </p>
               </div>
 
               <div class="grid grid-cols-3 gap-2 border-t border-purple-100 pt-2">
@@ -598,7 +615,7 @@ const filters = reactive({ search: '', course_id: null, content_type: '' })
 const emptyForm = () => ({
   name: '', course_id: null, section_id: null, content_type: 'video',
   duration_minutes: 0, sequence: 1,
-  quiz_bank_id: null, passing_score: 70, max_attempts: 1, time_limit_minutes: 0,
+  quiz_bank_id: null, quiz_role: 'quiz', passing_score: 70, max_attempts: 1, time_limit_minutes: 0,
 })
 const form = reactive(emptyForm())
 
@@ -780,6 +797,7 @@ function openEditModal(m) {
     duration_minutes: m.duration_minutes,
     sequence: m.sequence || 1,
     quiz_bank_id: m.quiz_bank_id || null,
+    quiz_role: m.quiz_role || 'quiz',
     passing_score: m.passing_score ?? 70,
     max_attempts: m.max_attempts ?? 1,
     time_limit_minutes: m.time_limit_minutes ?? 0,
@@ -832,6 +850,7 @@ async function saveModal() {
     }
     if (form.content_type === 'assessment') {
       payload.quiz_bank_id = form.quiz_bank_id || false
+      payload.quiz_role = form.quiz_role || 'quiz'
       payload.passing_score = form.passing_score
       payload.max_attempts = form.max_attempts
       payload.time_limit_minutes = form.time_limit_minutes

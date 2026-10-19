@@ -119,8 +119,17 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
-              <tr v-for="c in data.course_breakdown" :key="c.course_id" class="hover:bg-gray-50">
-                <td class="px-4 py-3 font-medium text-gray-800">{{ c.course_name }}</td>
+              <tr
+                v-for="c in data.course_breakdown"
+                :key="c.course_id"
+                @click="$router.push(`/dashboard/lms/courses/${c.course_id}/analytics`)"
+                class="hover:bg-blue-50/60 cursor-pointer"
+                title="Lihat detail kursus"
+              >
+                <td class="px-4 py-3 font-medium text-gray-800">
+                  <span class="hover:text-blue-600">{{ c.course_name }}</span>
+                  <span class="text-blue-500 text-xs ml-1">→</span>
+                </td>
                 <td class="px-4 py-3 text-center text-gray-600">{{ c.total_enrollments }}</td>
                 <td class="px-4 py-3 text-center text-green-600 font-medium">{{ c.completed }}</td>
                 <td class="px-4 py-3 text-center">
