@@ -175,6 +175,7 @@
                 >
                   <option value="" disabled>Select your branch</option>
                   <option value="Pitcar1_Akademi">Pitcar Akademi</option>
+                  <option value="Pitcar_Academy">Pitcar Academy</option>
                   <option value="Pitcar1">Pitcar Purwokerto</option>
                   <option value="pitcar_otokits_cilacap">Otokits Cilacap</option>
                   <option value="pitcar_accessories">Pitcar Aksesoris</option>

@@ -168,6 +168,10 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000
   },
+  // pdf.js 3.x (UMD) + import worker `?url` membuat pre-bundle dev server gagal.
+  optimizeDeps: {
+    exclude: ['pdfjs-dist']
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

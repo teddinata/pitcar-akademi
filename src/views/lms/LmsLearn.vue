@@ -212,7 +212,12 @@
               class="absolute inset-0 w-full h-full border-0"
               allow="autoplay; fullscreen; encrypted-media"
             ></iframe>
-            <!-- Uploaded file (PDF/gambar) via blob — aman, tidak memuat SPA -->
+            <!-- Uploaded file via blob — aman, tidak memuat SPA. PDF dirender pdf.js
+                 karena Chrome Android tidak bisa menampilkan PDF di iframe. -->
+            <PdfViewer v-else-if="fileUrl && fileKind === 'pdf'" :blob="fileBlob" :file-name="`${activeModule.name}.pdf`" />
+            <div v-else-if="fileUrl && fileKind === 'image'" class="absolute inset-0 overflow-auto bg-gray-100 flex items-start justify-center p-2">
+              <img :src="fileUrl" :alt="activeModule.name" class="max-w-full h-auto bg-white shadow" />
+            </div>
             <iframe
               v-else-if="fileUrl"
               :src="fileUrl"
@@ -464,6 +469,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { lmsApi } from '../../services/lmsApi'
 import { ChevronLeftIcon, BookOpenIcon, DocumentIcon, ClipboardDocumentCheckIcon } from '@heroicons/vue/24/outline'
+import PdfViewer from '../../components/PdfViewer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -598,6 +604,8 @@ const activeEmbedUrl = computed(() => {
 // modul belum di-upgrade / fallback index.html), seluruh aplikasi ikut
 // termuat di dalam iframe. Sekarang HTML ditolak, hanya file asli yang tampil.
 const fileUrl = ref(null)
+const fileBlob = ref(null)
+const fileKind = ref('')
 const fileLoading = ref(false)
 const fileError = ref('')
 let _lastObjectUrl = null
@@ -605,6 +613,8 @@ let _lastObjectUrl = null
 async function loadModuleFile(m) {
   if (_lastObjectUrl) { URL.revokeObjectURL(_lastObjectUrl); _lastObjectUrl = null }
   fileUrl.value = null
+  fileBlob.value = null
+  fileKind.value = ''
   fileError.value = ''
   if (!m || m.content_url || !m.has_content_file || m.content_type === 'assessment') return
   fileLoading.value = true
@@ -616,6 +626,12 @@ async function loadModuleFile(m) {
       return
     }
     const blob = await resp.blob()
+    // Jenis dari content-type; cadangan dari tanda tangan "%PDF" bila server
+    // mengirim octet-stream.
+    const awal = new TextDecoder().decode(await blob.slice(0, 5).arrayBuffer())
+    fileKind.value = ct.includes('pdf') || awal.startsWith('%PDF') ? 'pdf'
+      : ct.startsWith('image/') ? 'image' : 'other'
+    fileBlob.value = blob
     _lastObjectUrl = URL.createObjectURL(blob)
     fileUrl.value = _lastObjectUrl
   } catch (e) {

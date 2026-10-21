@@ -5,6 +5,15 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.4.1',
+    date: '2026-10-21',
+    title: 'Dokumen PDF tampil di HP Android & database Pitcar Academy',
+    items: [
+      { type: 'perbaikan', text: 'Modul dokumen PDF kini tampil langsung di HP Android. Sebelumnya Chrome Android hanya menampilkan ikon PDF dengan tombol "Buka" yang tidak berfungsi. Halaman dokumen bisa di-scroll, diperbesar/diperkecil, dan diunduh.' },
+      { type: 'baru', text: 'Halaman login punya pilihan cabang baru "Pitcar Academy" untuk masuk ke database Pitcar_Academy.' },
+    ],
+  },
+  {
     version: '1.4.0',
     date: '2026-10-19',
     title: 'Analitik per kursus, leaderboard & pre/post-test',
