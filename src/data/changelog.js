@@ -5,6 +5,15 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.5.1',
+    date: '2026-10-27',
+    title: 'Leaderboard lebih jelas: nilai post-test',
+    items: [
+      { type: 'perbaikan', text: 'Peringkat Nilai hanya memakai nilai post-test. Sebelumnya peserta yang baru mengerjakan pre-test bisa berada di atas peserta yang sudah tamat.' },
+      { type: 'ubah', text: 'Peserta yang belum mengerjakan post-test dipisah di bagian bawah leaderboard tanpa nomor peringkat. Saat urut Nilai, angka nilai ditonjolkan dan bar progres dibuat lebih kalem.' },
+    ],
+  },
+  {
     version: '1.5.0',
     date: '2026-10-27',
     title: 'Tontonan video per peserta & leaderboard urut nilai',

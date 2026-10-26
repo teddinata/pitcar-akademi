@@ -111,7 +111,7 @@
               <h2 class="font-semibold text-gray-800">Top 5 Leaderboard</h2>
               <button @click="activeTab = 'leaderboard'" class="text-xs font-semibold text-blue-600 hover:underline">Lihat semua →</button>
             </div>
-            <LeaderRow v-for="p in rankBy(leaderboard, 'score').slice(0, 5)" :key="p.key" :p="p" />
+            <LeaderRow v-for="p in rankBy(leaderboard, 'score').slice(0, 5)" :key="p.key" :p="p" :no-score="noScoreLabel" />
             <p v-if="!leaderboard.length" class="text-sm text-gray-400">Belum ada peserta.</p>
           </div>
           <div class="clay-card p-5">
@@ -477,10 +477,16 @@
             </div>
           </div>
           <p class="text-[11px] text-gray-400 mb-4">
-            <template v-if="leaderSort === 'score'">Urutan: nilai {{ scoreSource }} tertinggi, lalu progres, lalu yang selesai lebih dulu. Yang belum punya nilai di bawah.</template>
-            <template v-else>Urutan: progres tertinggi, lalu nilai {{ scoreSource }}.</template>
+            <template v-if="leaderSort === 'score'">Peringkat berdasarkan nilai {{ scoreSource }}. Nilai sama: progres lebih tinggi di atas.</template>
+            <template v-else>Peringkat berdasarkan progres materi. Progres sama: nilai {{ scoreSource }} lebih tinggi di atas.</template>
           </p>
-          <LeaderRow v-for="p in rankedLeaderboard" :key="p.key" :p="p" />
+          <template v-for="(p, i) in rankedLeaderboard" :key="p.key">
+            <p
+              v-if="leaderSort === 'score' && p.score == null && (i === 0 || rankedLeaderboard[i - 1].score != null)"
+              class="mt-3 mb-1 px-2 pt-3 border-t border-gray-100 text-[11px] font-semibold text-gray-500"
+            >{{ noScoreHeading }} · {{ leaderboard.filter(x => x.score == null).length }} peserta</p>
+            <LeaderRow :p="p" :by="leaderSort" :no-score="noScoreLabel" />
+          </template>
           <p v-if="!leaderboard.length" class="text-sm text-gray-400">Belum ada peserta.</p>
         </div>
       </template>
@@ -529,7 +535,9 @@ const hasPrePost = computed(() => !!(data.value?.course?.has_pre_test || data.va
 const leaderboard = computed(() => (isFull.value ? data.value.participants : data.value?.leaderboard) || [])
 const hasVideos = computed(() => (data.value?.course?.video_count || 0) > 0)
 const visibleTabs = computed(() => tabs.filter(t => t.key !== 'videos' || hasVideos.value))
-const scoreSource = computed(() => (data.value?.course?.has_post_test ? 'post-test' : 'quiz terbaik'))
+const scoreSource = computed(() => (data.value?.course?.has_post_test ? 'post-test' : 'quiz'))
+const noScoreLabel = computed(() => (data.value?.course?.has_post_test ? 'belum post-test' : 'belum ada nilai'))
+const noScoreHeading = computed(() => (data.value?.course?.has_post_test ? 'Belum mengerjakan post-test' : 'Belum mengerjakan quiz'))
 
 // ── Urutan: nilai (utama) atau progres ────────────────────────────────
 const leaderSortOptions = [
@@ -696,28 +704,44 @@ const ScoreCell = defineComponent({
 })
 
 const LeaderRow = defineComponent({
-  props: { p: Object },
+  props: { p: Object, by: { type: String, default: 'score' }, noScore: { type: String, default: 'belum ada nilai' } },
   setup(props) {
     const medal = r => ({ 1: '🥇', 2: '🥈', 3: '🥉' }[r])
     return () => {
       const p = props.p
+      const byScore = props.by === 'score'
+      const unranked = byScore && p.score == null
+      const done = p.progress >= 100
+      // Urut nilai: nilai jadi angka utama, progres jadi keterangan kalem.
+      const barColor = byScore
+        ? (done ? 'bg-green-300' : 'bg-gray-300')
+        : (done ? 'bg-green-500' : 'bg-indigo-500')
       return h('div', {
         class: `flex items-center gap-3 py-2.5 px-2 rounded-xl ${p.is_me ? 'bg-blue-50 ring-1 ring-blue-200' : ''}`,
       }, [
-        h('div', { class: 'w-8 text-center shrink-0 font-bold text-gray-500' }, medal(p.rank) || `#${p.rank}`),
+        h('div', { class: 'w-8 text-center shrink-0 font-bold text-gray-500' },
+          unranked ? h('span', { class: 'text-gray-300' }, '–') : (medal(p.rank) || `#${p.rank}`)),
         h('div', { class: 'flex-1 min-w-0' }, [
           h('p', { class: 'text-sm font-semibold text-gray-800 truncate' }, [p.name, p.is_me ? h('span', { class: 'ml-1 text-[10px] text-blue-600' }, '(kamu)') : null]),
           h('div', { class: 'flex items-center gap-2 mt-1' }, [
-            h('div', { class: 'h-1.5 flex-1 bg-black/5 rounded-full overflow-hidden' }, [
-              h('div', { class: `h-full rounded-full ${p.progress >= 100 ? 'bg-green-500' : 'bg-indigo-500'}`, style: { width: p.progress + '%' } }),
+            h('div', { class: `${byScore ? 'h-1' : 'h-1.5'} flex-1 bg-black/5 rounded-full overflow-hidden` }, [
+              h('div', { class: `h-full rounded-full ${barColor}`, style: { width: p.progress + '%' } }),
             ]),
-            h('span', { class: 'text-[11px] text-gray-500 w-9 text-right' }, Math.round(p.progress) + '%'),
+            h('span', { class: `text-[11px] text-right whitespace-nowrap ${byScore ? 'text-gray-400' : 'text-gray-600 font-semibold'}` },
+              (byScore ? 'progres ' : '') + Math.round(p.progress) + '%'),
           ]),
         ]),
-        h('div', { class: 'w-14 text-right shrink-0' }, [
-          h('p', { class: 'text-sm font-bold text-gray-800 tabular-nums' }, fmtNum(p.score)),
-          h('p', { class: 'text-[10px] text-gray-400' }, 'nilai'),
-        ]),
+        h('div', { class: 'w-24 text-right shrink-0' }, byScore
+          ? (p.score == null
+              ? [h('p', { class: 'text-[11px] text-gray-400 leading-tight' }, props.noScore)]
+              : [
+                  h('p', { class: 'text-lg font-bold text-gray-900 tabular-nums leading-none' }, fmtNum(p.score)),
+                  h('p', { class: 'text-[10px] text-gray-400 mt-0.5' }, 'nilai'),
+                ])
+          : [
+              h('p', { class: 'text-sm font-semibold text-gray-700 tabular-nums' }, p.score == null ? '-' : fmtNum(p.score)),
+              h('p', { class: 'text-[10px] text-gray-400' }, 'nilai'),
+            ]),
       ])
     }
   },
