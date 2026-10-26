@@ -39,7 +39,7 @@
       <!-- Tabs (admin) -->
       <div v-if="isFull" class="flex gap-2 mb-5 overflow-x-auto pb-1">
         <button
-          v-for="tab in tabs"
+          v-for="tab in visibleTabs"
           :key="tab.key"
           @click="activeTab = tab.key"
           class="px-4 py-2 text-sm whitespace-nowrap clay-pill"
@@ -111,7 +111,7 @@
               <h2 class="font-semibold text-gray-800">Top 5 Leaderboard</h2>
               <button @click="activeTab = 'leaderboard'" class="text-xs font-semibold text-blue-600 hover:underline">Lihat semua →</button>
             </div>
-            <LeaderRow v-for="p in leaderboard.slice(0, 5)" :key="p.rank" :p="p" />
+            <LeaderRow v-for="p in rankBy(leaderboard, 'score').slice(0, 5)" :key="p.key" :p="p" />
             <p v-if="!leaderboard.length" class="text-sm text-gray-400">Belum ada peserta.</p>
           </div>
           <div class="clay-card p-5">
@@ -144,6 +144,12 @@
             <option value="completed">Selesai</option>
             <option value="failed">Gagal</option>
           </select>
+          <select v-model="participantSort" aria-label="Urutkan peserta" class="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+            <option value="score">Urut: Nilai tertinggi</option>
+            <option value="progress">Urut: Progres tertinggi</option>
+            <option v-if="hasVideos" value="video">Urut: Tontonan video terendah</option>
+            <option value="name">Urut: Nama</option>
+          </select>
         </div>
         <div class="clay-card overflow-hidden">
           <div class="overflow-x-auto">
@@ -155,6 +161,8 @@
                   <th class="px-3 py-3 text-left font-medium min-w-36">Progres</th>
                   <th v-if="data.course.has_pre_test" class="px-3 py-3 text-center font-medium">Pre</th>
                   <th v-if="data.course.has_post_test" class="px-3 py-3 text-center font-medium">Post</th>
+                  <th class="px-3 py-3 text-center font-medium">Nilai</th>
+                  <th v-if="hasVideos" class="px-3 py-3 text-left font-medium whitespace-nowrap">Video Ditonton</th>
                   <th class="px-3 py-3 text-left font-medium whitespace-nowrap">Daftar</th>
                   <th class="px-3 py-3 text-left font-medium whitespace-nowrap">Selesai</th>
                   <th class="px-3 py-3 text-left font-medium whitespace-nowrap">Aktivitas Terakhir</th>
@@ -179,6 +187,19 @@
                   </td>
                   <td v-if="data.course.has_pre_test" class="px-3 py-3 text-center"><ScoreCell :v="p.pre" /></td>
                   <td v-if="data.course.has_post_test" class="px-3 py-3 text-center"><ScoreCell :v="p.post" /></td>
+                  <td class="px-3 py-3 text-center font-semibold text-gray-800 tabular-nums">{{ fmtNum(p.score) }}</td>
+                  <td v-if="hasVideos" class="px-3 py-3">
+                    <button
+                      @click="showVideosOf(p)"
+                      class="group text-left rounded-md -mx-1 px-1 py-0.5 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+                      :title="`Lihat tontonan video ${p.name}`"
+                    >
+                      <span class="text-sm font-semibold tabular-nums" :class="watchTextClass(p.video_watch)">{{ Math.round(p.video_watch || 0) }}%</span>
+                      <span class="block text-[11px] text-gray-500 whitespace-nowrap">
+                        {{ p.videos_done }}/{{ data.course.video_count }} tuntas<template v-if="p.videos_skipped"> · <span class="text-red-600">{{ p.videos_skipped }} dilewati</span></template>
+                      </span>
+                    </button>
+                  </td>
                   <td class="px-3 py-3 text-xs text-gray-600 whitespace-nowrap">{{ fmtDate(p.enrollment_date) }}</td>
                   <td class="px-3 py-3 text-xs text-gray-600 whitespace-nowrap">{{ fmtDate(p.completion_date) }}</td>
                   <td class="px-3 py-3 text-xs text-gray-600 whitespace-nowrap">{{ fmtDate(p.last_activity) }}</td>
@@ -190,6 +211,119 @@
             </table>
           </div>
           <p v-if="!filteredParticipants.length" class="text-sm text-gray-400 text-center py-8">Tidak ada peserta.</p>
+        </div>
+      </template>
+
+      <!-- ── TONTONAN VIDEO ── -->
+      <template v-else-if="isFull && hasVideos && activeTab === 'videos'">
+        <div class="clay-card p-4 mb-3">
+          <dl class="flex flex-wrap gap-x-8 gap-y-2 text-sm">
+            <div>
+              <dt class="text-xs text-gray-500">Rata-rata ditonton</dt>
+              <dd class="text-lg font-bold tabular-nums" :class="watchTextClass(videoSummary.avg)">{{ videoSummary.avg }}%</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-gray-500">Tuntas semua video</dt>
+              <dd class="text-lg font-bold text-gray-800 tabular-nums">{{ videoSummary.allDone }} <span class="text-sm font-medium text-gray-400">/ {{ s.enrolled }} peserta</span></dd>
+            </div>
+            <div>
+              <dt class="text-xs text-gray-500">Belum menonton sama sekali</dt>
+              <dd class="text-lg font-bold text-gray-800 tabular-nums">{{ videoSummary.none }} <span class="text-sm font-medium text-gray-400">peserta</span></dd>
+            </div>
+            <div>
+              <dt class="text-xs text-gray-500">Video dilewati</dt>
+              <dd class="text-lg font-bold tabular-nums" :class="videoSummary.skipped ? 'text-red-600' : 'text-gray-800'">{{ videoSummary.skipped }} <span class="text-sm font-medium text-gray-400">kali</span></dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="clay-card p-3 mb-3 flex flex-wrap gap-2 items-center">
+          <input v-model="videoSearch" placeholder="Cari nama / jabatan..." class="flex-1 min-w-40 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+          <select v-model="videoSort" aria-label="Urutkan" class="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+            <option value="low">Urut: Tontonan terendah</option>
+            <option value="high">Urut: Tontonan tertinggi</option>
+            <option value="name">Urut: Nama</option>
+          </select>
+          <label class="flex items-center gap-2 text-sm text-gray-700 px-1 cursor-pointer select-none">
+            <input v-model="videoOnlyUnfinished" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-300" />
+            Hanya yang belum tuntas
+          </label>
+        </div>
+
+        <div class="clay-card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="text-sm border-separate border-spacing-0 min-w-full">
+              <thead class="text-gray-500 text-xs">
+                <tr>
+                  <th class="sticky left-0 z-10 bg-gray-50 px-3 sm:px-4 py-3 text-left font-medium uppercase min-w-36 sm:min-w-52 border-b border-gray-100">Peserta</th>
+                  <th class="bg-gray-50 px-3 py-3 text-left font-medium uppercase whitespace-nowrap border-b border-gray-100">Rata-rata</th>
+                  <th
+                    v-for="v in videoModules"
+                    :key="v.id"
+                    class="bg-gray-50 px-2 py-3 text-left font-medium align-bottom border-b border-gray-100 min-w-28 max-w-40"
+                    :title="v.name"
+                  >
+                    <span class="block text-[10px] font-bold text-gray-400 uppercase">Video {{ v.vno }}</span>
+                    <span class="block text-gray-700 font-semibold normal-case leading-snug line-clamp-2">{{ v.name }}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="p in videoRows" :key="p.enrollment_id" class="group">
+                  <td class="sticky left-0 z-10 bg-white group-hover:bg-gray-50 px-3 sm:px-4 py-2.5 border-b border-gray-100">
+                    <p class="font-medium text-gray-800 truncate max-w-36 sm:max-w-52">{{ p.name }}</p>
+                    <p class="text-[11px] text-gray-400 truncate max-w-36 sm:max-w-52">{{ p.job || '-' }}</p>
+                  </td>
+                  <td class="bg-white/60 group-hover:bg-gray-50 px-3 py-2.5 border-b border-gray-100">
+                    <span class="font-bold tabular-nums" :class="watchTextClass(p.video_watch)">{{ Math.round(p.video_watch || 0) }}%</span>
+                    <span class="block text-[11px] text-gray-500 whitespace-nowrap">{{ p.videos_done }}/{{ data.course.video_count }} tuntas</span>
+                  </td>
+                  <td
+                    v-for="(cell, ci) in p.videos"
+                    :key="cell.module_id"
+                    class="px-1.5 py-1.5 border-b border-gray-100 group-hover:bg-gray-50"
+                  >
+                    <div
+                      class="relative overflow-hidden rounded-lg px-2.5 py-2 h-full"
+                      :class="cellClass(cell)"
+                      :title="cellTitle(p, cell, ci)"
+                    >
+                      <div class="flex items-center gap-1">
+                        <span v-if="cell.status === 'not_started'" class="text-xs">Belum</span>
+                        <span v-else class="font-semibold tabular-nums">{{ Math.round(cell.watch) }}%</span>
+                        <CheckCircleIcon v-if="cell.status === 'completed'" class="w-4 h-4 shrink-0" aria-label="selesai" />
+                        <ForwardIcon v-else-if="cell.status === 'skipped'" class="w-4 h-4 shrink-0" aria-label="dilewati" />
+                      </div>
+                      <span v-if="cell.status === 'skipped'" class="block text-[10px] font-semibold">dilewati</span>
+                      <span v-else-if="cell.status === 'in_progress'" class="block text-[10px] opacity-80">sedang ditonton</span>
+                      <div v-if="cell.status !== 'not_started'" class="absolute left-0 bottom-0 h-0.5 bg-current opacity-40" :style="{ width: cell.watch + '%' }"></div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot v-if="videoRows.length > 1">
+                <tr class="text-xs text-gray-600">
+                  <td class="sticky left-0 z-10 bg-gray-50 px-4 py-2.5 font-semibold">Rata-rata per video</td>
+                  <td class="bg-gray-50 px-3 py-2.5"></td>
+                  <td v-for="v in videoModules" :key="v.id" class="bg-gray-50 px-3.5 py-2.5 tabular-nums">
+                    <span class="font-semibold" :class="watchTextClass(v.avg)">{{ v.avg }}%</span>
+                    <span class="block text-[10px] text-gray-500">{{ v.done }} tuntas</span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <p v-if="!videoRows.length" class="text-sm text-gray-400 text-center py-8">
+            {{ videoOnlyUnfinished ? 'Semua peserta sudah menuntaskan video.' : 'Tidak ada peserta.' }}
+          </p>
+          <div class="px-4 py-3 border-t border-gray-100 flex flex-wrap gap-x-5 gap-y-1.5 text-[11px] text-gray-500">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-green-100 ring-1 ring-green-200"></span>≥ 90% ditonton</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-100 ring-1 ring-amber-200"></span>50–89%</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-100 ring-1 ring-red-200"></span>&lt; 50%</span>
+            <span class="flex items-center gap-1.5"><CheckCircleIcon class="w-3.5 h-3.5 text-green-700" />selesai</span>
+            <span class="flex items-center gap-1.5"><ForwardIcon class="w-3.5 h-3.5 text-red-600" />dilewati: ditandai selesai tapi ditonton &lt; 30%</span>
+            <span>Persentase = posisi terjauh yang pernah ditonton.</span>
+          </div>
         </div>
       </template>
 
@@ -326,14 +460,27 @@
       <!-- ── LEADERBOARD (admin tab & tampilan user) ── -->
       <template v-else>
         <div class="clay-card p-5 max-w-3xl">
-          <div class="flex items-center justify-between mb-1">
-            <h2 class="font-semibold text-gray-800 flex items-center gap-2"><TrophyIcon class="w-5 h-5 text-amber-500" /> Leaderboard</h2>
-            <span class="text-xs text-gray-400">{{ leaderboard.length }} peserta</span>
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
+            <h2 class="font-semibold text-gray-800 flex items-center gap-2">
+              <TrophyIcon class="w-5 h-5 text-amber-500" /> Leaderboard
+              <span class="text-xs font-normal text-gray-400">· {{ leaderboard.length }} peserta</span>
+            </h2>
+            <div class="inline-flex rounded-lg bg-black/5 p-0.5 text-xs font-semibold" role="group" aria-label="Urutkan leaderboard">
+              <button
+                v-for="opt in leaderSortOptions"
+                :key="opt.key"
+                @click="leaderSort = opt.key"
+                :aria-pressed="leaderSort === opt.key"
+                class="px-3 py-1.5 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+                :class="leaderSort === opt.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'"
+              >{{ opt.label }}</button>
+            </div>
           </div>
           <p class="text-[11px] text-gray-400 mb-4">
-            Urutan: progres tertinggi, lalu nilai {{ data.course.has_post_test ? 'post-test' : 'quiz terbaik' }}, lalu yang selesai lebih dulu.
+            <template v-if="leaderSort === 'score'">Urutan: nilai {{ scoreSource }} tertinggi, lalu progres, lalu yang selesai lebih dulu. Yang belum punya nilai di bawah.</template>
+            <template v-else>Urutan: progres tertinggi, lalu nilai {{ scoreSource }}.</template>
           </p>
-          <LeaderRow v-for="p in leaderboard" :key="p.rank" :p="p" />
+          <LeaderRow v-for="p in rankedLeaderboard" :key="p.key" :p="p" />
           <p v-if="!leaderboard.length" class="text-sm text-gray-400">Belum ada peserta.</p>
         </div>
       </template>
@@ -346,6 +493,7 @@ import { ref, computed, defineComponent, h, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { lmsApi } from '../../services/lmsApi'
 import { ChevronLeftIcon, TrophyIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline'
+import { CheckCircleIcon, ForwardIcon } from '@heroicons/vue/20/solid'
 
 const route = useRoute()
 const router = useRouter()
@@ -359,10 +507,16 @@ const search = ref('')
 const statusFilter = ref('')
 const activityPerson = ref(null)
 const activityType = ref('')
+const participantSort = ref('score')
+const leaderSort = ref('score')
+const videoSearch = ref('')
+const videoSort = ref('low')
+const videoOnlyUnfinished = ref(false)
 
 const tabs = [
   { key: 'summary', label: 'Ringkasan' },
   { key: 'participants', label: 'Peserta' },
+  { key: 'videos', label: 'Tontonan Video' },
   { key: 'prepost', label: 'Pre / Post-test' },
   { key: 'leaderboard', label: 'Leaderboard' },
   { key: 'modules', label: 'Materi' },
@@ -373,14 +527,94 @@ const isFull = computed(() => data.value?.scope === 'full')
 const s = computed(() => data.value?.summary || {})
 const hasPrePost = computed(() => !!(data.value?.course?.has_pre_test || data.value?.course?.has_post_test))
 const leaderboard = computed(() => (isFull.value ? data.value.participants : data.value?.leaderboard) || [])
+const hasVideos = computed(() => (data.value?.course?.video_count || 0) > 0)
+const visibleTabs = computed(() => tabs.filter(t => t.key !== 'videos' || hasVideos.value))
+const scoreSource = computed(() => (data.value?.course?.has_post_test ? 'post-test' : 'quiz terbaik'))
+
+// ── Urutan: nilai (utama) atau progres ────────────────────────────────
+const leaderSortOptions = [
+  { key: 'score', label: 'Nilai' },
+  { key: 'progress', label: 'Progres' },
+]
+const byScore = (a, b) => (a.score == null) - (b.score == null) || (b.score ?? 0) - (a.score ?? 0)
+const byProgress = (a, b) => (b.progress || 0) - (a.progress || 0)
+const comparators = {
+  score: (a, b) => byScore(a, b) || byProgress(a, b) || a.rank - b.rank,
+  progress: (a, b) => byProgress(a, b) || byScore(a, b) || a.rank - b.rank,
+  video: (a, b) => (a.video_watch ?? 0) - (b.video_watch ?? 0) || a.name.localeCompare(b.name),
+  name: (a, b) => a.name.localeCompare(b.name),
+}
+function rankBy(rows, key) {
+  return [...rows].sort(comparators[key]).map((p, i) => ({ ...p, key: p.enrollment_id || `${p.rank}-${p.name}`, rank: i + 1 }))
+}
+const rankedLeaderboard = computed(() => rankBy(leaderboard.value, leaderSort.value))
 
 const filteredParticipants = computed(() => {
   const q = search.value.trim().toLowerCase()
   return (data.value?.participants || []).filter(p =>
     (!statusFilter.value || p.status === statusFilter.value)
     && (!q || `${p.name} ${p.job} ${p.department}`.toLowerCase().includes(q))
-  )
+  ).sort(comparators[participantSort.value])
 })
+
+// ── Tontonan video ────────────────────────────────────────────────────
+const videoModules = computed(() => {
+  const participants = data.value?.participants || []
+  return (data.value?.modules || [])
+    .filter(m => m.content_type === 'video')
+    .map((m, i) => {
+      const cells = participants.map(p => (p.videos || []).find(v => v.module_id === m.id)).filter(Boolean)
+      const avg = cells.length ? Math.round(cells.reduce((t, c) => t + c.watch, 0) / cells.length) : 0
+      return { ...m, vno: i + 1, avg, done: cells.filter(c => c.status === 'completed').length }
+    })
+})
+const videoSummary = computed(() => {
+  const ps = data.value?.participants || []
+  const n = ps.length
+  return {
+    avg: n ? Math.round(ps.reduce((t, p) => t + (p.video_watch || 0), 0) / n) : 0,
+    allDone: ps.filter(p => p.videos?.length && p.videos_done === p.videos.length).length,
+    none: ps.filter(p => (p.videos || []).every(v => !v.watch)).length,
+    skipped: ps.reduce((t, p) => t + (p.videos_skipped || 0), 0),
+  }
+})
+const videoRows = computed(() => {
+  const q = videoSearch.value.trim().toLowerCase()
+  const rows = (data.value?.participants || []).filter(p =>
+    (!q || `${p.name} ${p.job} ${p.department}`.toLowerCase().includes(q))
+    && (!videoOnlyUnfinished.value || p.videos_done < (p.videos || []).length))
+  const cmp = {
+    low: comparators.video,
+    high: (a, b) => -comparators.video(a, b),
+    name: comparators.name,
+  }[videoSort.value]
+  return rows.sort(cmp)
+})
+function showVideosOf(p) {
+  videoSearch.value = p.name
+  videoOnlyUnfinished.value = false
+  activeTab.value = 'videos'
+}
+function watchTextClass(v) {
+  if (v == null) return 'text-gray-400'
+  return v >= 90 ? 'text-green-700' : v >= 50 ? 'text-amber-700' : 'text-red-600'
+}
+function cellClass(c) {
+  if (c.status === 'not_started') return 'bg-gray-50 text-gray-400'
+  if (c.status === 'skipped') return 'bg-red-100 text-red-700'
+  if (c.watch >= 90) return 'bg-green-100 text-green-800'
+  if (c.watch >= 50) return 'bg-amber-100 text-amber-800'
+  return 'bg-red-50 text-red-700'
+}
+function cellTitle(p, c, i) {
+  const name = videoModules.value[i]?.name || 'Video'
+  if (c.status === 'not_started') return `${p.name} · ${name}: belum ditonton`
+  const parts = [`${p.name} · ${name}`, `ditonton ${Math.round(c.watch)}%`]
+  if (c.minutes) parts.push(`${c.minutes} mnt`)
+  if (c.last_watched) parts.push(`terakhir ${fmtDate(c.last_watched)}`)
+  if (c.status === 'skipped') parts.push('DILEWATI')
+  return parts.join(' · ')
+}
 const sortedByName = computed(() => [...(data.value?.participants || [])].sort((a, b) => a.name.localeCompare(b.name)))
 const prePostRows = computed(() => [...(data.value?.participants || [])].sort((a, b) =>
   (b.delta ?? -999) - (a.delta ?? -999) || a.name.localeCompare(b.name)))
@@ -481,7 +715,7 @@ const LeaderRow = defineComponent({
           ]),
         ]),
         h('div', { class: 'w-14 text-right shrink-0' }, [
-          h('p', { class: 'text-sm font-bold text-gray-800' }, fmtNum(p.score)),
+          h('p', { class: 'text-sm font-bold text-gray-800 tabular-nums' }, fmtNum(p.score)),
           h('p', { class: 'text-[10px] text-gray-400' }, 'nilai'),
         ]),
       ])
@@ -492,15 +726,21 @@ const LeaderRow = defineComponent({
 // ── Export ────────────────────────────────────────────────────────────
 function exportCsv() {
   const c = data.value.course
+  const videos = videoModules.value
   const head = ['Peringkat', 'Nama', 'Jabatan', 'Departemen', 'Status', 'Progres %', 'Modul Selesai',
     ...(c.has_pre_test ? ['Pre-test'] : []), ...(c.has_post_test ? ['Post-test'] : []),
     ...(c.has_pre_test && c.has_post_test ? ['Delta'] : []),
-    'Nilai', 'Tgl Daftar', 'Tgl Selesai', 'Aktivitas Terakhir']
-  const rows = data.value.participants.map(p => [
+    'Nilai',
+    ...(videos.length ? ['Rata-rata Tonton Video %', 'Video Tuntas', 'Video Dilewati', ...videos.map(v => `Video ${v.vno}: ${v.name} %`)] : []),
+    'Tgl Daftar', 'Tgl Selesai', 'Aktivitas Terakhir']
+  const rows = rankBy(data.value.participants, 'score').map(p => [
     p.rank, p.name, p.job, p.department, statusLabel(p.status), p.progress, p.modules_done,
     ...(c.has_pre_test ? [p.pre?.score ?? ''] : []), ...(c.has_post_test ? [p.post?.score ?? ''] : []),
     ...(c.has_pre_test && c.has_post_test ? [p.delta ?? ''] : []),
-    p.score ?? '', p.enrollment_date || '', p.completion_date || '', p.last_activity || '',
+    p.score ?? '',
+    ...(videos.length ? [p.video_watch ?? '', p.videos_done, p.videos_skipped,
+      ...videos.map(v => (p.videos || []).find(x => x.module_id === v.id)?.watch ?? '')] : []),
+    p.enrollment_date || '', p.completion_date || '', p.last_activity || '',
   ])
   const csv = [head, ...rows]
     .map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))

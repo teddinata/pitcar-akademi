@@ -5,6 +5,16 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.5.0',
+    date: '2026-10-27',
+    title: 'Tontonan video per peserta & leaderboard urut nilai',
+    items: [
+      { type: 'baru', text: 'Analitik Kursus punya tab Tontonan Video: tabel peserta × video yang menunjukkan berapa persen tiap video ditonton, mana yang sudah selesai, belum dibuka, atau dilewati (ditandai selesai tapi ditonton kurang dari 30%). Bisa dicari, diurutkan dari tontonan terendah, dan disaring hanya yang belum tuntas.' },
+      { type: 'baru', text: 'Tab Peserta menampilkan kolom Nilai dan Video Ditonton (klik untuk melihat rincian per video), serta pilihan urutan nilai/progres/tontonan/nama. Unduhan CSV ikut memuat persentase tonton per video.' },
+      { type: 'ubah', text: 'Leaderboard kini diurutkan berdasarkan nilai, dengan pilihan urut berdasarkan progres.' },
+    ],
+  },
+  {
     version: '1.4.1',
     date: '2026-10-21',
     title: 'Dokumen PDF tampil di HP Android & database Pitcar Academy',
