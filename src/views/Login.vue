@@ -290,7 +290,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import {
   EyeIcon,
@@ -314,6 +314,7 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const showPassword = ref(false)
@@ -341,7 +342,9 @@ const handleLogin = async () => {
       formData.value.password
     )
     
-    router.push('/dashboard/lms')
+    // Kembali ke halaman tujuan sebelum login (hanya path internal).
+    const tujuan = String(route.query.redirect || '')
+    router.push(tujuan.startsWith('/') && !tujuan.startsWith('//') ? tujuan : '/dashboard/lms')
   } catch (err) {
     error.value = err.message || 'Login failed. Please check your credentials.'
   } finally {

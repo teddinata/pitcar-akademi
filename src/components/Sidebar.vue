@@ -216,8 +216,8 @@
     </div>
   </div>
 
-  <!-- Mobile Bottom Navigation Bar -->
-  <div class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 flex items-center justify-around px-2 z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+  <!-- Mobile Bottom Navigation Bar (disembunyikan di halaman mode fokus, mis. lembar tes) -->
+  <div v-if="!route.meta.focusMode" class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 flex items-center justify-around px-2 z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
     <!-- Quiz List Tab -->
     <button
       @click="navigateAndClose('/dashboard/quiz')"

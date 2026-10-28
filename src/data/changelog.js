@@ -5,6 +5,22 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.7.0',
+    date: '2026-10-29',
+    title: 'Tes kompetensi: pilihan ganda, timer, link, impor Excel',
+    items: [
+      { type: 'baru', text: 'Soal studi kasus bisa berupa pilihan ganda atau esai. Pada pilihan ganda, tiap opsi mewakili tindakan khas satu jenjang (L1–L4) dan langsung dinilai. Peserta tidak melihat jenjang opsi, dan urutan opsi diacak untuk tiap peserta.' },
+      { type: 'baru', text: 'Tes punya batas waktu yang dijaga server. Waktu berjalan sejak peserta menekan Mulai, tidak berhenti saat aplikasi ditutup, dan jawaban yang tersimpan terkirim otomatis saat waktu habis.' },
+      { type: 'baru', text: 'Link tes per periode untuk dibagikan lewat WA. Hanya peserta terdaftar yang bisa masuk, dan admin bisa mengganti link kapan saja.' },
+      { type: 'baru', text: 'Impor dan ekspor studi kasus lewat Excel, lengkap dengan template. Isi file dicek dulu dan tampil sebagai pratinjau sebelum disimpan. Tersedia juga tombol Duplikat untuk membuat versi baru kasus yang sudah dipakai.' },
+      { type: 'baru', text: '4 studi kasus contoh baru (pilihan ganda + esai): rem komplain balik, AC kurang dingin, aki tekor setelah pasang dashcam, dan rekomendasi servis banyak ditolak (kabeng).' },
+      { type: 'baru', text: 'Panduan cara pakai (tour) untuk admin dan peserta. Muncul sekali per akun, melanjutkan dari langkah terakhir bila halaman dimuat ulang, dan bisa diputar lagi lewat tombol Cara pakai.' },
+      { type: 'baru', text: 'Saat periode ditutup, jenjang kompetensi peserta otomatis tercatat di data karyawan (PitClock).' },
+      { type: 'baru', text: 'Leaderboard kursus bisa difilter per divisi dan departemen; peringkat dihitung ulang di dalam filter.' },
+      { type: 'ubah', text: 'Tampilan tes untuk peserta dirombak menjadi lembar ujian: satu soal per layar, nomor soal bergaya LJK, timer di atas, dan tombol navigasi yang mudah dijangkau di HP.' },
+    ],
+  },
+  {
     version: '1.6.1',
     date: '2026-10-28',
     title: 'Paket soal contoh mekanik siap pakai',

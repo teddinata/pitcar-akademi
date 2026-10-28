@@ -110,7 +110,7 @@
             <p>{{ data.attempt.ai_error }}</p>
             <button class="mt-2 px-3 py-1.5 rounded-lg bg-red-700 text-white text-xs font-bold" :disabled="busy" @click="nilaiUlang">Nilai ulang</button>
           </div>
-          <p v-else-if="['queued', 'running'].includes(data.attempt.ai_state)" class="mt-3 text-sm text-gray-600">Rekaman sedang ditranskripsi dan dinilai AI. Biasanya selesai dalam beberapa menit.</p>
+          <p v-else-if="['queued', 'running'].includes(data.attempt.ai_state)" class="mt-3 text-sm text-gray-600">Jawaban esai/rekaman sedang dinilai AI. Biasanya selesai dalam beberapa menit.</p>
 
           <template v-if="hasil">
             <p class="mt-3 text-sm leading-relaxed text-gray-800 max-w-prose">{{ hasil.ringkasan }}</p>
@@ -140,12 +140,29 @@
             </div>
           </template>
 
-          <!-- Jawaban tertulis -->
-          <details v-if="data.attempt.answers.some((a) => a && a.trim())" class="mt-4 group">
-            <summary class="cursor-pointer text-sm font-semibold text-gray-800">Jawaban tertulis</summary>
-            <div v-for="(q, i) in data.attempt.case.questions" :key="i" class="mt-3">
-              <p class="text-xs font-semibold text-gray-500">{{ i + 1 }}. {{ q }}</p>
-              <p class="mt-0.5 text-sm whitespace-pre-line text-gray-800">{{ data.attempt.answers[i] || '—' }}</p>
+          <!-- Pilihan ganda: opsi yang dipilih beserta jenjangnya -->
+          <div v-if="data.attempt.choice_review?.length" class="mt-4">
+            <p class="text-sm font-semibold text-gray-800">
+              Pilihan ganda
+              <span v-if="data.attempt.auto_submitted" class="ml-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Terkirim otomatis (waktu habis)</span>
+            </p>
+            <ol class="mt-2 space-y-2">
+              <li v-for="(c, i) in data.attempt.choice_review" :key="c.question_id" class="rounded-xl border border-gray-200 p-3">
+                <p class="text-xs font-semibold text-gray-500">{{ i + 1 }}. {{ c.text }} <span class="font-normal">· {{ c.pillar }}</span></p>
+                <div class="mt-1 flex items-start gap-2">
+                  <span class="px-1.5 rounded ring-1 text-xs font-bold shrink-0" :class="c.level ? LEVEL_STYLE[c.level].cell : EMPTY_CELL">{{ c.level ? `L${c.level}` : 'Tidak dijawab' }}</span>
+                  <span class="text-sm text-gray-800">{{ c.answer_text || '—' }}</span>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          <!-- Jawaban esai tertulis -->
+          <details v-if="(data.attempt.essay_answers || []).some((a) => a.answer && a.answer.trim())" class="mt-4 group">
+            <summary class="cursor-pointer text-sm font-semibold text-gray-800">Jawaban esai tertulis</summary>
+            <div v-for="(a, i) in data.attempt.essay_answers" :key="i" class="mt-3">
+              <p class="text-xs font-semibold text-gray-500">{{ i + 1 }}. {{ a.text }}</p>
+              <p class="mt-0.5 text-sm whitespace-pre-line text-gray-800">{{ a.answer || '—' }}</p>
             </div>
           </details>
 

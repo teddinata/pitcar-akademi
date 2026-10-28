@@ -463,7 +463,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
             <h2 class="font-semibold text-gray-800 flex items-center gap-2">
               <TrophyIcon class="w-5 h-5 text-amber-500" /> Leaderboard
-              <span class="text-xs font-normal text-gray-400">· {{ leaderboard.length }} peserta</span>
+              <span class="text-xs font-normal text-gray-400">· {{ leaderFiltered.length }}{{ leaderFilterOn ? ` dari ${leaderboard.length}` : '' }} peserta</span>
             </h2>
             <div class="inline-flex rounded-lg bg-black/5 p-0.5 text-xs font-semibold" role="group" aria-label="Urutkan leaderboard">
               <button
@@ -476,7 +476,21 @@
               >{{ opt.label }}</button>
             </div>
           </div>
+          <div v-if="divisionOptions.length || departmentOptions.length" class="flex flex-wrap items-center gap-2 mt-3 mb-2">
+            <label class="sr-only" for="lb-divisi">Divisi</label>
+            <select id="lb-divisi" v-model="leaderDivision" class="h-9 rounded-lg border border-gray-200 bg-white px-2.5 text-sm" @change="leaderDepartment = ''">
+              <option value="">Semua divisi</option>
+              <option v-for="o in divisionOptions" :key="o.id" :value="o.id">{{ o.name }}</option>
+            </select>
+            <label class="sr-only" for="lb-departemen">Departemen</label>
+            <select id="lb-departemen" v-model="leaderDepartment" class="h-9 rounded-lg border border-gray-200 bg-white px-2.5 text-sm">
+              <option value="">Semua departemen</option>
+              <option v-for="o in departmentOptions" :key="o.id" :value="o.id">{{ o.name }}</option>
+            </select>
+            <button v-if="leaderFilterOn" class="text-xs font-semibold text-blue-700 hover:underline" @click="leaderDivision = ''; leaderDepartment = ''">Reset filter</button>
+          </div>
           <p class="text-[11px] text-gray-400 mb-4">
+            <template v-if="leaderFilterOn">Peringkat dihitung ulang di antara peserta yang sesuai filter. </template>
             <template v-if="leaderSort === 'score'">Peringkat berdasarkan nilai {{ scoreSource }}. Nilai sama: progres lebih tinggi di atas.</template>
             <template v-else>Peringkat berdasarkan progres materi. Progres sama: nilai {{ scoreSource }} lebih tinggi di atas.</template>
           </p>
@@ -484,10 +498,11 @@
             <p
               v-if="leaderSort === 'score' && p.score == null && (i === 0 || rankedLeaderboard[i - 1].score != null)"
               class="mt-3 mb-1 px-2 pt-3 border-t border-gray-100 text-[11px] font-semibold text-gray-500"
-            >{{ noScoreHeading }} · {{ leaderboard.filter(x => x.score == null).length }} peserta</p>
+            >{{ noScoreHeading }} · {{ leaderFiltered.filter(x => x.score == null).length }} peserta</p>
             <LeaderRow :p="p" :by="leaderSort" :no-score="noScoreLabel" />
           </template>
           <p v-if="!leaderboard.length" class="text-sm text-gray-400">Belum ada peserta.</p>
+          <p v-else-if="!leaderFiltered.length" class="text-sm text-gray-400">Tidak ada peserta di divisi/departemen ini.</p>
         </div>
       </template>
     </template>
@@ -555,7 +570,19 @@ const comparators = {
 function rankBy(rows, key) {
   return [...rows].sort(comparators[key]).map((p, i) => ({ ...p, key: p.enrollment_id || `${p.rank}-${p.name}`, rank: i + 1 }))
 }
-const rankedLeaderboard = computed(() => rankBy(leaderboard.value, leaderSort.value))
+// Filter divisi (departemen induk paling atas) & departemen; peringkat dihitung ulang.
+const leaderDivision = ref('')
+const leaderDepartment = ref('')
+const leaderFilterOn = computed(() => !!(leaderDivision.value || leaderDepartment.value))
+const uniqueBy = (rows, idKey, nameKey) => [...new Map(rows.filter(r => r[idKey]).map(r => [r[idKey], { id: r[idKey], name: r[nameKey] }])).values()]
+  .sort((a, b) => a.name.localeCompare(b.name))
+const divisionOptions = computed(() => uniqueBy(leaderboard.value, 'division_id', 'division'))
+const departmentOptions = computed(() => uniqueBy(
+  leaderboard.value.filter(p => !leaderDivision.value || p.division_id === leaderDivision.value), 'department_id', 'department'))
+const leaderFiltered = computed(() => leaderboard.value.filter(p =>
+  (!leaderDivision.value || p.division_id === leaderDivision.value)
+  && (!leaderDepartment.value || p.department_id === leaderDepartment.value)))
+const rankedLeaderboard = computed(() => rankBy(leaderFiltered.value, leaderSort.value))
 
 const filteredParticipants = computed(() => {
   const q = search.value.trim().toLowerCase()

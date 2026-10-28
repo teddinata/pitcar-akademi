@@ -1,0 +1,176 @@
+/* Dunia "lembar ujian" untuk halaman tes kompetensi peserta.
+   Kertas putih di atas kertas kotak, garis hitam tebal, bayangan blok
+   (neo-brutal), bulatan LJK bertinta merah yang terisi grafit, stabilo kuning
+   untuk sorotan, tinta pulpen biru untuk jawaban esai. */
+.ujian {
+  --ink: #141414;
+  --ink-soft: #3a3a3a;
+  --paper: #ffffff;
+  --grid-bg: #f2f6fd;
+  --grid-line: #dbe5f5;
+  --merah: #b70000;
+  --merah-tua: #8f0000;
+  --merah-muda: #fde8e8;
+  --stabilo: #ffe14d;
+  --biru: #1d4ed8;
+  --hijau: #0f7a43;
+  --line: 2.5px;
+  --shadow: 4px 4px 0 var(--ink);
+  --shadow-sm: 2px 2px 0 var(--ink);
+  --radius: 14px;
+  --display: 'Bricolage Grotesque Variable', 'Poppins', system-ui, sans-serif;
+
+  min-height: 100%;
+  color: var(--ink);
+  background-color: var(--grid-bg);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+.ujian ::selection { background: var(--stabilo); color: var(--ink); }
+.ujian :focus-visible { outline: 3px solid var(--biru); outline-offset: 2px; }
+
+.u-display { font-family: var(--display); letter-spacing: -0.015em; }
+
+.u-card {
+  background: var(--paper);
+  border: var(--line) solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* Tombol */
+.u-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  min-height: 44px; padding: .55rem 1.1rem;
+  font-weight: 700; font-size: .9rem; line-height: 1.1;
+  color: var(--ink); background: var(--paper);
+  border: var(--line) solid var(--ink); border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: transform .08s ease-out, box-shadow .08s ease-out, background-color .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.u-btn:hover:not(:disabled) { background: #f4f4f4; }
+.u-btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }
+.u-btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.u-btn-merah { background: var(--merah); color: #fff; }
+.u-btn-merah:hover:not(:disabled) { background: var(--merah-tua); }
+.u-btn-hitam { background: var(--ink); color: #fff; }
+.u-btn-hitam:hover:not(:disabled) { background: #000; }
+.u-btn-besar { min-height: 56px; font-size: 1.05rem; padding: .8rem 1.4rem; border-radius: 14px; box-shadow: var(--shadow); }
+
+.u-chip {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .15rem .6rem; font-size: .75rem; font-weight: 700;
+  border: 2px solid var(--ink); border-radius: 999px; background: var(--paper);
+}
+.u-chip-kuning { background: var(--stabilo); }
+.u-chip-merah { background: var(--merah-muda); color: var(--merah-tua); border-color: var(--merah); }
+.u-chip-hijau { background: #dcf3e6; color: var(--hijau); border-color: var(--hijau); }
+
+/* Nomor soal dalam kotak hitam */
+.u-nomor {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 2.6rem; height: 2.6rem;
+  font-family: var(--display); font-weight: 800; font-size: 1.25rem;
+  color: #fff; background: var(--ink); border-radius: 10px;
+}
+
+/* Bulatan LJK: tinta merah, terisi grafit saat dipilih */
+.u-bubble {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 2.25rem; height: 2.25rem; border-radius: 999px;
+  font-weight: 800; font-size: .9rem;
+  color: var(--merah); background: var(--paper);
+  border: 2.5px solid var(--merah);
+  transition: background-color .12s, color .12s, border-color .12s, transform .12s;
+}
+.is-filled > .u-bubble, .u-bubble.is-filled {
+  color: #fff; background: var(--ink); border-color: var(--ink);
+}
+
+/* Opsi pilihan ganda: satu baris penuh yang bisa ditekan */
+.u-opsi {
+  display: flex; align-items: flex-start; gap: .85rem; width: 100%;
+  padding: .8rem .9rem; text-align: left;
+  border: 2px solid var(--ink); border-radius: 12px; background: var(--paper);
+  transition: background-color .12s, box-shadow .12s, transform .08s;
+  -webkit-tap-highlight-color: transparent;
+}
+.u-opsi:hover { background: #fffbe0; }
+.u-opsi:active { transform: translate(1px, 1px); }
+.u-opsi.is-filled { background: #fff6bf; box-shadow: var(--shadow-sm); }
+.u-opsi.is-filled .u-bubble { transform: scale(1.04); }
+
+/* Navigator LJK: nomor soal */
+.u-ljk {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 2.1rem; height: 2.1rem; border-radius: 999px;
+  font-size: .8rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  color: var(--merah); background: var(--paper); border: 2px solid var(--merah);
+}
+.u-ljk.is-filled { color: #fff; background: var(--ink); border-color: var(--ink); }
+.u-ljk.is-current { box-shadow: 0 0 0 3px var(--stabilo), 0 0 0 5px var(--ink); }
+
+/* Timer stempel */
+.u-timer {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .3rem .7rem; border: var(--line) solid var(--ink); border-radius: 10px;
+  background: var(--paper); box-shadow: var(--shadow-sm);
+  font-family: var(--display); font-weight: 800; font-size: 1.25rem;
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.u-timer.is-warn { background: var(--stabilo); }
+.u-timer.is-danger { background: var(--merah); color: #fff; }
+
+/* Kertas bergaris untuk jawaban esai (tinta biru) */
+.u-garis {
+  width: 100%; min-height: 11rem; resize: vertical;
+  padding: 0 .9rem; border: 2px solid var(--ink); border-radius: 12px;
+  font-size: 1rem; line-height: 2rem; color: var(--biru);
+  background-color: var(--paper);
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(2rem - 1px), #c9d6ee calc(2rem - 1px), #c9d6ee 2rem);
+  background-attachment: local;
+  background-position: 0 .45rem;
+  padding-top: .45rem;
+}
+.u-garis::placeholder { color: #7d8aa5; }
+.u-garis:focus { outline: none; box-shadow: 0 0 0 3px var(--stabilo), 0 0 0 5px var(--ink); }
+
+/* Kotak centang dunia lembar ujian (persetujuan rekam) */
+.u-check {
+  appearance: none; -webkit-appearance: none; flex-shrink: 0;
+  width: 1.5rem; height: 1.5rem; margin-top: .1rem;
+  border: 2.5px solid var(--ink); border-radius: 6px; background: var(--paper);
+  display: grid; place-items: center; cursor: pointer;
+}
+.u-check:checked {
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 80% no-repeat;
+}
+
+/* Margin merah buku ujian di kertas jawaban esai */
+.u-garis {
+  padding-left: 2.6rem;
+  background-image:
+    linear-gradient(to right, transparent 1.75rem, rgba(183, 0, 0, .55) 1.75rem, rgba(183, 0, 0, .55) calc(1.75rem + 2px), transparent calc(1.75rem + 2px)),
+    repeating-linear-gradient(to bottom, transparent 0, transparent calc(2rem - 1px), #c9d6ee calc(2rem - 1px), #c9d6ee 2rem);
+}
+
+/* Stempel TERKIRIM */
+.u-stempel {
+  display: inline-block; padding: .35rem 1.1rem;
+  font-family: var(--display); font-weight: 800; font-size: 1.8rem; letter-spacing: .06em;
+  color: var(--merah); border: 4px solid var(--merah); border-radius: 10px;
+  transform: rotate(-6deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .u-stempel.is-anim { animation: u-cap .42s cubic-bezier(.16, 1, .3, 1) both; }
+  .u-opsi.is-filled .u-bubble { animation: u-isi .22s ease-out; }
+}
+@keyframes u-cap { from { transform: rotate(-6deg) scale(1.9); opacity: 0; } to { transform: rotate(-6deg) scale(1); opacity: 1; } }
+@keyframes u-isi { from { transform: scale(.7); } to { transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) {
+  .u-btn, .u-opsi, .u-bubble { transition: none; }
+}

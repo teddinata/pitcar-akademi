@@ -149,6 +149,12 @@ const routes = [
     path: '/dashboard/lms/my-competency/case/:attemptId',
     name: 'CompetencyCase',
     component: () => import('../views/competency/CompetencyCase.vue'),
+    meta: { requiresAuth: true, focusMode: true }
+  },
+  {
+    path: '/dashboard/lms/competency/join/:token',
+    name: 'CompetencyJoin',
+    component: () => import('../views/competency/CompetencyJoin.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -394,7 +400,8 @@ router.beforeEach(async (to, from, next) => {
   if (to.matched.some(r => r.meta.requiresAuth)) {
     authStore.checkAuth()
     if (!authStore.isAuthenticated) {
-      next('/login')
+      // Simpan tujuan (mis. link tes yang dibagikan) supaya kembali ke sana setelah login.
+      next({ path: '/login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : {} })
     } else {
       next()
     }

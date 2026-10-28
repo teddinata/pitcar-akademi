@@ -17,6 +17,7 @@
         </p>
       </div>
       <div v-if="cycle" class="flex flex-wrap gap-2">
+        <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 bg-white/80 ring-1 ring-gray-200 hover:bg-white" data-tour="cycle-help" @click="tour.replay()"><QuestionMarkCircleIcon class="w-4 h-4" />Cara pakai</button>
         <button v-if="cycle.state === 'draft'" class="px-4 py-2 rounded-lg bg-[#b70000] text-white text-sm font-bold hover:bg-[#930000] disabled:bg-gray-300" :disabled="busy || !participants.length" @click="aksi('openCycle', 'Periode dimulai. Tugas penilaian sudah muncul di akun masing-masing.')">Mulai periode</button>
         <button v-if="cycle.state === 'open'" class="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-bold disabled:bg-gray-300" :disabled="busy" @click="konfirmasiTutup = true">Tutup periode</button>
         <button v-if="cycle.state === 'closed'" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 bg-white ring-1 ring-gray-200 hover:bg-gray-50" :disabled="busy" @click="aksi('reopenCycle', 'Periode dibuka lagi.')">Buka lagi</button>
@@ -33,8 +34,22 @@
         <button class="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-bold" :disabled="busy" @click="konfirmasiTutup = false; aksi('closeCycle', 'Periode ditutup.')">Ya, tutup</button>
       </div>
 
+      <!-- Link undangan tes -->
+      <div v-if="cycle.case" class="clay-card p-3 sm:p-4 mb-4 flex flex-wrap items-center gap-3" data-tour="cycle-link">
+        <LinkIcon class="w-5 h-5 text-[#b70000] shrink-0" />
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold text-gray-900">Link tes studi kasus</p>
+          <p class="text-xs text-gray-500">Bagikan ke peserta (WA/grup). Hanya peserta terdaftar yang bisa masuk; tes juga muncul di menu Asesmen Kompetensi mereka.{{ cycle.state === 'draft' ? ' Link aktif setelah periode dimulai.' : '' }}</p>
+          <p class="mt-1.5 font-mono text-xs text-gray-700 bg-white rounded-lg ring-1 ring-gray-200 px-2.5 py-1.5 truncate">{{ joinUrl }}</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="px-3 py-2 rounded-lg bg-gray-900 text-white text-sm font-bold" @click="salinLink">{{ tersalin ? 'Tersalin' : 'Salin link' }}</button>
+          <button class="px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 bg-white ring-1 ring-gray-200 hover:bg-gray-50" :disabled="busy" title="Link lama berhenti berlaku" @click="gantiLink">Ganti link</button>
+        </div>
+      </div>
+
       <!-- Tambah peserta -->
-      <div v-if="cycle.state !== 'closed'" class="clay-card p-3 mb-4 relative">
+      <div v-if="cycle.state !== 'closed'" class="clay-card p-3 mb-4 relative" data-tour="cycle-add">
         <div class="flex flex-wrap items-center gap-2">
           <MagnifyingGlassIcon class="w-4 h-4 text-gray-400 ml-1" />
           <input
@@ -71,7 +86,7 @@
       </div>
 
       <!-- Peta -->
-      <div class="clay-card overflow-hidden">
+      <div class="clay-card overflow-hidden" data-tour="cycle-map">
         <div class="overflow-x-auto">
           <table class="w-full text-sm border-separate border-spacing-0">
             <thead class="text-xs text-gray-500">
@@ -142,9 +157,10 @@
 </template>
 
 <script setup>
-import { computed, defineComponent, h, onMounted, ref } from 'vue'
+import { computed, defineComponent, h, nextTick, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronLeftIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { ChevronLeftIcon, LinkIcon, MagnifyingGlassIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/outline'
+import { useTour } from '../../composables/useTour'
 import { competencyApi } from '../../services/competencyApi'
 import { LEVEL_STYLE, levelName } from '../../utils/competency'
 import LevelCell from '../../components/competency/LevelCell.vue'
@@ -254,10 +270,43 @@ function dihapus(detail) {
   toast('Peserta dihapus dari periode.')
 }
 
+const tersalin = ref(false)
+const joinUrl = computed(() => `${window.location.origin}/dashboard/lms/competency/join/${cycle.value?.access_token || ''}`)
+async function salinLink() {
+  try {
+    await navigator.clipboard.writeText(joinUrl.value)
+    tersalin.value = true
+    setTimeout(() => { tersalin.value = false }, 2000)
+  } catch {
+    toast('Tidak bisa menyalin otomatis. Tekan lama pada link untuk menyalin.', false)
+  }
+}
+async function gantiLink() {
+  busy.value = true
+  try {
+    cycle.value = await competencyApi.newCycleToken(cycleId)
+    toast('Link baru dibuat. Link lama tidak berlaku lagi.')
+  } catch (e) {
+    toast(e.message, false)
+  } finally {
+    busy.value = false
+  }
+}
+
+const tour = useTour('admin-periode', () => [
+  { element: '[data-tour="cycle-add"]', title: 'Tambah peserta', text: 'Ketik nama karyawan. Atasan dan tim penilai terisi otomatis dari struktur karyawan dan bisa diubah per peserta.', side: 'bottom' },
+  { element: '[data-tour="cycle-link"]', title: 'Bagikan link tes', text: 'Salin link dan kirim ke peserta. Hanya peserta terdaftar yang bisa masuk. Kalau link tersebar ke orang lain, tekan Ganti link.', side: 'bottom' },
+  { element: '[data-tour="cycle-map"]', title: 'Peta jenjang', text: 'Level tiap pilar dan jenjang peserta terisi saat studi kasus, penilaian atasan, dan feedback tim masuk. Klik baris untuk rincian dan level manual.', side: 'top' },
+  { element: '[data-tour="cycle-help"]', title: 'Tutup periode', text: 'Setelah semua lengkap, tutup periode: peserta bisa melihat hasilnya, dan jenjang tercatat di data karyawan PitClock. Tekan "Cara pakai" untuk melihat panduan ini lagi.', side: 'bottom', align: 'end' },
+])
+
 function rataPilar(pillarId) {
   const vals = participants.value.map((p) => p.results[pillarId]?.final).filter((v) => v)
   return vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1).replace('.', ',') : '–'
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  if (cycle.value) nextTick(() => tour.autoStart())
+})
 </script>

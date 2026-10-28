@@ -1,0 +1,87 @@
+/* Popover onboarding tour Akademi: kartu kertas bergaris tebal (neo-brutal),
+   tinta merah Pitcar untuk tombol utama. */
+.driver-popover.akademi-tour {
+  background: #fff;
+  color: #141414;
+  border: 2.5px solid #141414;
+  border-radius: 14px;
+  box-shadow: 5px 5px 0 #141414;
+  padding: 18px 18px 14px;
+  max-width: min(340px, calc(100vw - 32px));
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+.driver-popover.akademi-tour .driver-popover-title {
+  font-family: 'Bricolage Grotesque Variable', 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  padding-right: 22px;
+}
+.driver-popover.akademi-tour .driver-popover-description {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #2b2b2b;
+}
+.driver-popover.akademi-tour .driver-popover-progress-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #141414;
+  background: #ffe14d;
+  border: 2px solid #141414;
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.driver-popover.akademi-tour .driver-popover-footer { margin-top: 14px; gap: 8px; }
+.driver-popover.akademi-tour .driver-popover-navigation-btns { gap: 8px; }
+.driver-popover.akademi-tour .driver-popover-footer button {
+  font: 700 13px/1 'Poppins', system-ui, sans-serif;
+  text-shadow: none;
+  border: 2px solid #141414;
+  border-radius: 10px;
+  padding: 9px 14px;
+  background: #fff;
+  color: #141414;
+  box-shadow: 2px 2px 0 #141414;
+  transition: transform .08s ease-out, box-shadow .08s ease-out;
+}
+.driver-popover.akademi-tour .driver-popover-footer button:hover { background: #f4f4f4; }
+.driver-popover.akademi-tour .driver-popover-footer button:active { transform: translate(2px, 2px); box-shadow: none; }
+.driver-popover.akademi-tour .driver-popover-footer .driver-popover-next-btn {
+  background: #b70000;
+  color: #fff;
+}
+.driver-popover.akademi-tour .driver-popover-footer .driver-popover-next-btn:hover { background: #8f0000; }
+.driver-popover.akademi-tour .driver-popover-footer button:focus-visible,
+.driver-popover.akademi-tour .driver-popover-close-btn:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+}
+.driver-popover.akademi-tour .driver-popover-close-btn {
+  color: #141414;
+  font-size: 22px;
+  width: 36px;
+  height: 36px;
+  top: 4px;
+  right: 4px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+}
+.driver-popover.akademi-tour .driver-popover-arrow { display: none; }
+.driver-overlay path { fill: rgba(20, 20, 20, 0.62); }
+@media (prefers-reduced-motion: reduce) {
+  .driver-popover.akademi-tour .driver-popover-footer button { transition: none; }
+}
+/* Ikon X garis (heroicons x-mark) digambar lewat mask supaya tombol tetap tanpa anak elemen. */
+.driver-popover.akademi-tour .driver-popover-close-btn::before {
+  content: '';
+  display: block;
+  margin: auto;
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 18 18 6M6 6l12 12'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 18 18 6M6 6l12 12'/%3E%3C/svg%3E") center / contain no-repeat;
+}

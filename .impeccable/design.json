@@ -1,0 +1,599 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T19:16:13+00:00",
+  "title": "Design System: Akademi Pitcar",
+  "extensions": {
+    "colorMeta": {
+      "pitcar-red": {
+        "role": "primary",
+        "displayName": "Pitcar Red / LJK Marking Ink",
+        "canonical": "#b70000",
+        "tonalRamp": [
+          "#4c0000",
+          "#850000",
+          "#bd0000",
+          "#f50000",
+          "#ff3333",
+          "#ff7070",
+          "#ffadad",
+          "#ffe5e5"
+        ]
+      },
+      "merah-tua": {
+        "role": "primary",
+        "displayName": "Pressed Red",
+        "canonical": "#8f0000",
+        "tonalRamp": [
+          "#4c0000",
+          "#850000",
+          "#bd0000",
+          "#f50000",
+          "#ff3333",
+          "#ff7070",
+          "#ffadad",
+          "#ffe5e5"
+        ]
+      },
+      "merah-muda": {
+        "role": "primary",
+        "displayName": "Red Wash",
+        "canonical": "#fde8e8",
+        "tonalRamp": [
+          "#4c0000",
+          "#850000",
+          "#bd0000",
+          "#f50000",
+          "#ff3333",
+          "#ff7070",
+          "#ffadad",
+          "#ffe5e5"
+        ]
+      },
+      "stabilo": {
+        "role": "secondary",
+        "displayName": "Stabilo Yellow",
+        "canonical": "#ffe14d",
+        "tonalRamp": [
+          "#4c4000",
+          "#856e00",
+          "#bd9d00",
+          "#f5cc00",
+          "#ffdd33",
+          "#ffe770",
+          "#fff1ad",
+          "#fffbe5"
+        ]
+      },
+      "stabilo-wash": {
+        "role": "secondary",
+        "displayName": "Highlighter Wash",
+        "canonical": "#fffbe0",
+        "tonalRamp": [
+          "#4c4000",
+          "#856e00",
+          "#bd9d00",
+          "#f5cc00",
+          "#ffdd33",
+          "#ffe770",
+          "#fff1ad",
+          "#fffbe5"
+        ]
+      },
+      "stabilo-fill": {
+        "role": "secondary",
+        "displayName": "Highlighter Fill",
+        "canonical": "#fff6bf",
+        "tonalRamp": [
+          "#4c4000",
+          "#856e00",
+          "#bd9d00",
+          "#f5cc00",
+          "#ffdd33",
+          "#ffe770",
+          "#fff1ad",
+          "#fffbe5"
+        ]
+      },
+      "biru-pulpen": {
+        "role": "tertiary",
+        "displayName": "Ballpoint Blue",
+        "canonical": "#1d4ed8",
+        "tonalRamp": [
+          "#091843",
+          "#102a75",
+          "#163ca6",
+          "#1d4ed8",
+          "#4b74e7",
+          "#819eee",
+          "#b7c7f5",
+          "#e9eefc"
+        ]
+      },
+      "hijau": {
+        "role": "tertiary",
+        "displayName": "Done Green",
+        "canonical": "#0f7a43",
+        "tonalRamp": [
+          "#084425",
+          "#0f7641",
+          "#15a85c",
+          "#1bda78",
+          "#49e997",
+          "#80efb6",
+          "#b6f6d5",
+          "#e8fcf2"
+        ]
+      },
+      "hijau-muda": {
+        "role": "tertiary",
+        "displayName": "Green Wash",
+        "canonical": "#dcf3e6",
+        "tonalRamp": [
+          "#084425",
+          "#0f7641",
+          "#15a85c",
+          "#1bda78",
+          "#49e997",
+          "#80efb6",
+          "#b6f6d5",
+          "#e8fcf2"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#141414",
+        "tonalRamp": [
+          "#262626",
+          "#424242",
+          "#5e5e5e",
+          "#7a7a7a",
+          "#999999",
+          "#b8b8b8",
+          "#d6d6d6",
+          "#f2f2f2"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#3a3a3a",
+        "tonalRamp": [
+          "#262626",
+          "#424242",
+          "#5e5e5e",
+          "#7a7a7a",
+          "#999999",
+          "#b8b8b8",
+          "#d6d6d6",
+          "#f2f2f2"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#262626",
+          "#424242",
+          "#5e5e5e",
+          "#7a7a7a",
+          "#999999",
+          "#b8b8b8",
+          "#d6d6d6",
+          "#f2f2f2"
+        ]
+      },
+      "grid-paper": {
+        "role": "neutral",
+        "displayName": "Grid Paper",
+        "canonical": "#f2f6fd",
+        "tonalRamp": [
+          "#0a1f42",
+          "#123573",
+          "#194ba4",
+          "#2162d4",
+          "#4e85e4",
+          "#83a9ec",
+          "#b8cef4",
+          "#e9f0fc"
+        ]
+      },
+      "grid-line": {
+        "role": "neutral",
+        "displayName": "Grid Line",
+        "canonical": "#dbe5f5",
+        "tonalRamp": [
+          "#0a1f42",
+          "#123573",
+          "#194ba4",
+          "#2162d4",
+          "#4e85e4",
+          "#83a9ec",
+          "#b8cef4",
+          "#e9f0fc"
+        ]
+      },
+      "ruled-line": {
+        "role": "neutral",
+        "displayName": "Ruled Line",
+        "canonical": "#c9d6ee",
+        "tonalRamp": [
+          "#0a1f42",
+          "#123573",
+          "#194ba4",
+          "#2162d4",
+          "#4e85e4",
+          "#83a9ec",
+          "#b8cef4",
+          "#e9f0fc"
+        ]
+      },
+      "glass-base": {
+        "role": "neutral",
+        "displayName": "Glass Base",
+        "canonical": "#f4f5f5",
+        "tonalRamp": [
+          "#242828",
+          "#3f4545",
+          "#5a6363",
+          "#758080",
+          "#949e9e",
+          "#b4bbbb",
+          "#d4d8d8",
+          "#f2f3f3"
+        ]
+      },
+      "glass-red-bright": {
+        "role": "primary",
+        "displayName": "Glass Red Bright (gradient start)",
+        "canonical": "#e01414",
+        "tonalRamp": [
+          "#4c0000",
+          "#850000",
+          "#bd0000",
+          "#f50000",
+          "#ff3333",
+          "#ff7070",
+          "#ffadad",
+          "#ffe5e5"
+        ]
+      },
+      "glass-text": {
+        "role": "neutral",
+        "displayName": "Slate Text",
+        "canonical": "#334155",
+        "tonalRamp": [
+          "#1d2530",
+          "#323f53",
+          "#475a76",
+          "#5c7599",
+          "#8094b2",
+          "#a6b4c9",
+          "#ccd4e0",
+          "#eff2f5"
+        ]
+      },
+      "glass-pill-text": {
+        "role": "neutral",
+        "displayName": "Slate Pill Text",
+        "canonical": "#475569",
+        "tonalRamp": [
+          "#1d2530",
+          "#323f53",
+          "#475a76",
+          "#5c7599",
+          "#8094b2",
+          "#a6b4c9",
+          "#ccd4e0",
+          "#eff2f5"
+        ]
+      },
+      "app-bg": {
+        "role": "neutral",
+        "displayName": "App Background",
+        "canonical": "#f3f4f6",
+        "tonalRamp": [
+          "#242828",
+          "#3f4545",
+          "#5a6363",
+          "#758080",
+          "#949e9e",
+          "#b4bbbb",
+          "#d4d8d8",
+          "#f2f3f3"
+        ]
+      },
+      "gray-900": {
+        "role": "neutral",
+        "displayName": "Tailwind Grey 900",
+        "canonical": "#111827",
+        "tonalRamp": [
+          "#1d2530",
+          "#323f53",
+          "#475a76",
+          "#5c7599",
+          "#8094b2",
+          "#a6b4c9",
+          "#ccd4e0",
+          "#eff2f5"
+        ]
+      },
+      "gray-500": {
+        "role": "neutral",
+        "displayName": "Tailwind Grey 500",
+        "canonical": "#6b7280",
+        "tonalRamp": [
+          "#1d2530",
+          "#323f53",
+          "#475a76",
+          "#5c7599",
+          "#8094b2",
+          "#a6b4c9",
+          "#ccd4e0",
+          "#eff2f5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "ujian-display": {
+        "displayName": "Answer Sheet Display",
+        "purpose": "Case title on the test cover and task-list page title; .ujian scope only."
+      },
+      "ujian-headline": {
+        "displayName": "Answer Sheet Headline",
+        "purpose": "Section titles, empty and error states inside .ujian."
+      },
+      "ujian-title": {
+        "displayName": "Question Title",
+        "purpose": "Question text on the test sheet."
+      },
+      "ujian-numeral": {
+        "displayName": "Numeral",
+        "purpose": "Timer, question number block, fact tiles; tabular figures."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Poppins body text in both worlds; 15px in the Answer Sheet."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Chips."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Answer Sheet button labels."
+      },
+      "glass-label": {
+        "displayName": "Glass Label",
+        "purpose": "Glass buttons and pills."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet-block",
+        "value": "4px 4px 0 #141414",
+        "purpose": "Answer Sheet cards and the large start button."
+      },
+      {
+        "name": "control-block",
+        "value": "2px 2px 0 #141414",
+        "purpose": "Answer Sheet buttons, timer, chosen option. Removed on :active (press flat)."
+      },
+      {
+        "name": "tour-block",
+        "value": "5px 5px 0 #141414",
+        "purpose": "driver.js onboarding popover only."
+      },
+      {
+        "name": "current-ring",
+        "value": "0 0 0 3px #ffe14d, 0 0 0 5px #141414",
+        "purpose": "Current question in the LJK navigator; focused essay sheet."
+      },
+      {
+        "name": "glass-card",
+        "value": "0 10px 34px rgba(31, 38, 135, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)",
+        "purpose": "Default glass container (app default world)."
+      },
+      {
+        "name": "glass-card-sm",
+        "value": "0 6px 22px rgba(31, 38, 135, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.55)",
+        "purpose": "Small glass card."
+      },
+      {
+        "name": "glass-modal",
+        "value": "0 24px 60px rgba(31, 38, 135, 0.30)",
+        "purpose": "Near-opaque glass modal panel."
+      },
+      {
+        "name": "glass-primary",
+        "value": "0 8px 22px rgba(183, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35)",
+        "purpose": "Red gradient glass button."
+      }
+    ],
+    "motion": [
+      {
+        "name": "press",
+        "value": "transform .08s ease-out, box-shadow .08s ease-out",
+        "purpose": "Answer Sheet button press-flat."
+      },
+      {
+        "name": "state-fill",
+        "value": "background-color .12s, color .12s, border-color .12s",
+        "purpose": "Bubble and option fill."
+      },
+      {
+        "name": "bubble-fill",
+        "value": "u-isi .22s ease-out (scale .7 to 1.04)",
+        "purpose": "Bubble filling when an option is chosen; reduced-motion off."
+      },
+      {
+        "name": "stamp-land",
+        "value": "u-cap .42s cubic-bezier(.16, 1, .3, 1) (scale 1.9 to 1, rotate -6deg)",
+        "purpose": "TERKIRIM stamp landing; reduced-motion off."
+      },
+      {
+        "name": "glass-standard",
+        "value": "all 0.18s ease",
+        "purpose": "Glass buttons and pills."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Red Button",
+      "kind": "button",
+      "refersTo": "ujian-button-merah",
+      "description": "Answer Sheet forward commitment: start, send.",
+      "html": "<button class=\"ds-u-btn-merah\">Kirim jawaban</button>",
+      "css": ".ds-u-btn-merah{font-family:'Poppins',system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:44px;padding:.55rem 1.1rem;font-weight:700;font-size:.9rem;line-height:1.1;border:2.5px solid #141414;border-radius:12px;box-shadow:2px 2px 0 #141414;cursor:pointer;transition:transform .08s ease-out,box-shadow .08s ease-out,background-color .12s;background:#b70000;color:#fff}.ds-u-btn-merah:hover{background:#8f0000}.ds-u-btn-merah:active{transform:translate(2px,2px);box-shadow:none}.ds-u-btn-merah:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}"
+    },
+    {
+      "name": "Ink Button",
+      "kind": "button",
+      "refersTo": "ujian-button-hitam",
+      "description": "Answer Sheet Next / Continue / Retry.",
+      "html": "<button class=\"ds-u-btn-hitam\">Berikutnya</button>",
+      "css": ".ds-u-btn-hitam{font-family:'Poppins',system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:44px;padding:.55rem 1.1rem;font-weight:700;font-size:.9rem;line-height:1.1;border:2.5px solid #141414;border-radius:12px;box-shadow:2px 2px 0 #141414;cursor:pointer;transition:transform .08s ease-out,box-shadow .08s ease-out,background-color .12s;background:#141414;color:#fff}.ds-u-btn-hitam:hover{background:#000}.ds-u-btn-hitam:active{transform:translate(2px,2px);box-shadow:none}.ds-u-btn-hitam:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}"
+    },
+    {
+      "name": "Paper Button",
+      "kind": "button",
+      "refersTo": "ujian-button",
+      "description": "Answer Sheet default and back actions.",
+      "html": "<button class=\"ds-u-btn\">Sebelumnya</button>",
+      "css": ".ds-u-btn{font-family:'Poppins',system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:44px;padding:.55rem 1.1rem;font-weight:700;font-size:.9rem;line-height:1.1;border:2.5px solid #141414;border-radius:12px;box-shadow:2px 2px 0 #141414;cursor:pointer;transition:transform .08s ease-out,box-shadow .08s ease-out,background-color .12s;background:#fff;color:#141414}.ds-u-btn:hover{background:#f4f4f4}.ds-u-btn:active{transform:translate(2px,2px);box-shadow:none}.ds-u-btn:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}"
+    },
+    {
+      "name": "Chips",
+      "kind": "chip",
+      "refersTo": "ujian-chip",
+      "description": "Metadata and state pills: yellow, red, green, plain.",
+      "html": "<span class=\"ds-u-chip ds-k\">Pilihan ganda · pilih satu</span> <span class=\"ds-u-chip ds-m\">Belum dikerjakan</span> <span class=\"ds-u-chip ds-h\">Terkirim</span> <span class=\"ds-u-chip\">Mekanik</span>",
+      "css": ".ds-u-chip{font-family:'Poppins',system-ui,sans-serif;display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .6rem;font-size:.75rem;font-weight:700;border:2px solid #141414;border-radius:999px;background:#fff;color:#141414}.ds-u-chip.ds-k{background:#ffe14d}.ds-u-chip.ds-m{background:#fde8e8;color:#8f0000;border-color:#b70000}.ds-u-chip.ds-h{background:#dcf3e6;color:#0f7a43;border-color:#0f7a43}"
+    },
+    {
+      "name": "Question Card",
+      "kind": "card",
+      "refersTo": "ujian-card",
+      "description": "Paper sheet with the black number block, on the squared grid.",
+      "html": "<div class=\"ds-u-grid\"><div class=\"ds-u-card\"><span class=\"ds-u-nomor\">2</span><h2 class=\"ds-u-q\">Penyebab mana yang paling mungkin dan perlu dipastikan lebih dulu?</h2></div></div>",
+      "css": ".ds-u-grid{padding:24px;background-color:#f2f6fd;background-image:linear-gradient(#dbe5f5 1px,transparent 1px),linear-gradient(90deg,#dbe5f5 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}.ds-u-card{display:flex;gap:.75rem;align-items:flex-start;padding:24px;background:#fff;color:#141414;border:2.5px solid #141414;border-radius:14px;box-shadow:4px 4px 0 #141414}.ds-u-nomor{font-family:'Bricolage Grotesque Variable','Poppins',system-ui,sans-serif;display:grid;place-items:center;flex-shrink:0;width:2.6rem;height:2.6rem;font-weight:800;font-size:1.25rem;color:#fff;background:#141414;border-radius:10px}.ds-u-q{font-family:'Bricolage Grotesque Variable','Poppins',system-ui,sans-serif;margin:0;font-size:1.2rem;font-weight:700;line-height:1.375;letter-spacing:-.015em}"
+    },
+    {
+      "name": "Answer Option",
+      "kind": "custom",
+      "refersTo": "ujian-opsi",
+      "description": "Signature LJK option row: red-ink bubble fills with graphite when chosen.",
+      "html": "<div class=\"ds-u-opts\"><button class=\"ds-u-opsi\"><span class=\"ds-u-bubble\">A</span><span>Hapus kode error lalu serahkan mobil.</span></button><button class=\"ds-u-opsi is-filled\"><span class=\"ds-u-bubble\">B</span><span>Scan kode error, catat, lalu cek penyebabnya.</span></button></div>",
+      "css": ".ds-u-opts{display:grid;gap:10px}.ds-u-opsi{font-family:'Poppins',system-ui,sans-serif;display:flex;align-items:flex-start;gap:.85rem;width:100%;padding:.8rem .9rem;text-align:left;font-size:15px;line-height:1.625;color:#141414;border:2px solid #141414;border-radius:12px;background:#fff;cursor:pointer;transition:background-color .12s,box-shadow .12s,transform .08s}.ds-u-opsi:hover{background:#fffbe0}.ds-u-opsi:active{transform:translate(1px,1px)}.ds-u-opsi:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}.ds-u-opsi.is-filled{background:#fff6bf;box-shadow:2px 2px 0 #141414}.ds-u-bubble{display:grid;place-items:center;flex-shrink:0;width:2.25rem;height:2.25rem;border-radius:999px;font-weight:800;font-size:.9rem;color:#b70000;background:#fff;border:2.5px solid #b70000;transition:background-color .12s,color .12s,border-color .12s,transform .12s}.ds-u-opsi.is-filled .ds-u-bubble{color:#fff;background:#141414;border-color:#141414;transform:scale(1.04)}"
+    },
+    {
+      "name": "LJK Navigator and Timer",
+      "kind": "nav",
+      "refersTo": "ujian-ljk",
+      "description": "Sticky-header question navigator (unanswered red, answered ink, current yellow ring) beside the timer stamp.",
+      "html": "<div class=\"ds-u-head\"><nav class=\"ds-u-nav\"><button class=\"ds-u-ljk is-filled\">1</button><button class=\"ds-u-ljk is-current\">2</button><button class=\"ds-u-ljk\">3</button></nav><div class=\"ds-u-timer\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\"/></svg>19:58</div><div class=\"ds-u-timer is-warn\">04:12</div><div class=\"ds-u-timer is-danger\">00:48</div></div>",
+      "css": ".ds-u-head{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px;background:#fff;border-bottom:2.5px solid #141414}.ds-u-nav{display:flex;gap:10px}.ds-u-ljk{font-family:'Poppins',system-ui,sans-serif;display:grid;place-items:center;width:2.1rem;height:2.1rem;border-radius:999px;font-size:.8rem;font-weight:800;font-variant-numeric:tabular-nums;color:#b70000;background:#fff;border:2px solid #b70000;cursor:pointer}.ds-u-ljk.is-filled{color:#fff;background:#141414;border-color:#141414}.ds-u-ljk.is-current{box-shadow:0 0 0 3px #ffe14d,0 0 0 5px #141414}.ds-u-ljk:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}.ds-u-timer{font-family:'Bricolage Grotesque Variable','Poppins',system-ui,sans-serif;display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .7rem;border:2.5px solid #141414;border-radius:10px;background:#fff;color:#141414;box-shadow:2px 2px 0 #141414;font-weight:800;font-size:1.25rem;font-variant-numeric:tabular-nums;line-height:1.1}.ds-u-timer.is-warn{background:#ffe14d}.ds-u-timer.is-danger{background:#b70000;color:#fff}"
+    },
+    {
+      "name": "Essay Sheet",
+      "kind": "input",
+      "refersTo": "ujian-garis",
+      "description": "Ruled exam paper with a red margin; answer written in ballpoint blue.",
+      "html": "<textarea class=\"ds-u-garis\" rows=\"5\" placeholder=\"Tulis langkah, alasan, dan keputusan Anda…\"></textarea>",
+      "css": ".ds-u-garis{font-family:'Poppins',system-ui,sans-serif;width:100%;min-height:11rem;resize:vertical;padding:.45rem .9rem 0 2.6rem;border:2px solid #141414;border-radius:12px;font-size:1rem;line-height:2rem;color:#1d4ed8;background-color:#fff;background-image:linear-gradient(to right,transparent 1.75rem,rgba(183,0,0,.55) 1.75rem,rgba(183,0,0,.55) calc(1.75rem + 2px),transparent calc(1.75rem + 2px)),repeating-linear-gradient(to bottom,transparent 0,transparent calc(2rem - 1px),#c9d6ee calc(2rem - 1px),#c9d6ee 2rem);background-attachment:local;background-position:0 .45rem}.ds-u-garis::placeholder{color:#7d8aa5}.ds-u-garis:focus{outline:none;box-shadow:0 0 0 3px #ffe14d,0 0 0 5px #141414}"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "glass-card",
+      "description": "App-default frosted container over the glass backdrop.",
+      "html": "<div class=\"ds-g-bg\"><div class=\"ds-g-card\"><h3>Kursus aktif</h3><p>12 peserta · 3 modul</p></div></div>",
+      "css": ".ds-g-bg{padding:24px;background:radial-gradient(1000px 560px at 92% -10%,rgba(183,0,0,.07),transparent 60%),linear-gradient(135deg,#f7f7f7 0%,#f4f5f5 55%,#eeefef 100%)}.ds-g-card{font-family:'Poppins',system-ui,sans-serif;padding:20px;background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid rgba(255,255,255,.7);border-radius:1.25rem;box-shadow:0 10px 34px rgba(31,38,135,.12),inset 0 1px 0 rgba(255,255,255,.6)}.ds-g-card h3{margin:0;font-size:1.125rem;font-weight:700;color:#111827}.ds-g-card p{margin:.25rem 0 0;font-size:.875rem;color:#6b7280}"
+    },
+    {
+      "name": "Glass Buttons and Pills",
+      "kind": "button",
+      "refersTo": "glass-button-primary",
+      "description": "App-default glass button, red gradient primary, filter pills.",
+      "html": "<div class=\"ds-g-row\"><button class=\"ds-g-btn\">Batal</button><button class=\"ds-g-btn-primary\">Simpan</button><button class=\"ds-g-pill\">Semua</button><button class=\"ds-g-pill is-active\">Aktif</button></div>",
+      "css": ".ds-g-row{display:flex;flex-wrap:wrap;gap:8px;padding:16px;background:#f4f5f5}.ds-g-btn,.ds-g-btn-primary,.ds-g-pill{font-family:'Poppins',system-ui,sans-serif;padding:.5rem 1rem;font-size:.875rem;cursor:pointer;transition:all .18s ease}.ds-g-btn{border-radius:.9rem;font-weight:600;color:#334155;background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.6);box-shadow:0 4px 14px rgba(31,38,135,.10)}.ds-g-btn:hover{background:rgba(255,255,255,.68)}.ds-g-btn:active{box-shadow:inset 0 2px 6px rgba(31,38,135,.16)}.ds-g-btn-primary{border-radius:.9rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#e01414 0%,#b70000 100%);border:1px solid rgba(255,255,255,.25);box-shadow:0 8px 22px rgba(183,0,0,.35),inset 0 1px 0 rgba(255,255,255,.35)}.ds-g-btn-primary:hover{filter:brightness(1.05)}.ds-g-btn-primary:active{box-shadow:inset 0 2px 8px rgba(0,0,0,.25)}.ds-g-pill{border-radius:9999px;font-weight:600;color:#475569;background:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.6);box-shadow:0 3px 12px rgba(31,38,135,.08)}.ds-g-pill.is-active{color:#fff;background:linear-gradient(135deg,#e01414,#b70000);box-shadow:0 6px 18px rgba(183,0,0,.4),inset 0 1px 0 rgba(255,255,255,.3)}.ds-g-btn:focus-visible,.ds-g-btn-primary:focus-visible,.ds-g-pill:focus-visible{outline:2px solid #b70000;outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Answer Sheet",
+    "overview": "Akademi Pitcar runs two visual systems, and both are real in the shipped code. The **app default** is the incumbent **Frosted Workspace**: translucent white glass cards over a pale grey backdrop with a faint Pitcar-red bloom in the corners, Poppins throughout, Tailwind's grey scale for text, and soft blue-tinted ambient shadows. Admin pages, LMS course pages and dashboards use it (`src/style.css`, 30+ views). It is the default for any new screen outside the participant test flow.\n\nThe **participant competency test** (the `.ujian` scope: task list, test sheet, join-by-link page) is a separate, deliberately scoped world: **The Answer Sheet**. It is the exam paper every Indonesian worker knows from school (an LJK answer sheet on squared paper) working as a phone app: white paper cards with thick black rules on a pale blue grid, flat black block shadows with no blur, red-ink answer bubbles that fill with graphite when chosen, a yellow highlighter for emphasis and time warnings, and blue ballpoint ink for written answers. Headings set in a heavy Bricolage Grotesque, body text in Poppins. It is dense with real information (counts, minutes, rules, progress) and built for thumbs: 44px minimum targets, sticky bottom navigation on phones, one question per screen. The driver.js onboarding popover (`src/styles/tour.css`) speaks the same paper-and-ink dialect wherever the tour runs, including the admin competency pages.\n\nThe two worlds share exactly one thing, the Pitcar red (`pitcar-red`) as the action color, which is a brand commitment. Everything else (material, depth, type, radius) belongs to one world or the other and is not mixed.",
+    "keyCharacteristics": [
+      "App default: frosted glass cards, blurred ambient shadows, Poppins, Tailwind grey text, gradient red primary buttons.",
+      "Answer Sheet scope: paper on a 24px squared grid, 2.5px ink borders, hard offset block shadows, no blur.",
+      "LJK signature: red-ink circles that fill solid ink when answered, used for both options and the question navigator.",
+      "Highlighter yellow marks emphasis, the selected option, the current question and the 5-minute warning.",
+      "Blue ballpoint ink is reserved for the participant's own written answer.",
+      "Pitcar red is the one action color in both worlds."
+    ],
+    "rules": [
+      {
+        "name": "The One Red Rule",
+        "body": "Pitcar red is the only action color in either world. A second accent never carries a primary action.",
+        "section": "colors"
+      },
+      {
+        "name": "The Stationery Roles Rule",
+        "body": "Inside `.ujian`, each ink has one job: red marks what still needs doing, graphite (ink) marks what is done, yellow highlights, blue is the participant's own handwriting, green confirms submission. Do not swap roles.",
+        "section": "colors"
+      },
+      {
+        "name": "The Scoped Display Rule",
+        "body": "Bricolage Grotesque appears only inside `.ujian` and the tour popover title. Glass-world screens stay Poppins-only.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Clock Rule",
+        "body": "Every number that changes or is compared (timer, navigator, fact tiles, recording time) uses tabular figures so it does not jitter.",
+        "section": "typography"
+      },
+      {
+        "name": "The Press-Flat Rule",
+        "body": "In the Answer Sheet, an active control translates by its own shadow offset and drops the shadow (2px for buttons, 1px for options). Disabled controls have no shadow.",
+        "section": "elevation"
+      },
+      {
+        "name": "The No-Blur Paper Rule",
+        "body": "Inside `.ujian` no shadow has blur. Hard block shadows belong to this world and the tour popover only; glass screens keep their ambient shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** use the Frosted Workspace (glass cards, Poppins, Tailwind grey) for any new screen outside the participant competency-test flow.",
+      "**Do** wrap participant test screens in the `.ujian` scope and build them from its tokens and components rather than ad hoc Tailwind colors.",
+      "**Do** keep Pitcar red as the single action color in both worlds (One Red Rule).",
+      "**Do** keep tap targets at 44px or more on participant screens, with primary navigation fixed to the bottom on phones.",
+      "**Do** use LJK circles (red outline, ink when done) for any answered/unanswered status in the Answer Sheet.",
+      "**Do** use tabular figures for any live or compared number.",
+      "**Do** honor `prefers-reduced-motion`: the stamp and bubble animations and control transitions turn off."
+    ],
+    "donts": [
+      "**Don't** put blurred or soft shadows, glass blur, or translucent surfaces inside `.ujian` (No-Blur Paper Rule).",
+      "**Don't** use color gradients for fills or buttons inside `.ujian`; gradients there only draw paper markings (the grid, the ruling, the margin line).",
+      "**Don't** carry hard block shadows, 2.5px ink borders or Bricolage into glass-world screens; the Answer Sheet is a scoped surface system, not the app default.",
+      "**Don't** use blue ink for anything but the participant's own answer text and focus outlines.",
+      "**Don't** use green for anything other than a done or submitted state.",
+      "**Don't** use the rotated stamp anywhere except the submitted confirmation."
+    ]
+  }
+}
