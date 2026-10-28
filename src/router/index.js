@@ -140,6 +140,42 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/lms/my-competency',
+    name: 'MyCompetency',
+    component: () => import('../views/competency/MyCompetency.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/lms/my-competency/case/:attemptId',
+    name: 'CompetencyCase',
+    component: () => import('../views/competency/CompetencyCase.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/lms/my-competency/rating/:ratingId',
+    name: 'CompetencyRating',
+    component: () => import('../views/competency/CompetencyRating.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/lms/my-competency/result/:participantId',
+    name: 'CompetencyResult',
+    component: () => import('../views/competency/CompetencyResult.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/lms/competency-map',
+    name: 'CompetencyAdmin',
+    component: () => import('../views/competency/CompetencyAdmin.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard/lms/competency-map/:cycleId',
+    name: 'CompetencyCycle',
+    component: () => import('../views/competency/CompetencyCycle.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/lms/learning-paths',
     name: 'LmsLearningPaths',
     component: () => import('../views/lms/LmsLearningPaths.vue'),

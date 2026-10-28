@@ -499,6 +499,7 @@ import {
   RocketLaunchIcon,
   ListBulletIcon,
   DocumentTextIcon,
+  Squares2X2Icon,
 } from '@heroicons/vue/24/outline'
 import NavItem from './NavItem.vue'
 import ChangelogModal from './ChangelogModal.vue'
@@ -536,12 +537,14 @@ const lmsLearnerItems = [
   { name: 'Enrollment', icon: RectangleStackIcon, path: '/dashboard/lms/enrollments', adminOnly: false },
   { name: 'Penilaian', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/assessments', adminOnly: false },
   { name: 'Kompetensi', icon: StarIcon, path: '/dashboard/lms/competencies', adminOnly: false },
+  { name: 'Asesmen Kompetensi', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/my-competency', adminOnly: false },
   { name: 'Learning Path', icon: MapIcon, path: '/dashboard/lms/learning-paths', adminOnly: false },
   { name: 'Lencana', icon: TrophyIcon, path: '/dashboard/lms/badges', adminOnly: false },
 ]
 
 const lmsAdminItems = [
   { name: 'Analitik', icon: PresentationChartLineIcon, path: '/dashboard/lms/analytics', adminOnly: true },
+  { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true },
   { name: 'Kategori', icon: TagIcon, path: '/dashboard/lms/categories', adminOnly: true },
   { name: 'Modul', icon: PuzzlePieceIcon, path: '/dashboard/lms/modules', adminOnly: true },
   { name: 'Karyawan', icon: UsersIcon, path: '/dashboard/lms/employees', adminOnly: true },
@@ -600,6 +603,7 @@ const belajarItems = [
   { name: 'Quiz Saya', icon: ClipboardDocumentListIcon, path: '/dashboard/quiz', adminOnly: false },
   { name: 'Riwayat Quiz', icon: ClockIcon, path: '/dashboard/quiz/history', adminOnly: false },
   { name: 'Kompetensi', icon: StarIcon, path: '/dashboard/lms/competencies', adminOnly: false },
+  { name: 'Asesmen Kompetensi', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/my-competency', adminOnly: false },
   { name: 'Learning Path', icon: MapIcon, path: '/dashboard/lms/learning-paths', adminOnly: false },
   { name: 'Lencana', icon: TrophyIcon, path: '/dashboard/lms/badges', adminOnly: false },
 ]
@@ -611,6 +615,7 @@ const kelolaItems = [
 ]
 const analitikItems = [
   { name: 'Ringkasan Akademi', icon: ChartBarSquareIcon, path: '/dashboard/analytics', adminOnly: true },
+  { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true },
   { name: 'Karyawan', icon: UsersIcon, path: '/dashboard/lms/employees', adminOnly: true },
   { name: 'Analitik LMS', icon: PresentationChartLineIcon, path: '/dashboard/lms/analytics', adminOnly: true },
   { name: 'Dashboard Quiz', icon: ChartBarSquareIcon, path: '/dashboard/quiz/admin', adminOnly: true },

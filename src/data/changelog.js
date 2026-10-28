@@ -5,6 +5,18 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.6.0',
+    date: '2026-10-27',
+    title: 'Peta Kompetensi L1–L4 per peran',
+    items: [
+      { type: 'baru', text: 'Jenjang per orang: L1 Helper / Junior Mekanik, L2 Mekanik, L3 Senior Mekanik, L4 Foreman / layak Kabeng. Peta menampilkan kolom Jenjang dan jumlah orang di tiap jenjang. Jenjang dihitung dari rata-rata level pilar, paling tinggi satu level di atas pilar terlemah. Nama jenjang bisa diubah di tab Rubrik pilar.' },
+      { type: 'baru', text: 'Menu Peta Kompetensi (admin): petakan level karyawan L1–L4 per pilar untuk tiap peran. Tersedia profil Mekanik (Servis Berkala, Diagnosa & Perbaikan, Kelistrikan & Scan Tool, Kualitas/SOP/Keselamatan, Komunikasi & Kerja Tim) dan Kepala Bengkel (Bisnis, Manajerial, Leadership, Data). Rubrik, studi kasus, dan pernyataan tim bisa diubah.' },
+      { type: 'baru', text: 'Studi kasus bisa dijawab tertulis atau lisan (direkam). Rekaman ditranskripsi lalu dinilai AI per pilar sesuai rubrik, lengkap dengan kutipan jawaban dan menit rekaman yang bisa langsung diputar.' },
+      { type: 'baru', text: 'Level akhir menggabungkan studi kasus (40%), penilaian atasan (30%), dan feedback tim anonim (30%, tampil setelah minimal 3 penilai). Penilaian diri ditampilkan sebagai blind spot. Admin bisa menimpa level secara manual dengan alasan.' },
+      { type: 'baru', text: 'Menu Asesmen Kompetensi untuk semua karyawan: kerjakan studi kasus, isi penilaian diri/atasan/tim, dan lihat hasil (arti level, langkah ke level berikutnya, kursus yang disarankan) setelah periode ditutup.' },
+    ],
+  },
+  {
     version: '1.5.1',
     date: '2026-10-27',
     title: 'Leaderboard lebih jelas: nilai post-test',
