@@ -5,6 +5,15 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.6.1',
+    date: '2026-10-28',
+    title: 'Paket soal contoh mekanik siap pakai',
+    items: [
+      { type: 'baru', text: 'Studi kasus punya kolom Panduan penilaian: indikator jawaban L1–L4 per pertanyaan dan jawaban salah yang sering muncul. Hanya terlihat admin, dipakai AI sebagai acuan bersama rubrik, dan tidak terlihat peserta.' },
+      { type: 'baru', text: 'Paket contoh Mekanik "Mesin brebet saat dingin & check engine menyala" kini lengkap: 5 pertanyaan (termasuk kasus part kosong), saran 25 menit, panduan penilaian, dan pernyataan tim untuk semua pilar.' },
+    ],
+  },
+  {
     version: '1.6.0',
     date: '2026-10-27',
     title: 'Peta Kompetensi L1–L4 per peran',

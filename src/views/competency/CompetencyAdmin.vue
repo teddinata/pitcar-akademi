@@ -172,6 +172,11 @@
           </div>
           <label class="block w-40"><span class="text-xs font-semibold text-gray-600">Saran waktu (menit)</span>
             <input v-model.number="caseForm.time_limit_minutes" type="number" min="5" :class="FIELD" /></label>
+          <label class="block">
+            <span class="text-xs font-semibold text-gray-600">Panduan penilaian</span>
+            <span class="block text-xs text-gray-500">Indikator jawaban L1–L4 per pertanyaan dan jawaban salah yang sering muncul. Hanya terlihat admin; dipakai AI sebagai acuan bersama rubrik pilar. Peserta tidak bisa melihatnya.</span>
+            <textarea v-model="caseForm.guide" rows="12" :class="FIELD" class="!h-auto py-2 font-mono text-xs" :placeholder="GUIDE_CONTOH"></textarea>
+          </label>
           <div class="flex flex-wrap justify-between gap-2 pt-2">
             <button v-if="caseForm.id" class="px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-white" :disabled="busy" @click="arsipCase">
               {{ caseForm.active ? 'Arsipkan' : 'Aktifkan lagi' }}
@@ -236,7 +241,8 @@ const profileId = ref(null)
 const courses = ref([])
 const flash = ref(null)
 const cycleForm = reactive({ name: '', profile_id: null, date_start: '', date_end: '', case_id: null })
-const caseForm = reactive({ id: null, profile_id: null, name: '', scenario: '', questions: [''], pillar_ids: [], time_limit_minutes: 30, active: true })
+const caseForm = reactive({ id: null, profile_id: null, name: '', scenario: '', questions: [''], pillar_ids: [], time_limit_minutes: 30, guide: '', active: true })
+const GUIDE_CONTOH = 'Pertanyaan 1 - (topik)\nL1: ...\nL2: ...\nL3: ...\nL4: ...\n\nJawaban salah yang sering muncul\n- ...'
 
 const activeCases = computed(() => config.cases.filter((c) => c.active))
 const activeProfile = computed(() => config.profiles.find((pr) => pr.id === profileId.value) || null)
@@ -314,8 +320,8 @@ async function simpanPilar(p) {
 
 function editCase(c) {
   Object.assign(caseForm, c
-    ? { id: c.id, profile_id: c.profile_id, name: c.name, scenario: c.scenario, questions: [...c.questions], pillar_ids: [...c.pillar_ids], time_limit_minutes: c.time_limit_minutes, active: c.active }
-    : { id: null, profile_id: profileId.value, name: '', scenario: '', questions: [''], pillar_ids: profilePillars.value.map((p) => p.id), time_limit_minutes: 30, active: true })
+    ? { id: c.id, profile_id: c.profile_id, name: c.name, scenario: c.scenario, questions: [...c.questions], pillar_ids: [...c.pillar_ids], time_limit_minutes: c.time_limit_minutes, guide: c.guide || '', active: c.active }
+    : { id: null, profile_id: profileId.value, name: '', scenario: '', questions: [''], pillar_ids: profilePillars.value.map((p) => p.id), time_limit_minutes: 30, guide: '', active: true })
 }
 async function simpanCase() {
   const hasil = await run(() => competencyApi.saveCase(caseForm.id, { ...caseForm }), 'Studi kasus disimpan.')
