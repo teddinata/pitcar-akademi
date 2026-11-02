@@ -5,6 +5,14 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.7.1',
+    date: '2026-11-02',
+    title: 'Perbaikan cari peserta di Peta Kompetensi',
+    items: [
+      { type: 'perbaikan', text: 'Daftar hasil saat mencari karyawan untuk ditambahkan sebagai peserta kini tampil di atas tabel peta, tidak lagi tertutup tabel.' },
+    ],
+  },
+  {
     version: '1.7.0',
     date: '2026-10-29',
     title: 'Tes kompetensi: pilihan ganda, timer, link, impor Excel',

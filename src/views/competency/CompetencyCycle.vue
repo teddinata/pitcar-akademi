@@ -49,7 +49,8 @@
       </div>
 
       <!-- Tambah peserta -->
-      <div v-if="cycle.state !== 'closed'" class="clay-card p-3 mb-4 relative" data-tour="cycle-add">
+      <!-- z-30: kartu kaca (backdrop-filter) membuat lapisan sendiri; tanpa ini tabel di bawah menutupi hasil cari -->
+      <div v-if="cycle.state !== 'closed'" class="clay-card p-3 mb-4 relative z-30" data-tour="cycle-add">
         <div class="flex flex-wrap items-center gap-2">
           <MagnifyingGlassIcon class="w-4 h-4 text-gray-400 ml-1" />
           <input
