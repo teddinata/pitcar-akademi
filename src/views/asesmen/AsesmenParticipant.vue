@@ -81,10 +81,16 @@
           <p class="text-sm font-bold">{{ ORAL_STATE({ ...d.oral, answered: d.oral.lines.filter((l) => l.state === 'done').length, total: d.oral.lines.length }) }}<span v-if="d.oral.ai_at"> · {{ fmtDateTime(d.oral.ai_at) }}</span></p>
         </div>
         <div v-if="d.oral.ai_state === 'failed'" class="u-card p-4 mb-3 !bg-[color:var(--merah-muda)]">
-          <p class="font-bold text-[color:var(--merah-tua)]">Penilaian AI gagal: {{ d.oral.ai_error }}</p>
-          <button class="u-btn u-btn-hitam mt-2 !min-h-9" :disabled="busy" @click="nilaiUlangLisan">Nilai ulang</button>
+          <p class="font-bold text-[color:var(--merah-tua)]">Penilaian AI berhenti: {{ d.oral.ai_error }}</p>
+          <p class="mt-1 text-sm">Bila ada rekaman bermasalah, tekan <b>Transkripsi ulang</b> atau <b>Lampirkan rekaman</b> di soal itu. Penilaian lalu berjalan lagi otomatis.</p>
+          <button class="u-btn u-btn-hitam mt-2 !min-h-9" :disabled="busy" @click="nilaiUlangLisan"><ArrowPathIcon class="w-4 h-4" />Proses ulang</button>
         </div>
-        <p v-else-if="['queued', 'running'].includes(d.oral.ai_state)" class="u-card p-4 mb-3 font-bold">Rekaman sedang ditranskripsi dan dinilai AI (dua kali). Muat ulang beberapa menit lagi.</p>
+        <div v-else-if="sedangDiproses" class="u-card p-4 mb-3">
+          <p class="font-bold">AI sedang memproses ujian ini: {{ teksProgres }}</p>
+          <p v-if="d.oral.ai_error" class="mt-1 text-sm text-[color:var(--merah-tua)]">Percobaan sebelumnya gagal dan akan diulang otomatis: {{ d.oral.ai_error }}</p>
+          <p class="mt-1 text-xs text-[color:var(--ink-soft)]">Halaman ini memperbarui sendiri tiap 15 detik.</p>
+          <button class="u-btn mt-2 !min-h-9" :disabled="busy" @click="nilaiUlangLisan"><ArrowPathIcon class="w-4 h-4" />Proses sekarang</button>
+        </div>
 
         <!-- Tabel skor -->
         <div v-if="d.oral.ai_state === 'done'" class="overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] shadow-[4px_4px_0_var(--ink)] bg-white mb-5">
@@ -126,7 +132,23 @@
           <div class="grid xl:grid-cols-2">
             <div class="p-4 sm:p-5 xl:border-r-[2.5px] border-[color:var(--ink)] space-y-3">
               <p class="font-extrabold">Rekaman & transkrip</p>
-              <RecordingPlayer :ref="(el) => setPlayer(l.id, el)" :recordings="l.recordings" />
+              <RecordingPlayer :ref="(el) => setPlayer(l.id, el)" :recordings="l.recordings" :editable="bisaUbahRekaman" :busy="busy"
+                               @retranscribe="(r) => run(() => competencyApi.retranscribeOral(r.id))"
+                               @use="(r, used) => run(() => competencyApi.useOralRecording(r.id, used))" />
+              <details v-if="bisaUbahRekaman" class="rounded-xl border-2 border-dashed border-[color:var(--ink)] p-3 text-sm" :open="perluLampiran(l)">
+                <summary class="cursor-pointer font-extrabold">Lampirkan rekaman{{ perluLampiran(l) ? ' (rekaman bermasalah)' : '' }}</summary>
+                <p class="mt-1 text-xs text-[color:var(--ink-soft)]">Bila rekaman peserta gagal atau terpotong, lampirkan file audio jawaban soal ini (mp3, m4a, wav, webm, ogg; maks 24 MB), mis. rekaman HP. Ujian lalu ditranskripsi dan dinilai ulang AI.</p>
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  <select v-if="l.followup_question" v-model="opsiLampir(l).kind" class="u-input !min-h-9 !w-auto">
+                    <option value="main">Jawaban utama</option><option value="followup">Jawaban lanjutan</option>
+                  </select>
+                  <label class="flex items-center gap-1.5 text-xs font-bold"><input v-model="opsiLampir(l).replace" type="checkbox" />Ganti rekaman lama</label>
+                  <label class="u-btn !min-h-9" :class="busy ? 'opacity-60 pointer-events-none' : 'cursor-pointer'">
+                    <PaperClipIcon class="w-4 h-4" />{{ unggah.line === l.id ? `Mengirim ${Math.round(unggah.progress * 100)}%` : 'Pilih file' }}
+                    <input type="file" class="sr-only" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.webm,.ogg,.aac,.flac,.3gp" :disabled="busy" @change="(e) => lampirkan(l, e)" />
+                  </label>
+                </div>
+              </details>
               <div v-if="l.followup_question" class="rounded-xl border-2 border-[color:var(--ink)] p-3 bg-[#fffbe0] text-sm">
                 <p class="font-extrabold">Pertanyaan lanjutan AI</p>
                 <p class="mt-1">“{{ l.followup_question }}”</p>
@@ -245,10 +267,11 @@
 import '@fontsource-variable/bricolage-grotesque'
 import '../../styles/exam.css'
 import '../../styles/asesmen.css'
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  CheckBadgeIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlayCircleIcon, QuestionMarkCircleIcon,
+  ArrowPathIcon, CheckBadgeIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, PaperClipIcon, PlayCircleIcon,
+  QuestionMarkCircleIcon,
 } from '@heroicons/vue/24/outline'
 import RecordingPlayer from '../../components/asesmen/RecordingPlayer.vue'
 import { competencyApi } from '../../services/competencyApi'
@@ -345,6 +368,65 @@ async function run(fn) {
 const periksa = (l, ubah) => run(() => competencyApi.reviewOral(l.id, ubah ? { ...review[l.id].scores } : {}, review[l.id].note))
 const sahkan = (undo) => run(() => competencyApi.validate(d.value.id, catatanSah.value, undo))
 const nilaiUlangLisan = () => run(() => competencyApi.requeueOral(d.value.oral.id))
+
+// --- Proses AI lisan: progres + muat ulang otomatis --------------------------
+const sedangDiproses = computed(() => ['queued', 'running'].includes(d.value?.oral?.ai_state))
+const teksProgres = computed(() => {
+  const p = d.value?.oral?.progress
+  if (!p) return 'menunggu antrean'
+  if (p.transcribed < p.recordings) return `transkripsi ${p.transcribed}/${p.recordings} rekaman`
+  return `penilaian AI ${p.passes}/${p.total_passes}`
+})
+let timer = null
+watch(sedangDiproses, (on) => {
+  clearInterval(timer)
+  timer = on ? setInterval(segarkan, 15000) : null
+})
+async function segarkan() {
+  if (busy.value || document.hidden || !d.value) return
+  try {
+    const data = await competencyApi.recapParticipant(d.value.id)
+    if (busy.value) return
+    isiReview(data)
+    d.value = data
+  } catch { /* coba lagi di putaran berikutnya */ }
+}
+onBeforeUnmount(() => clearInterval(timer))
+
+// --- Asesor memperbaiki rekaman ---------------------------------------------
+const bisaUbahRekaman = computed(() => d.value?.oral?.state === 'submitted' && d.value.cycle.state !== 'closed' && !d.value.validated)
+const lampir = reactive({})
+const unggah = reactive({ line: null, progress: 0 })
+const opsiLampir = (l) => (lampir[l.id] ||= { kind: 'main', replace: true })
+const perluLampiran = (l) => {
+  const dipakai = l.recordings.filter((r) => !r.excluded)
+  return !dipakai.some((r) => r.kind === 'main' && r.size) || dipakai.some((r) => r.transcript_state === 'failed')
+}
+function durasiAudio(file) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const audio = new Audio()
+    const selesai = (t) => { URL.revokeObjectURL(url); resolve(Number.isFinite(t) ? t : 0) }
+    audio.onloadedmetadata = () => selesai(audio.duration)
+    audio.onerror = () => selesai(0)
+    setTimeout(() => selesai(0), 5000)
+    audio.preload = 'metadata'
+    audio.src = url
+  })
+}
+async function lampirkan(l, e) {
+  const file = e.target.files?.[0]
+  e.target.value = ''
+  if (!file) return
+  if (file.size > 24 * 1024 * 1024) { error.value = 'Ukuran file maksimal 24 MB.'; return }
+  const opsi = opsiLampir(l)
+  unggah.line = l.id
+  unggah.progress = 0
+  await run(async () => competencyApi.attachOralRecording(l.id, opsi.kind, file, {
+    replace: opsi.replace, duration: await durasiAudio(file), onProgress: (p) => { unggah.progress = p },
+  }))
+  unggah.line = null
+}
 const nilaiUlangKasus = (a) => run(() => competencyApi.requeueCase(a.id))
 function ke(id) { if (id) router.push(`/dashboard/asesmen/rekap/${id}`) }
 watch(() => route.params.id, (id) => { if (id) { catatanSah.value = ''; load(id); window.scrollTo({ top: 0 }) } })

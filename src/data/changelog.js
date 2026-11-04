@@ -5,6 +5,17 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.10.0',
+    date: '2026-11-04',
+    title: 'Ujian lisan: proses AI lebih andal + lampirkan rekaman',
+    items: [
+      { type: 'baru', text: 'Asesor bisa melampirkan file rekaman (mp3, m4a, wav, webm, ogg; maks 24 MB) per soal bila rekaman peserta gagal atau terpotong. Rekaman lama otomatis diabaikan (bisa dipakai lagi), lalu ujian ditranskripsi dan dinilai ulang AI.' },
+      { type: 'baru', text: 'Tombol Transkripsi ulang dan Abaikan per rekaman, serta Proses sekarang saat ujian masih diproses AI.' },
+      { type: 'ubah', text: 'Halaman rincian peserta menampilkan progres AI (transkripsi x/y rekaman, penilaian AI 1/2) dan memperbarui sendiri tiap 15 detik.' },
+      { type: 'perbaikan', text: 'Penilaian ujian lisan tidak lagi tertahan di "sedang ditranskripsi dan dinilai AI". Prosesnya dikerjakan per langkah dan tiap langkah tersimpan. Bila transkripsi gagal, AI tidak menilai jawaban kosong; asesor diminta transkripsi ulang atau melampirkan rekaman.' },
+    ],
+  },
+  {
     version: '1.9.0',
     date: '2026-11-04',
     title: 'Paket Asesmen: satu rangkaian per peran',

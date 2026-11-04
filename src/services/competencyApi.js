@@ -14,6 +14,15 @@ async function op(operation, params = {}) {
   return data.result?.data
 }
 
+function blobBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result).split(',')[1] || '')
+    reader.onerror = () => reject(new Error('File tidak bisa dibaca.'))
+    reader.readAsDataURL(blob)
+  })
+}
+
 export const competencyApi = {
   // Admin
   config: () => op('config'),
@@ -75,6 +84,21 @@ export const competencyApi = {
   reviewOral: (lineId, scores, note) => op('oral_review', { line_id: lineId, scores, note }),
   requeueOral: (oralId) => op('oral_requeue', { oral_id: oralId }),
   requeueCase: (attemptId) => op('terpadu_requeue_case', { attempt_id: attemptId }),
+  retranscribeOral: (recordingId) => op('oral_retranscribe', { recording_id: recordingId }),
+  useOralRecording: (recordingId, used) => op('oral_recording_use', { recording_id: recordingId, used }),
+  /** Asesor melampirkan file rekaman untuk satu soal; dikirim per potongan agar tahan sinyal lemah. */
+  async attachOralRecording(lineId, kind, file, { replace = true, duration = 0, onProgress } = {}) {
+    const { recording_id: id } = await op('oral_attach_start', {
+      line_id: lineId, kind, mimetype: file.type, filename: file.name, size: file.size,
+    })
+    const PART = 1536 * 1024
+    for (let seq = 0, at = 0; at < file.size; seq += 1, at += PART) {
+      const data = await blobBase64(file.slice(at, at + PART))
+      await op('oral_attach_chunk', { recording_id: id, seq, data })
+      onProgress?.(Math.min(1, (at + PART) / file.size))
+    }
+    return op('oral_attach_finish', { recording_id: id, duration, replace })
+  },
   validate: (id, note, undo = false) => op('terpadu_validate', { id, note, undo }),
   oral: (oralId) => op('oral_get', { oral_id: oralId }),
   oralStart: (lineId, consent, mimetype) => op('oral_start', { line_id: lineId, consent, mimetype }),
