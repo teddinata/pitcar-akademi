@@ -181,6 +181,15 @@ const routes = [
     component: () => import('../views/competency/CompetencyCycle.vue'),
     meta: { requiresAuth: true }
   },
+  // Menu Asesmen (Asesmen Terpadu): ujian lisan + AI, studi kasus, lead, rekap & validasi
+  { path: '/dashboard/asesmen', name: 'AsesmenCycles', component: () => import('../views/asesmen/AsesmenCycles.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/periode/:id', name: 'AsesmenCycle', component: () => import('../views/asesmen/AsesmenCycle.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/rekap', name: 'AsesmenRekap', component: () => import('../views/asesmen/AsesmenRekap.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/rekap/:id', name: 'AsesmenParticipant', component: () => import('../views/asesmen/AsesmenParticipant.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/soal-lisan', name: 'AsesmenOralBank', component: () => import('../views/asesmen/AsesmenOralBank.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/studi-kasus', name: 'AsesmenCases', component: () => import('../views/asesmen/AsesmenCases.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/ujian/:oralId', name: 'OralExam', component: () => import('../views/asesmen/OralExam.vue'), meta: { requiresAuth: true, focusMode: true } },
+  { path: '/dashboard/asesmen/hasil/:participantId', name: 'AsesmenResult', component: () => import('../views/asesmen/AsesmenResult.vue'), meta: { requiresAuth: true } },
   {
     path: '/dashboard/lms/learning-paths',
     name: 'LmsLearningPaths',

@@ -25,6 +25,10 @@
           <p class="mt-1 text-violet-900">Yang dinilai dan admin hanya melihat rata-rata dari minimal beberapa penilai, tidak pernah jawaban per orang. Jawab berdasarkan pengalaman kerja sehari-hari.</p>
         </template>
         <template v-else-if="data.rater_type === 'self'">Pilih level yang paling menggambarkan cara Anda bekerja <b>saat ini</b>, bukan target. Penilaian diri tidak ikut nilai akhir; dipakai untuk melihat perbedaan cara pandang.</template>
+        <template v-else-if="data.require_evidence">
+          <p class="font-semibold">Anda ditunjuk sebagai lead penilai.</p>
+          <p class="mt-1">Pilih level yang paling sesuai dengan kerja yang <b>Anda lihat sendiri</b>, lalu tulis satu contoh kejadian nyata sebagai bukti (wajib). Bila belum pernah melihat pekerjaan di pilar itu, pilih <b>Belum pernah melihat</b>; pilar itu tidak dihitung dari Anda.</p>
+        </template>
         <template v-else>Pilih level yang paling sesuai dengan perilaku yang Anda lihat sendiri. Tambahkan contoh kejadian bila ada; catatan membantu kabeng berkembang.</template>
       </div>
 
@@ -39,6 +43,7 @@
           <div class="flex items-baseline justify-between gap-2">
             <h2 class="text-base font-bold text-gray-900">{{ p.name }}</h2>
             <span v-if="levels[p.id]?.level" class="text-xs font-semibold text-gray-500">L{{ levels[p.id].level }} dipilih</span>
+            <span v-else-if="levels[p.id]?.level === 0" class="text-xs font-semibold text-gray-500">Belum pernah melihat</span>
           </div>
           <p class="text-xs text-gray-500 mt-0.5 max-w-prose">{{ p.description }}</p>
           <div class="mt-3 grid sm:grid-cols-2 gap-2">
@@ -52,10 +57,16 @@
               <span class="text-sm leading-snug text-gray-700">{{ p.rubric[n] }}</span>
             </label>
           </div>
+          <label v-if="data.require_evidence" class="mt-2 inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="radio" :name="`pilar-${p.id}`" :checked="levels[p.id].level === 0" :disabled="closed" class="text-gray-900" @change="levels[p.id].level = 0" />
+            Belum pernah melihat pekerjaannya di pilar ini
+          </label>
           <input
+            v-if="!(data.require_evidence && levels[p.id].level === 0)"
             v-model="levels[p.id].note" type="text" :disabled="closed"
-            class="mt-3 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-            :placeholder="data.rater_type === 'self' ? 'Contoh nyata (opsional)' : 'Contoh kejadian yang Anda lihat (opsional)'"
+            class="mt-3 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+            :class="data.require_evidence && levels[p.id].level && (levels[p.id].note || '').trim().length < 15 ? 'border-amber-400' : 'border-gray-200'"
+            :placeholder="data.rater_type === 'self' ? 'Contoh nyata (opsional)' : data.require_evidence ? 'Bukti: kejadian nyata yang Anda lihat (wajib, mis. kapan & mobil apa)' : 'Contoh kejadian yang Anda lihat (opsional)'"
           />
         </fieldset>
       </template>
@@ -126,11 +137,15 @@ const closed = computed(() => data.value?.cycle?.state !== 'open')
 const total = computed(() => (data.value?.rater_type === 'team' ? data.value.questions.length : data.value?.pillars.length) || 0)
 const terisi = computed(() => (data.value?.rater_type === 'team'
   ? data.value.questions.filter((q) => answers[q.id]).length
-  : (data.value?.pillars || []).filter((p) => levels[p.id]?.level).length))
+  : (data.value?.pillars || []).filter((p) => {
+    const row = levels[p.id]
+    if (!data.value.require_evidence) return row?.level
+    return row?.level === 0 || (row?.level && (row.note || '').trim().length >= 15)
+  }).length))
 const lengkap = computed(() => total.value > 0 && terisi.value === total.value)
 const progressLabel = computed(() => (data.value?.rater_type === 'team'
   ? `${terisi.value}/${total.value} pernyataan dijawab`
-  : `${terisi.value}/${total.value} pilar dinilai`))
+  : `${terisi.value}/${total.value} pilar dinilai${data.value?.require_evidence ? ' (dengan bukti)' : ''}`))
 
 function isi(d) {
   data.value = d
@@ -139,7 +154,8 @@ function isi(d) {
     d.questions.forEach((q) => { answers[q.id] = q.score || null })
   } else {
     d.pillars.forEach((p) => {
-      levels[p.id] = { level: d.levels[String(p.id)]?.level || null, note: d.levels[String(p.id)]?.note || '' }
+      const lv = d.levels[String(p.id)]?.level
+      levels[p.id] = { level: lv || (lv === 0 && d.state === 'submitted' ? 0 : null), note: d.levels[String(p.id)]?.note || '' }
     })
   }
 }

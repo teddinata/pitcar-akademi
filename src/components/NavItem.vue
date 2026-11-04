@@ -23,12 +23,14 @@
         >
           {{ item.name }}
         </span>
+        <span v-if="isExpanded && item.badge" class="u-new ml-auto shrink-0" :class="item.badgeTone === 'abu' ? 'is-abu' : ''">{{ item.badge }}</span>
       </div>
     </a>
   </router-link>
 </template>
 
 <script setup>
+import '../styles/asesmen.css'
 defineProps({
   item: { type: Object, required: true },
   isExpanded: { type: Boolean, default: false },

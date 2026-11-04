@@ -22,7 +22,13 @@ const blobToBase64 = (blob) => new Promise((resolve, reject) => {
 
 export const recorderSupported = () => typeof window !== 'undefined' && !!window.MediaRecorder && !!navigator.mediaDevices?.getUserMedia
 
-export function useAnswerRecorder() {
+/**
+ * @param {{ startRecording?: (target: any, mimeType: string) => Promise<{recording_id: number}> }} options
+ *   startRecording: pembuat segmen rekaman di server. Bawaan: segmen studi kasus
+ *   (target = id lembar jawaban). Ujian lisan memakai soal sebagai target.
+ */
+export function useAnswerRecorder(options = {}) {
+  const startRecording = options.startRecording || ((target, mime) => competencyApi.recordingStart(target, true, mime))
   const state = ref('idle') // idle | starting | recording | paused | stopping
   const error = ref('')
   const elapsed = ref(0)
@@ -43,6 +49,7 @@ export function useAnswerRecorder() {
   let audioCtx = null
   let analyser = null
   let meterFrame = null
+  let lastStart = null // balasan server saat segmen terakhir dibuat (mis. soal lisan yang dibuka)
 
   const queue = createUploadQueue({
     send: (item) => (item.kind === 'chunk'
@@ -85,7 +92,8 @@ export function useAnswerRecorder() {
   }
 
   const startSegment = async () => {
-    const hasil = await competencyApi.recordingStart(attemptId, true, mimeType)
+    const hasil = await startRecording(attemptId, mimeType)
+    lastStart = hasil
     recordingId = hasil.recording_id
     seq = 0
     segmentStart = elapsed.value
@@ -124,7 +132,8 @@ export function useAnswerRecorder() {
     try { await startSegment() } catch (err) { error.value = err.message; state.value = 'idle' }
   }
 
-  const start = async (idAttempt) => {
+  const start = async (idAttempt, { reset = false } = {}) => {
+    if (reset) elapsed.value = 0
     if (!recorderSupported()) { error.value = 'Browser ini tidak bisa merekam suara. Pakai Chrome atau Safari versi terbaru.'; return false }
     error.value = ''
     state.value = 'starting'
@@ -181,5 +190,5 @@ export function useAnswerRecorder() {
     stopMeter()
   })
 
-  return { state, error, elapsed, upload, level, active, start, pause, resume, marker, stop, retryUpload: () => queue.retry() }
+  return { state, error, elapsed, upload, level, active, start, pause, resume, marker, stop, retryUpload: () => queue.retry(), lastStart: () => lastStart }
 }

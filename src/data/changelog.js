@@ -5,6 +5,20 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.8.0',
+    date: '2026-11-04',
+    title: 'Menu Asesmen baru: ujian lisan + AI, studi kasus, lead, rekap',
+    items: [
+      { type: 'baru', text: 'Grup menu baru "Asesmen" (bertanda NEW) berisi Periode Asesmen, Rekap & Validasi, Soal Ujian Lisan, Studi Kasus, dan Asesmen Saya. Peta Kompetensi pindah ke grup ini dengan label 360°.' },
+      { type: 'baru', text: 'Ujian lisan mandiri memakai rubrik lama (6 aspek, skor 1–5, soal L1–L4 berbobot 20/20/30/30). Peserta menjawab dengan suara dari HP. Soal baru terlihat saat rekaman mulai, waktu per soal dijaga server, dan variasi soal diacak per peserta.' },
+      { type: 'baru', text: 'Bila jawaban dangkal, AI memberi satu pertanyaan lanjutan. Setelah selesai, AI menilai tiap soal dua kali secara terpisah lalu merata-ratakannya. Hasilnya persen (cara hitung sama dengan sheet asesor) dan jenjang lulus berjenjang (substansi ≥ 3,5).' },
+      { type: 'baru', text: 'Satu periode bisa memakai beberapa studi kasus, untuk semua peserta atau acak satu per peserta. Ada 2 kasus HOTS baru: overheat setelah ganti water pump, dan setir narik setelah spooring.' },
+      { type: 'baru', text: 'Penilaian lead: admin menunjuk satu atau beberapa lead per peserta, bisa sekaligus untuk banyak peserta. Lead menilai rubrik pilar dengan bukti kejadian nyata, atau memilih "Belum pernah melihat".' },
+      { type: 'baru', text: 'Rekap & Validasi menghitung jenjang akhir (lisan 50 / studi kasus 30 / lead 20, bobot bisa diubah). Asesor mendengar rekaman lewat transkrip dan kutipan yang bisa diklik, memeriksa jawaban bertanda, lalu mengesahkan. Hanya hasil yang disahkan yang masuk ke data karyawan.' },
+      { type: 'baru', text: 'Tampilan neo-brutal dan panduan cara pakai (tour) di setiap halaman Asesmen.' },
+    ],
+  },
+  {
     version: '1.7.1',
     date: '2026-11-02',
     title: 'Perbaikan cari peserta di Peta Kompetensi',

@@ -1,0 +1,86 @@
+/* Menu Asesmen (admin, asesor, peserta): dunia neo-brutal yang sama dengan
+   lembar ujian (exam.css: .ujian, .u-card, .u-btn, .u-chip), ditambah
+   komponen meja kerja: tab, input, tabel, sel skor, pita langkah, pemutar rekaman. */
+.ujian .u-tabs { display: flex; gap: .5rem; overflow-x: auto; padding-bottom: .35rem; }
+.ujian .u-tab {
+  flex-shrink: 0; min-height: 40px; padding: .45rem 1rem;
+  font-weight: 800; font-size: .88rem; white-space: nowrap;
+  background: var(--paper); border: 2px solid var(--ink); border-radius: 10px;
+}
+.ujian .u-tab:hover { background: #fffbe0; }
+.ujian .u-tab.is-active { background: var(--ink); color: #fff; box-shadow: 3px 3px 0 var(--merah); }
+
+.ujian .u-input {
+  width: 100%; min-height: 44px; padding: .55rem .8rem;
+  font-size: .95rem; color: var(--ink); background: var(--paper);
+  border: 2px solid var(--ink); border-radius: 10px;
+}
+.ujian textarea.u-input { min-height: 6rem; line-height: 1.5; resize: vertical; }
+.ujian .u-input:focus { outline: none; box-shadow: 0 0 0 3px var(--stabilo), 0 0 0 5px var(--ink); }
+.ujian .u-label { display: block; margin-bottom: .3rem; font-size: .8rem; font-weight: 800; letter-spacing: .02em; }
+
+.ujian .u-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .9rem; }
+.ujian .u-table th {
+  position: sticky; top: 0; z-index: 1;
+  padding: .6rem .7rem; text-align: left; font-size: .74rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+  background: var(--ink); color: #fff; white-space: nowrap;
+}
+.ujian .u-table td { padding: .65rem .7rem; border-top: 2px solid var(--ink); vertical-align: middle; background: var(--paper); }
+.ujian .u-table tr.is-click td { cursor: pointer; }
+.ujian .u-table tr.is-click:hover td { background: #fffbe0; }
+
+/* Sel skor 1-5 (rubrik) dan level L1-L4 */
+.ujian .u-skor {
+  display: inline-grid; place-items: center; min-width: 2.3rem; height: 2.3rem; padding: 0 .35rem;
+  font-family: var(--display); font-weight: 800; font-size: 1rem; font-variant-numeric: tabular-nums;
+  border: 2px solid var(--ink); border-radius: 8px; background: var(--paper);
+}
+.ujian .u-skor.s1 { background: #ffd6d6; }
+.ujian .u-skor.s2 { background: #ffe8c7; }
+.ujian .u-skor.s3 { background: #fff6bf; }
+.ujian .u-skor.s4 { background: #d9f2e3; }
+.ujian .u-skor.s5 { background: #b8e8cc; }
+.ujian .u-skor.is-empty { background: #f1f1f1; color: #888; }
+.ujian .u-level {
+  display: inline-grid; place-items: center; min-width: 2.6rem; height: 2.1rem; padding: 0 .5rem;
+  font-family: var(--display); font-weight: 800; border: 2px solid var(--ink); border-radius: 8px;
+}
+.ujian .u-level.l0 { background: #f1f1f1; color: #666; }
+.ujian .u-level.l1 { background: #ffd6d6; }
+.ujian .u-level.l2 { background: #ffe8c7; }
+.ujian .u-level.l3 { background: #cfe3ff; }
+.ujian .u-level.l4 { background: #b8e8cc; }
+
+/* Angka besar ringkasan */
+.ujian .u-angka { font-family: var(--display); font-weight: 800; font-size: 2.6rem; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+
+/* Langkah cara pakai bernomor */
+.ujian .u-langkah { display: grid; gap: .75rem; }
+@media (min-width: 768px) { .ujian .u-langkah { grid-template-columns: repeat(var(--kolom, 4), minmax(0, 1fr)); } }
+.ujian .u-langkah > li { display: flex; gap: .7rem; align-items: flex-start; padding: .85rem; background: var(--paper); border: 2px solid var(--ink); border-radius: 12px; }
+
+/* Pita tanda NEW / sumber */
+.u-new {
+  display: inline-flex; align-items: center; padding: .05rem .4rem;
+  font-size: .62rem; font-weight: 900; letter-spacing: .06em; line-height: 1.3;
+  color: #141414; background: #ffe14d; border: 1.5px solid #141414; border-radius: 5px;
+  box-shadow: 1.5px 1.5px 0 #141414; transform: rotate(-3deg);
+}
+.u-new.is-abu { background: #ececec; transform: none; box-shadow: none; }
+
+/* Pemutar rekaman + transkrip */
+.ujian .u-audio { width: 100%; height: 44px; }
+.ujian .u-transkrip { max-height: 18rem; overflow-y: auto; border: 2px solid var(--ink); border-radius: 10px; background: #fbfbf7; }
+.ujian .u-transkrip button { display: flex; gap: .6rem; width: 100%; padding: .4rem .7rem; text-align: left; font-size: .9rem; line-height: 1.45; }
+.ujian .u-transkrip button:hover { background: #fffbe0; }
+.ujian .u-transkrip button.is-now { background: var(--stabilo); }
+.ujian .u-transkrip time { flex-shrink: 0; font-family: ui-monospace, monospace; font-size: .78rem; font-weight: 700; color: var(--biru); padding-top: .1rem; }
+.ujian .u-kutipan { display: inline; padding: 0 .2rem; background: linear-gradient(transparent 55%, #ffe14d 55%); }
+
+/* Indikator volume mikrofon */
+.ujian .u-meter { display: flex; align-items: flex-end; gap: 3px; height: 28px; }
+.ujian .u-meter span { width: 6px; border-radius: 2px; background: var(--ink); transition: height .08s; }
+@media (prefers-reduced-motion: no-preference) {
+  .ujian .u-rec-dot { animation: u-kedip 1.1s ease-in-out infinite; }
+}
+@keyframes u-kedip { 50% { opacity: .25; } }

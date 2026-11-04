@@ -34,10 +34,12 @@ const pesan = ref(null)
 onMounted(async () => {
   try {
     const hasil = await competencyApi.join(String(route.params.token || ''))
-    if (hasil.attempt_id) {
+    if (hasil.redirect) {
+      router.replace(hasil.redirect)
+    } else if (hasil.attempt_id) {
       router.replace(`/dashboard/lms/my-competency/case/${hasil.attempt_id}`)
     } else if (hasil.closed) {
-      pesan.value = { judul: 'Periode sudah ditutup', teks: `Tes "${hasil.cycle}" tidak bisa dikerjakan lagi.`, hasil: `/dashboard/lms/my-competency/result/${hasil.participant_id}` }
+      pesan.value = { judul: 'Periode sudah ditutup', teks: `Tes "${hasil.cycle}" tidak bisa dikerjakan lagi.`, hasil: hasil.result || `/dashboard/lms/my-competency/result/${hasil.participant_id}` }
     } else {
       pesan.value = { judul: 'Tidak ada tes', teks: `Periode "${hasil.cycle}" tidak memakai studi kasus. Cek tugas penilaian Anda di Asesmen Kompetensi.` }
     }

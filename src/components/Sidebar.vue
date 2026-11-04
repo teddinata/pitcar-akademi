@@ -46,6 +46,31 @@
         </div>
       </div>
 
+      <!-- ── ASESMEN SECTION (baru) ── -->
+      <div class="mb-4">
+        <div
+          class="flex items-center px-3 h-9 text-xs font-bold uppercase tracking-wider mb-1 cursor-pointer rounded-lg transition-all duration-200"
+          :class="[
+            isExpanded ? 'justify-between' : 'justify-center',
+            showAsesmen || asesmenActive ? 'text-[#B70000]' : 'text-gray-400 hover:text-[#B70000]'
+          ]"
+          @click="toggleAsesmen"
+        >
+          <div class="flex items-center gap-3">
+            <ClipboardDocumentCheckIcon class="w-5 h-5 shrink-0" />
+            <span class="transition-all duration-300 overflow-hidden" :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Asesmen</span>
+            <span v-if="isExpanded" class="u-new">NEW</span>
+          </div>
+          <ChevronDownIcon v-if="isExpanded" class="w-4 h-4 transition-transform duration-200" :class="showAsesmen ? 'rotate-180' : ''" />
+        </div>
+        <div v-show="showAsesmen && isExpanded" class="space-y-0.5 pl-2">
+          <NavItem v-for="item in filteredAsesmenItems" :key="item.path" :item="item" :is-expanded="isExpanded" active-class="assessment-active" />
+        </div>
+        <div v-show="!isExpanded" class="space-y-0.5">
+          <NavItem v-for="item in filteredAsesmenItems" :key="`asc-${item.path}`" :item="item" :is-expanded="false" active-class="assessment-active" />
+        </div>
+      </div>
+
       <!-- ── KELOLA SECTION (admin) ── -->
       <div v-if="filteredKelolaItems.length" class="mb-4">
         <div
@@ -394,6 +419,25 @@
         </button>
       </div>
 
+      <!-- Asesmen section (baru) -->
+      <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">Asesmen <span class="u-new">NEW</span></h3>
+      <div class="grid grid-cols-4 gap-2 mb-4">
+        <button
+          v-for="item in filteredAsesmenItems"
+          :key="item.path"
+          @click="navigateAndClose(item.path, 'lms')"
+          class="relative flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+          :class="isRouteActive(item.path) ? 'border-red-200 bg-red-50' : ''"
+        >
+          <span v-if="item.badge" class="u-new absolute -top-1.5 -right-1 !text-[8px]" :class="item.badgeTone === 'abu' ? 'is-abu' : ''">{{ item.badge }}</span>
+          <div class="w-9 h-9 rounded-full flex items-center justify-center mb-1.5 shadow-sm"
+            :class="isRouteActive(item.path) ? 'bg-[#B70000] text-white' : 'bg-red-50 text-[#B70000]'">
+            <component :is="item.icon" class="w-4 h-4" />
+          </div>
+          <span class="text-[9px] font-bold text-gray-700 leading-snug">{{ item.name }}</span>
+        </button>
+      </div>
+
       <!-- Admin section -->
       <template v-if="authStore.user?.is_admin">
         <div class="h-px bg-gray-100 mb-3"></div>
@@ -500,6 +544,9 @@ import {
   ListBulletIcon,
   DocumentTextIcon,
   Squares2X2Icon,
+  CalendarDaysIcon,
+  CheckBadgeIcon,
+  MicrophoneIcon,
 } from '@heroicons/vue/24/outline'
 import NavItem from './NavItem.vue'
 import ChangelogModal from './ChangelogModal.vue'
@@ -537,14 +584,12 @@ const lmsLearnerItems = [
   { name: 'Enrollment', icon: RectangleStackIcon, path: '/dashboard/lms/enrollments', adminOnly: false },
   { name: 'Penilaian', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/assessments', adminOnly: false },
   { name: 'Kompetensi', icon: StarIcon, path: '/dashboard/lms/competencies', adminOnly: false },
-  { name: 'Asesmen Kompetensi', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/my-competency', adminOnly: false },
   { name: 'Learning Path', icon: MapIcon, path: '/dashboard/lms/learning-paths', adminOnly: false },
   { name: 'Lencana', icon: TrophyIcon, path: '/dashboard/lms/badges', adminOnly: false },
 ]
 
 const lmsAdminItems = [
   { name: 'Analitik', icon: PresentationChartLineIcon, path: '/dashboard/lms/analytics', adminOnly: true },
-  { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true },
   { name: 'Kategori', icon: TagIcon, path: '/dashboard/lms/categories', adminOnly: true },
   { name: 'Modul', icon: PuzzlePieceIcon, path: '/dashboard/lms/modules', adminOnly: true },
   { name: 'Karyawan', icon: UsersIcon, path: '/dashboard/lms/employees', adminOnly: true },
@@ -603,10 +648,22 @@ const belajarItems = [
   { name: 'Quiz Saya', icon: ClipboardDocumentListIcon, path: '/dashboard/quiz', adminOnly: false },
   { name: 'Riwayat Quiz', icon: ClockIcon, path: '/dashboard/quiz/history', adminOnly: false },
   { name: 'Kompetensi', icon: StarIcon, path: '/dashboard/lms/competencies', adminOnly: false },
-  { name: 'Asesmen Kompetensi', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/my-competency', adminOnly: false },
   { name: 'Learning Path', icon: MapIcon, path: '/dashboard/lms/learning-paths', adminOnly: false },
   { name: 'Lencana', icon: TrophyIcon, path: '/dashboard/lms/badges', adminOnly: false },
 ]
+// Grup Asesmen (baru): Asesmen Terpadu + Peta Kompetensi lama (label 360°).
+const asesmenItems = [
+  { name: 'Asesmen Saya', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/my-competency', adminOnly: false },
+  { name: 'Periode Asesmen', icon: CalendarDaysIcon, path: '/dashboard/asesmen', adminOnly: true, badge: 'NEW', exact: true },
+  { name: 'Rekap & Validasi', icon: CheckBadgeIcon, path: '/dashboard/asesmen/rekap', adminOnly: true, badge: 'NEW' },
+  { name: 'Soal Ujian Lisan', icon: MicrophoneIcon, path: '/dashboard/asesmen/soal-lisan', adminOnly: true, badge: 'NEW' },
+  { name: 'Studi Kasus', icon: DocumentTextIcon, path: '/dashboard/asesmen/studi-kasus', adminOnly: true, badge: 'NEW' },
+  { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true, badge: '360°', badgeTone: 'abu' },
+]
+const filteredAsesmenItems = computed(() => asesmenItems.filter((i) => !i.adminOnly || _isAdmin()))
+const showAsesmen = ref(true)
+const toggleAsesmen = () => { if (isExpanded.value) showAsesmen.value = !showAsesmen.value }
+const asesmenActive = computed(() => route.path.startsWith('/dashboard/asesmen') || route.path.startsWith('/dashboard/lms/my-competency') || route.path.startsWith('/dashboard/lms/competency-map'))
 const kelolaItems = [
   { name: 'Modul & Section', icon: PuzzlePieceIcon, path: '/dashboard/lms/modules', adminOnly: true },
   { name: 'Kategori', icon: TagIcon, path: '/dashboard/lms/categories', adminOnly: true },
@@ -615,7 +672,6 @@ const kelolaItems = [
 ]
 const analitikItems = [
   { name: 'Ringkasan Akademi', icon: ChartBarSquareIcon, path: '/dashboard/analytics', adminOnly: true },
-  { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true },
   { name: 'Karyawan', icon: UsersIcon, path: '/dashboard/lms/employees', adminOnly: true },
   { name: 'Analitik LMS', icon: PresentationChartLineIcon, path: '/dashboard/lms/analytics', adminOnly: true },
   { name: 'Dashboard Quiz', icon: ChartBarSquareIcon, path: '/dashboard/quiz/admin', adminOnly: true },
@@ -671,7 +727,7 @@ const closeAllMobileSheets = () => {
 
 const isRouteActive = (path) => route.path === path
 
-const isLmsRoute = computed(() => route.path.startsWith('/dashboard/lms'))
+const isLmsRoute = computed(() => route.path.startsWith('/dashboard/lms') || route.path.startsWith('/dashboard/asesmen'))
 
 const kelolaRoutePrefixes = ['/dashboard/quiz/program', '/dashboard/quiz/manage', '/dashboard/quiz/admin']
 const isKelolaRoute = computed(() => kelolaRoutePrefixes.some(p => route.path.startsWith(p)))
