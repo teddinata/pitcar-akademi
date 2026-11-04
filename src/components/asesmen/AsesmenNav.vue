@@ -34,9 +34,8 @@ defineEmits(['help'])
 
 const TABS = [
   { to: '/dashboard/asesmen', label: 'Periode', exact: true },
+  { to: '/dashboard/asesmen/paket', label: 'Paket Asesmen' },
   { to: '/dashboard/asesmen/rekap', label: 'Rekap & Validasi' },
-  { to: '/dashboard/asesmen/soal-lisan', label: 'Soal Ujian Lisan' },
-  { to: '/dashboard/asesmen/studi-kasus', label: 'Studi Kasus' },
 ]
 const route = useRoute()
 const aktif = (t) => (t.exact ? route.path === t.to || route.path.startsWith('/dashboard/asesmen/periode') : route.path.startsWith(t.to))

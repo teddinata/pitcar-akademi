@@ -186,8 +186,9 @@ const routes = [
   { path: '/dashboard/asesmen/periode/:id', name: 'AsesmenCycle', component: () => import('../views/asesmen/AsesmenCycle.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard/asesmen/rekap', name: 'AsesmenRekap', component: () => import('../views/asesmen/AsesmenRekap.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard/asesmen/rekap/:id', name: 'AsesmenParticipant', component: () => import('../views/asesmen/AsesmenParticipant.vue'), meta: { requiresAuth: true } },
-  { path: '/dashboard/asesmen/soal-lisan', name: 'AsesmenOralBank', component: () => import('../views/asesmen/AsesmenOralBank.vue'), meta: { requiresAuth: true } },
-  { path: '/dashboard/asesmen/studi-kasus', name: 'AsesmenCases', component: () => import('../views/asesmen/AsesmenCases.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/paket', name: 'AsesmenPackage', component: () => import('../views/asesmen/AsesmenPackage.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/soal-lisan', redirect: { path: '/dashboard/asesmen/paket', query: { bagian: 'lisan' } } },
+  { path: '/dashboard/asesmen/studi-kasus', redirect: { path: '/dashboard/asesmen/paket', query: { bagian: 'kasus' } } },
   { path: '/dashboard/asesmen/ujian/:oralId', name: 'OralExam', component: () => import('../views/asesmen/OralExam.vue'), meta: { requiresAuth: true, focusMode: true } },
   { path: '/dashboard/asesmen/hasil/:participantId', name: 'AsesmenResult', component: () => import('../views/asesmen/AsesmenResult.vue'), meta: { requiresAuth: true } },
   {

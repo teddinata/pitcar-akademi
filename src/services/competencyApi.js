@@ -58,6 +58,9 @@ export const competencyApi = {
   myResult: (participantId) => op('my_result', { participant_id: participantId }),
 
   // Menu Asesmen (Asesmen Terpadu)
+  packages: () => op('packages'),
+  package: (profileId) => op('package_get', { profile_id: profileId }),
+  savePackage: (profileId, data) => op('package_save', { profile_id: profileId, data }),
   oralBank: () => op('oral_bank'),
   saveOralQuestion: (id, data) => op('oral_question_save', { id, data }),
   archiveOralQuestion: (id, active) => op('oral_question_archive', { id, active }),

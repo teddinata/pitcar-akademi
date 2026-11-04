@@ -546,7 +546,7 @@ import {
   Squares2X2Icon,
   CalendarDaysIcon,
   CheckBadgeIcon,
-  MicrophoneIcon,
+  RectangleGroupIcon,
 } from '@heroicons/vue/24/outline'
 import NavItem from './NavItem.vue'
 import ChangelogModal from './ChangelogModal.vue'
@@ -655,9 +655,8 @@ const belajarItems = [
 const asesmenItems = [
   { name: 'Asesmen Saya', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/my-competency', adminOnly: false },
   { name: 'Periode Asesmen', icon: CalendarDaysIcon, path: '/dashboard/asesmen', adminOnly: true, badge: 'NEW', exact: true },
+  { name: 'Paket Asesmen', icon: RectangleGroupIcon, path: '/dashboard/asesmen/paket', adminOnly: true, badge: 'NEW' },
   { name: 'Rekap & Validasi', icon: CheckBadgeIcon, path: '/dashboard/asesmen/rekap', adminOnly: true, badge: 'NEW' },
-  { name: 'Soal Ujian Lisan', icon: MicrophoneIcon, path: '/dashboard/asesmen/soal-lisan', adminOnly: true, badge: 'NEW' },
-  { name: 'Studi Kasus', icon: DocumentTextIcon, path: '/dashboard/asesmen/studi-kasus', adminOnly: true, badge: 'NEW' },
   { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true, badge: '360°', badgeTone: 'abu' },
 ]
 const filteredAsesmenItems = computed(() => asesmenItems.filter((i) => !i.adminOnly || _isAdmin()))

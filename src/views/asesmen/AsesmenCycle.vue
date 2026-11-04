@@ -34,6 +34,10 @@
         <!-- Pengaturan -->
         <form class="u-card p-4 sm:p-5 space-y-4" data-tour="asm-atur" @submit.prevent="simpan">
           <h2 class="u-display text-xl font-extrabold">Pengaturan</h2>
+          <p class="rounded-lg border-2 border-[color:var(--ink)] bg-[#fffbe0] p-2.5 text-sm">
+            Diisi dari <b>Paket {{ cycle.profile.name }}</b>. Perubahan di sini hanya untuk periode ini.
+            <router-link :to="`/dashboard/asesmen/paket?paket=${cycle.profile.id}`" class="font-bold underline underline-offset-4">Ubah paket</router-link>
+          </p>
           <label class="block"><span class="u-label">Nama periode</span><input v-model="form.name" class="u-input" /></label>
           <div class="grid grid-cols-2 gap-3">
             <label><span class="u-label">Mulai</span><input v-model="form.date_start" type="date" class="u-input" /></label>

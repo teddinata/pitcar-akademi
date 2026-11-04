@@ -38,10 +38,15 @@
     <!-- Buat periode -->
     <form v-if="isAdmin" class="u-card p-4 mb-4 grid sm:grid-cols-[1fr_12rem_auto] gap-3 items-end" data-tour="asm-buat" @submit.prevent="buat">
       <label><span class="u-label">Nama periode baru</span><input v-model="baru.name" class="u-input" placeholder="mis. Asesmen Mekanik Nov 2026" /></label>
-      <label><span class="u-label">Profil peran</span>
-        <select v-model="baru.profile_id" class="u-input"><option v-for="p in profiles" :key="p.id" :value="p.id">{{ p.name }}</option></select>
+      <label><span class="u-label">Paket asesmen</span>
+        <select v-model="baru.profile_id" class="u-input"><option v-for="p in packages" :key="p.profile.id" :value="p.profile.id">{{ p.profile.name }}{{ siap(p) ? '' : ' (belum lengkap)' }}</option></select>
       </label>
       <button class="u-btn u-btn-merah" :disabled="!baru.name.trim() || busy"><PlusIcon class="w-5 h-5" />Buat periode</button>
+      <p v-if="paketDipilih" class="sm:col-span-3 text-sm">
+        <template v-if="siap(paketDipilih)"><b class="text-[color:var(--hijau)]">✓ Paket {{ paketDipilih.profile.name }} siap.</b> Soal lisan, studi kasus, rubrik lead, dan bobot paket langsung terbawa ke periode baru.</template>
+        <template v-else><b class="text-[color:var(--merah-tua)]">Paket {{ paketDipilih.profile.name }} belum lengkap:</b> {{ paketDipilih.readiness.filter((r) => !r.ok).map((r) => r.label).join('; ') }}.
+          <router-link :to="`/dashboard/asesmen/paket?paket=${paketDipilih.profile.id}`" class="font-bold underline underline-offset-4">Lengkapi paket</router-link></template>
+      </p>
     </form>
 
     <div v-if="loading" class="space-y-3"><div v-for="i in 2" :key="i" class="u-card h-24 animate-pulse"></div></div>
@@ -78,7 +83,7 @@ import '@fontsource-variable/bricolage-grotesque'
 import '../../styles/exam.css'
 import '../../styles/asesmen.css'
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { PlusIcon } from '@heroicons/vue/24/outline'
 import AsesmenNav from '../../components/asesmen/AsesmenNav.vue'
 import { competencyApi } from '../../services/competencyApi'
@@ -87,8 +92,8 @@ import { fmtDateTime } from '../../utils/competency'
 import { useAuthStore } from '../../stores/auth'
 
 const ALUR = [
-  { judul: 'Siapkan soal', teks: 'Soal ujian lisan L1–L4 + kunci jawaban, dan studi kasus. Contoh mekanik sudah tersedia.' },
-  { judul: 'Buat periode', teks: 'Pilih komponen, tambah peserta, tunjuk lead (boleh lebih dari satu) dan asesor validator.' },
+  { judul: 'Siapkan paket', teks: 'Satu paket per peran: soal lisan, studi kasus, rubrik lead, bobot. Paket Mekanik sudah siap.' },
+  { judul: 'Buat periode', teks: 'Pilih paket, tambah peserta, tunjuk lead (boleh lebih dari satu) dan asesor validator.' },
   { judul: 'Peserta & lead mengisi', teks: 'Peserta ujian lisan & studi kasus dari HP lewat Asesmen Saya. Lead menilai rubrik pilar dengan bukti.' },
   { judul: 'Asesor validasi', teks: 'AI menilai rekaman. Asesor cukup cek jawaban bertanda di Rekap, lalu sahkan. Tutup periode = jenjang ke PitClock.' },
 ]
@@ -109,7 +114,10 @@ const loading = ref(true)
 const error = ref('')
 const busy = ref(false)
 const cycles = ref([])
-const profiles = ref([])
+const packages = ref([])
+const route = useRoute()
+const siap = (p) => p.readiness.every((r) => r.ok)
+const paketDipilih = computed(() => packages.value.find((p) => p.profile.id === baru.profile_id))
 const serverAdmin = ref(false)
 const isAdmin = computed(() => serverAdmin.value || !!auth.user?.is_admin)
 const baru = reactive({ name: '', profile_id: null })
@@ -122,9 +130,10 @@ async function load() {
     cycles.value = hasil.cycles
     serverAdmin.value = hasil.is_admin
     if (hasil.is_admin) {
-      profiles.value = (await competencyApi.oralBank()).profiles
-      const mekanik = profiles.value.find((p) => p.code === 'mekanik') || profiles.value[0]
-      if (!baru.profile_id && mekanik) baru.profile_id = mekanik.id
+      packages.value = (await competencyApi.packages()).packages
+      const q = Number(route.query.paket)
+      const awal = packages.value.find((p) => p.profile.id === q) || packages.value.find((p) => p.profile.code === 'mekanik') || packages.value[0]
+      if (!baru.profile_id && awal) baru.profile_id = awal.profile.id
     }
   } catch (e) {
     error.value = e.message
@@ -148,10 +157,10 @@ async function buat() {
 
 const tour = useTour('asesmen-beranda', () => [
   { title: 'Menu Asesmen (baru)', text: 'Tempat semua asesmen kenaikan jenjang: ujian lisan rubrik lama yang kini direkam & dinilai AI, studi kasus, dan penilaian lead.' },
-  { element: '[data-tour="asm-nav"]', title: 'Empat halaman', text: 'Periode: jalankan asesmen. Rekap & Validasi: hasil akhir dan pemeriksaan asesor. Soal Ujian Lisan dan Studi Kasus: bank soal.', side: 'bottom' },
+  { element: '[data-tour="asm-nav"]', title: 'Tiga halaman', text: 'Periode: jalankan asesmen. Paket Asesmen: semua bahan satu peran dalam satu rangkaian. Rekap & Validasi: hasil akhir dan pemeriksaan asesor.', side: 'bottom' },
   { element: '[data-tour="asm-alur"]', title: 'Alurnya 4 langkah', text: 'Ikuti urutan ini setiap kali menjalankan asesmen.', side: 'bottom' },
   { element: '[data-tour="asm-rumus"]', title: 'Cara hasil dihitung', text: 'AI dan rekaman jadi penilaian utama; asesor hanya memvalidasi jawaban yang ditandai.', side: 'top' },
-  { element: '[data-tour="asm-buat"]', title: 'Mulai dari sini', text: 'Beri nama periode dan pilih profil peran, lalu atur detailnya.', side: 'top' },
+  { element: '[data-tour="asm-buat"]', title: 'Mulai dari sini', text: 'Beri nama periode dan pilih paket. Isi paket terbawa otomatis; tinggal tambah peserta, lead, dan asesor.', side: 'top' },
   { element: '[data-tour="asm-help"]', title: 'Panduan ada di tiap halaman', text: 'Tekan Cara pakai untuk memutar panduan lagi.', side: 'bottom', align: 'end' },
 ])
 

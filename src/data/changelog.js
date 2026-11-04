@@ -5,6 +5,17 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.9.0',
+    date: '2026-11-04',
+    title: 'Paket Asesmen: satu rangkaian per peran',
+    items: [
+      { type: 'baru', text: 'Halaman Paket Asesmen menyatukan semua bahan asesmen satu peran (mis. Mekanik) dalam satu rangkaian: 1 Ujian lisan, 2 Studi kasus, 3 Rubrik lead, 4 Komponen & bobot. Tiap langkah punya tanda siap/belum lengkap.' },
+      { type: 'baru', text: 'Studi kasus dicentang masuk paket. Rubrik pilar untuk lead dan nama jenjang kini bisa diubah langsung di paket.' },
+      { type: 'ubah', text: 'Membuat periode cukup memilih paket. Soal, studi kasus, komponen, dan bobot paket langsung terbawa, dan masih bisa diubah khusus untuk periode itu.' },
+      { type: 'ubah', text: 'Menu Soal Ujian Lisan dan Studi Kasus digabung ke Paket Asesmen.' },
+    ],
+  },
+  {
     version: '1.8.0',
     date: '2026-11-04',
     title: 'Menu Asesmen baru: ujian lisan + AI, studi kasus, lead, rekap',
