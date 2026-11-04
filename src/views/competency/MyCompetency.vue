@@ -23,7 +23,7 @@
       </div>
 
       <template v-else-if="data">
-        <div v-if="!data.cases.length && !data.ratings.length && !data.results.length && !(data.orals || []).length && !(data.validations || []).length && !(data.terpadu_results || []).length" class="u-card p-8 text-center">
+        <div v-if="!data.cases.length && !data.ratings.length && !data.results.length && !(data.validations || []).length && !(data.terpadu_results || []).length" class="u-card p-8 text-center">
           <ClipboardDocumentCheckIcon class="w-12 h-12 mx-auto" />
           <p class="u-display mt-3 text-xl font-extrabold">Belum ada tugas asesmen</p>
           <p class="mt-1 text-[15px] text-[color:var(--ink-soft)]">Tugas muncul di sini saat admin membuka periode asesmen yang melibatkan Anda, atau lewat link tes yang dibagikan.</p>
@@ -38,29 +38,6 @@
               <span class="flex-1"><b>{{ c.name }}</b><span class="block text-sm text-[color:var(--ink-soft)]">{{ c.participant_count }} peserta · dengarkan rekaman yang ditandai, lalu sahkan</span></span>
               <ChevronRightIcon class="w-5 h-5" />
             </router-link>
-          </div>
-        </section>
-
-        <!-- Ujian lisan mandiri -->
-        <section v-if="(data.orals || []).length" class="mb-8" data-tour="daftar-lisan">
-          <h2 class="u-display text-xl font-extrabold mb-3 flex items-center gap-2">Ujian lisan <span class="u-new">NEW</span></h2>
-          <div class="space-y-4">
-            <article v-for="o in data.orals" :key="o.oral_id" class="u-card p-4 sm:p-5 flex flex-wrap items-center gap-4">
-              <span class="grid place-items-center w-14 h-14 rounded-xl border-[2.5px] border-[color:var(--ink)] shrink-0" :class="o.state === 'submitted' ? 'bg-[color:var(--ink)] text-white' : o.state === 'progress' ? 'bg-[color:var(--stabilo)]' : 'bg-white text-[color:var(--merah)]'">
-                <component :is="o.state === 'submitted' ? CheckIcon : MicrophoneIcon" class="w-7 h-7" />
-              </span>
-              <div class="flex-1 min-w-[12rem]">
-                <div class="flex flex-wrap gap-1.5">
-                  <span class="u-chip" :class="o.state === 'submitted' ? 'u-chip-hijau' : o.state === 'progress' ? 'u-chip-kuning' : 'u-chip-merah'">{{ o.state === 'submitted' ? 'Terkirim' : o.state === 'progress' ? `Soal ${o.answered}/${o.total} selesai` : 'Belum dikerjakan' }}</span>
-                  <span class="u-chip">{{ o.profile }}</span>
-                </div>
-                <p class="u-display mt-2 text-lg font-bold leading-snug">4 soal L1–L4, dijawab dengan suara</p>
-                <p class="mt-0.5 text-sm text-[color:var(--ink-soft)]">Rubrik 6 aspek · dinilai AI lalu dicek asesor · {{ o.cycle }}</p>
-              </div>
-              <router-link v-if="o.state !== 'submitted'" :to="`/dashboard/asesmen/ujian/${o.oral_id}`" class="u-btn w-full sm:w-auto" :class="o.state === 'progress' ? 'u-btn-hitam' : 'u-btn-merah'">
-                {{ o.state === 'progress' ? 'Lanjutkan' : 'Mulai ujian' }}<ArrowRightIcon class="w-4 h-4" />
-              </router-link>
-            </article>
           </div>
         </section>
 
@@ -154,7 +131,7 @@ import '../../styles/exam.css'
 import '../../styles/asesmen.css'
 import { computed, nextTick, onMounted, ref } from 'vue'
 import {
-  ArrowRightIcon, ChartBarIcon, CheckBadgeIcon, CheckIcon, ChevronRightIcon, ClipboardDocumentCheckIcon, ClockIcon, MicrophoneIcon, PencilSquareIcon,
+  ArrowRightIcon, ChartBarIcon, CheckBadgeIcon, CheckIcon, ChevronRightIcon, ClipboardDocumentCheckIcon, ClockIcon, PencilSquareIcon,
   QuestionMarkCircleIcon, ShieldCheckIcon, Squares2X2Icon, UserGroupIcon, UserIcon,
 } from '@heroicons/vue/24/outline'
 import { competencyApi } from '../../services/competencyApi'
@@ -181,8 +158,7 @@ const sortedRatings = computed(() => [...(data.value?.ratings || [])].sort((a, b
 
 const tour = useTour('peserta-daftar', () => [
   { title: 'Asesmen Kompetensi', text: 'Halaman ini berisi semua tugas asesmen Anda: tes studi kasus, penilaian untuk rekan, dan hasil Anda.' },
-  { element: '[data-tour="daftar-lisan"]', title: 'Ujian lisan', text: 'Jawab 4 soal L1–L4 dengan suara langsung dari HP. Soal baru terlihat saat rekaman mulai.', side: 'bottom' },
-  { element: '[data-tour="daftar-validasi"]', title: 'Tugas asesor', text: 'Anda ditunjuk sebagai asesor. Buka rekap untuk mendengar rekaman yang ditandai dan mengesahkan hasil.', side: 'bottom' },
+  { element: '[data-tour="daftar-validasi"]', title: 'Tugas asesor', text: 'Anda ditunjuk sebagai asesor. Buka rekap untuk menjalankan ujian lisan peserta, memeriksa jawaban yang ditandai, dan mengesahkan hasil.', side: 'bottom' },
   { element: '[data-tour="daftar-tes"]', title: 'Tes studi kasus', text: 'Buka tes untuk melihat jumlah soal dan waktunya. Waktu baru berjalan setelah Anda menekan Mulai di dalam tes.', side: 'bottom' },
   { element: '[data-tour="daftar-penilaian"]', title: 'Penilaian', text: 'Isi penilaian diri, penilaian sebagai atasan, atau feedback tim (anonim) untuk rekan Anda.', side: 'top' },
   { element: '[data-tour="daftar-hasil"]', title: 'Hasil', text: 'Hasil dan jenjang Anda muncul di sini setelah admin menutup periode.', side: 'top' },

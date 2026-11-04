@@ -80,6 +80,18 @@
           <h2 class="u-display text-2xl font-extrabold">Ujian lisan</h2>
           <p class="text-sm font-bold">{{ ORAL_STATE({ ...d.oral, answered: d.oral.lines.filter((l) => l.state === 'done').length, total: d.oral.lines.length }) }}<span v-if="d.oral.ai_at"> · {{ fmtDateTime(d.oral.ai_at) }}</span></p>
         </div>
+        <!-- Ujian lisan dijalankan asesor dari sini -->
+        <div v-if="d.oral.state !== 'submitted'" class="u-card p-4 sm:p-5 mb-3 flex flex-wrap items-center gap-3 !bg-[#fffbe0]" data-tour="det-mulai-lisan">
+          <MicrophoneIcon class="w-8 h-8 shrink-0" />
+          <div class="flex-1 min-w-[14rem]">
+            <p class="font-extrabold">{{ d.oral.state === 'progress' ? `Ujian lisan berjalan: soal ${d.oral.lines.filter((l) => l.state === 'done').length}/${d.oral.lines.length} selesai` : 'Ujian lisan belum dilakukan' }}</p>
+            <p class="text-sm">Anda membacakan soal L1–L4 dan merekam jawaban {{ d.employee.name }} dari HP atau laptop ini. Peserta tidak mengerjakan ujian lisan sendiri.</p>
+          </div>
+          <router-link v-if="d.cycle.state === 'open'" :to="`/dashboard/asesmen/ujian/${d.oral.id}`" class="u-btn u-btn-merah">
+            <MicrophoneIcon class="w-5 h-5" />{{ d.oral.state === 'progress' ? 'Lanjutkan ujian lisan' : 'Mulai ujian lisan' }}
+          </router-link>
+          <p v-else class="text-sm font-bold">Periode tidak sedang berjalan.</p>
+        </div>
         <div v-if="d.oral.ai_state === 'failed'" class="u-card p-4 mb-3 !bg-[color:var(--merah-muda)]">
           <p class="font-bold text-[color:var(--merah-tua)]">Penilaian AI berhenti: {{ d.oral.ai_error }}</p>
           <p class="mt-1 text-sm">Bila ada rekaman bermasalah, tekan <b>Transkripsi ulang</b> atau <b>Lampirkan rekaman</b> di soal itu. Penilaian lalu berjalan lagi otomatis.</p>
@@ -122,7 +134,7 @@
               <span v-for="f in l.flags" :key="f.code" class="u-chip u-chip-kuning">{{ f.label }}</span>
               <span v-if="l.reviewed_at" class="u-chip u-chip-hijau">Diperiksa {{ l.reviewed_by }}</span>
             </div>
-            <p class="u-display mt-3 text-lg font-bold leading-snug">{{ l.question || 'Soal belum dibuka peserta.' }}</p>
+            <p class="u-display mt-3 text-lg font-bold leading-snug">{{ l.question || 'Soal belum dibuka.' }}</p>
             <details v-if="l.key_points" class="mt-2 text-sm">
               <summary class="cursor-pointer font-bold">Kunci jawaban</summary>
               <ul class="mt-1 list-disc pl-5 space-y-0.5"><li v-for="(k, i) in l.key_points.split('\n').filter(Boolean)" :key="i">{{ k }}</li></ul>
@@ -270,7 +282,7 @@ import '../../styles/asesmen.css'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ArrowPathIcon, CheckBadgeIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, PaperClipIcon, PlayCircleIcon,
+  ArrowPathIcon, CheckBadgeIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, MicrophoneIcon, PaperClipIcon, PlayCircleIcon,
   QuestionMarkCircleIcon,
 } from '@heroicons/vue/24/outline'
 import RecordingPlayer from '../../components/asesmen/RecordingPlayer.vue'
@@ -433,6 +445,7 @@ watch(() => route.params.id, (id) => { if (id) { catatanSah.value = ''; load(id)
 
 const tour = useTour('asesmen-rincian', () => [
   { element: '[data-tour="det-kesimpulan"]', title: 'Kesimpulan di atas', text: 'Jenjang akhir, nilai tiap komponen, dan poin latihan. Dihitung otomatis dari nilai AI dan lead.', side: 'bottom' },
+  { element: '[data-tour="det-mulai-lisan"]', title: 'Jalankan ujian lisan', text: 'Ujian lisan direkam oleh asesor bersama peserta. Tekan Mulai ujian lisan, bacakan soalnya, dan rekam jawaban peserta.', side: 'bottom' },
   { element: '[data-tour="det-lisan"]', title: 'Skor per soal', text: 'Tabel sama seperti sheet asesor lama. Klik baris untuk loncat ke rekaman soal itu.', side: 'top' },
   { element: '[data-tour="det-periksa"]', title: 'Periksa yang ditandai', text: 'Putar kutipan atau transkrip, lalu Setujui nilai AI atau ubah skor dengan alasan.', side: 'top' },
   { element: '[data-tour="det-sahkan"]', title: 'Sahkan', text: 'Setelah semua tanda diperiksa, sahkan. Hanya hasil yang disahkan yang masuk ke data karyawan saat periode ditutup.', side: 'top' },

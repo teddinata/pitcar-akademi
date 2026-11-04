@@ -27,7 +27,7 @@
         <template v-else-if="data.rater_type === 'self'">Pilih level yang paling menggambarkan cara Anda bekerja <b>saat ini</b>, bukan target. Penilaian diri tidak ikut nilai akhir; dipakai untuk melihat perbedaan cara pandang.</template>
         <template v-else-if="data.require_evidence">
           <p class="font-semibold">Anda ditunjuk sebagai lead penilai.</p>
-          <p class="mt-1">Pilih level yang paling sesuai dengan kerja yang <b>Anda lihat sendiri</b>, lalu tulis satu contoh kejadian nyata sebagai bukti (wajib). Bila belum pernah melihat pekerjaan di pilar itu, pilih <b>Belum pernah melihat</b>; pilar itu tidak dihitung dari Anda.</p>
+          <p class="mt-1">Pilih deskripsi A, B, C, atau D yang paling sesuai dengan kerja yang <b>Anda lihat sendiri</b>, lalu tulis satu contoh kejadian nyata sebagai bukti (wajib). Bila belum pernah melihat pekerjaan di pilar itu, pilih <b>Belum pernah melihat</b>; pilar itu tidak dihitung dari Anda.</p>
         </template>
         <template v-else>Pilih level yang paling sesuai dengan perilaku yang Anda lihat sendiri. Tambahkan contoh kejadian bila ada; catatan membantu kabeng berkembang.</template>
       </div>
@@ -42,7 +42,7 @@
           <legend class="sr-only">{{ p.name }}</legend>
           <div class="flex items-baseline justify-between gap-2">
             <h2 class="text-base font-bold text-gray-900">{{ p.name }}</h2>
-            <span v-if="levels[p.id]?.level" class="text-xs font-semibold text-gray-500">L{{ levels[p.id].level }} dipilih</span>
+            <span v-if="levels[p.id]?.level" class="text-xs font-semibold text-gray-500">{{ label(levels[p.id].level) }} dipilih</span>
             <span v-else-if="levels[p.id]?.level === 0" class="text-xs font-semibold text-gray-500">Belum pernah melihat</span>
           </div>
           <p class="text-xs text-gray-500 mt-0.5 max-w-prose">{{ p.description }}</p>
@@ -53,7 +53,7 @@
               :class="levels[p.id]?.level === n ? 'border-gray-900 bg-gray-50 ring-1 ring-gray-900' : 'border-gray-200 hover:border-gray-300 bg-white'"
             >
               <input v-model="levels[p.id].level" type="radio" :name="`pilar-${p.id}`" :value="n" class="sr-only" :disabled="closed" />
-              <span class="grid place-items-center w-9 h-9 rounded-lg text-sm font-bold shrink-0 ring-1" :class="LEVEL_STYLE[n].cell">L{{ n }}</span>
+              <span class="grid place-items-center w-9 h-9 rounded-lg text-sm font-bold shrink-0 ring-1" :class="huruf ? 'bg-white text-gray-900 ring-gray-300' : LEVEL_STYLE[n].cell">{{ label(n) }}</span>
               <span class="text-sm leading-snug text-gray-700">{{ p.rubric[n] }}</span>
             </label>
           </div>
@@ -127,6 +127,9 @@ const loading = ref(true)
 const error = ref('')
 const data = ref(null)
 const levels = reactive({})
+// Lead Asesmen Terpadu memilih deskripsi A-D (urut sama dengan L1-L4) tanpa melihat label level.
+const huruf = computed(() => !!data.value?.require_evidence)
+const label = (n) => (huruf.value ? 'ABCD'[n - 1] : `L${n}`)
 const answers = reactive({})
 const note = ref('')
 const saving = ref(false)

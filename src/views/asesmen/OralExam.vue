@@ -1,14 +1,15 @@
-<!-- Ujian lisan mandiri (rubrik 6 aspek). Satu soal per layar, berjenjang L1-L4.
-     Soal baru terlihat saat rekaman mulai; waktu per soal dijaga server.
-     Jawaban dangkal mendapat maksimal satu pertanyaan lanjutan dari AI. -->
+<!-- Ujian lisan dipandu asesor (rubrik 6 aspek). Asesor/admin membacakan soal L1-L4
+     dan merekam jawaban peserta dari perangkatnya. Soal baru terlihat saat rekaman
+     mulai; waktu per soal dijaga server. Jawaban dangkal mendapat maksimal satu
+     pertanyaan lanjutan dari AI yang dibacakan asesor. -->
 <template>
   <div class="ujian min-h-screen pb-28">
     <header class="sticky top-0 z-20 bg-[color:var(--paper)] border-b-[2.5px] border-[color:var(--ink)]">
       <div class="max-w-3xl mx-auto px-4 h-16 flex items-center gap-3">
-        <router-link to="/dashboard/lms/my-competency" class="u-btn !min-h-10 !px-2.5" title="Kembali"><ChevronLeftIcon class="w-5 h-5" /></router-link>
+        <router-link :to="kembali" class="u-btn !min-h-10 !px-2.5" title="Kembali ke rincian peserta"><ChevronLeftIcon class="w-5 h-5" /></router-link>
         <div class="min-w-0 flex-1">
-          <p class="text-xs font-bold text-[color:var(--ink-soft)] truncate">{{ data?.cycle.name || 'Ujian lisan' }}</p>
-          <p class="u-display font-extrabold leading-tight truncate">Ujian Lisan Mandiri</p>
+          <p class="text-xs font-bold text-[color:var(--ink-soft)] truncate">{{ data ? `Ujian lisan · ${data.cycle.name}` : 'Ujian lisan' }}</p>
+          <p class="u-display font-extrabold leading-tight truncate">{{ data?.employee?.name || 'Ujian Lisan' }}</p>
         </div>
         <span v-if="timerSisa !== null" class="u-timer" :class="timerSisa <= 15 ? 'is-danger' : timerSisa <= 45 ? 'is-warn' : ''" role="timer" aria-live="off">
           <ClockIcon class="w-5 h-5" />{{ mmss(timerSisa) }}
@@ -38,21 +39,21 @@
         <section v-if="data.state === 'submitted'" class="u-card p-6 sm:p-8 text-center">
           <span class="u-stempel is-anim">TERKIRIM</span>
           <p class="u-display mt-6 text-2xl font-extrabold">Ujian lisan selesai</p>
-          <p class="mt-2 text-[15px] text-[color:var(--ink-soft)] max-w-md mx-auto">Rekaman Anda sedang dinilai AI memakai rubrik 6 aspek, lalu dicek asesor. Hasil (persen dan jenjang) muncul di Asesmen Saya setelah periode ditutup.</p>
-          <router-link to="/dashboard/lms/my-competency" class="u-btn u-btn-hitam mt-6">Kembali ke Asesmen Saya</router-link>
+          <p class="mt-2 text-[15px] text-[color:var(--ink-soft)] max-w-md mx-auto">Rekaman sedang ditranskripsi dan dinilai AI memakai rubrik 6 aspek. Pantau hasilnya, periksa jawaban bertanda, lalu sahkan di rincian peserta.</p>
+          <router-link :to="kembali" class="u-btn u-btn-hitam mt-6">Buka rincian peserta</router-link>
         </section>
 
         <template v-else-if="current">
           <!-- Pembuka: aturan + persetujuan (sekali) -->
           <section v-if="!data.consent && stage === 'idle'" class="u-card p-5 sm:p-6" data-tour="lisan-aturan">
             <p class="u-chip u-chip-kuning">Sebelum mulai</p>
-            <h1 class="u-display mt-3 text-[1.7rem] font-extrabold leading-tight">4 soal, dijawab dengan suara</h1>
+            <h1 class="u-display mt-3 text-[1.7rem] font-extrabold leading-tight">4 soal, Anda bacakan, peserta menjawab lisan</h1>
             <ol class="mt-4 space-y-3 text-[15px]">
               <li v-for="(t, i) in ATURAN" :key="i" class="flex gap-3"><span class="u-nomor !w-8 !h-8 !text-base">{{ i + 1 }}</span><span class="pt-1">{{ t }}</span></li>
             </ol>
             <label class="mt-5 flex gap-3 items-start rounded-xl border-2 border-[color:var(--ink)] p-3 bg-[#fffbe0]">
               <input v-model="consent" type="checkbox" class="u-check" />
-              <span class="text-[15px] font-semibold">Saya setuju jawaban lisan saya direkam, ditranskripsi, dan dinilai AI serta asesor. Rekaman disimpan 90 hari.</span>
+              <span class="text-[15px] font-semibold">Peserta sudah diberi tahu dan setuju jawaban lisannya direkam, ditranskripsi, dan dinilai AI serta asesor. Rekaman disimpan 90 hari.</span>
             </label>
           </section>
 
@@ -71,7 +72,7 @@
               <div class="rounded-xl border-2 border-dashed border-[color:var(--ink)] p-6 text-center bg-[color:var(--grid-bg)]">
                 <LockClosedIcon class="w-8 h-8 mx-auto" />
                 <p class="mt-2 font-bold">Soal terbuka saat rekaman mulai</p>
-                <p class="text-sm text-[color:var(--ink-soft)]">Siapkan diri di tempat yang tenang. Setelah tombol ditekan, waktu langsung berjalan.</p>
+                <p class="text-sm text-[color:var(--ink-soft)]">Pastikan ruangan tenang dan HP dekat peserta. Setelah tombol ditekan, bacakan soalnya; waktu langsung berjalan.</p>
               </div>
               <button class="u-btn u-btn-merah u-btn-besar w-full mt-4" :disabled="(!data.consent && !consent) || stage !== 'idle'" data-tour="lisan-mulai" @click="mulai('main')">
                 <MicrophoneIcon class="w-6 h-6" />{{ current.state === 'answering' ? 'Rekam ulang jawaban (mikrofon tadi gagal)' : 'Buka soal & mulai rekam' }}
@@ -93,33 +94,33 @@
                     <span v-for="i in 7" :key="i" :style="{ height: `${Math.max(4, Math.min(28, rec.level.value * 40 * (1 - Math.abs(i - 4) / 5)))}px` }"></span>
                   </div>
                 </div>
-                <p v-if="rec.level.value < 0.02 && rec.elapsed.value > 4" class="mt-2 text-sm font-bold text-[color:var(--merah-tua)]">Suara tidak terdengar. Dekatkan HP ke mulut atau cek izin mikrofon.</p>
+                <p v-if="rec.level.value < 0.02 && rec.elapsed.value > 4" class="mt-2 text-sm font-bold text-[color:var(--merah-tua)]">Suara tidak terdengar. Dekatkan HP ke peserta atau cek izin mikrofon.</p>
                 <button class="u-btn u-btn-hitam u-btn-besar w-full mt-4" :disabled="rec.state.value === 'stopping'" @click="selesai">
-                  <StopIcon class="w-6 h-6" />{{ stage === 'followup-rec' ? 'Selesai menjawab pertanyaan lanjutan' : 'Selesai menjawab' }}
+                  <StopIcon class="w-6 h-6" />{{ stage === 'followup-rec' ? 'Peserta selesai menjawab lanjutan' : 'Peserta selesai menjawab' }}
                 </button>
               </div>
 
               <!-- Menunggu cek AI -->
               <div v-else-if="stage === 'processing'" class="mt-6 rounded-xl border-[2.5px] border-[color:var(--ink)] p-6 text-center bg-[color:var(--grid-bg)]" role="status">
                 <ArrowPathIcon class="w-8 h-8 mx-auto animate-spin" />
-                <p class="u-display mt-2 text-lg font-extrabold">Sedang mendengarkan jawabanmu…</p>
+                <p class="u-display mt-2 text-lg font-extrabold">AI sedang mendengarkan jawaban peserta…</p>
                 <p class="text-sm text-[color:var(--ink-soft)]">Biasanya 10–20 detik. Jangan tutup halaman ini.</p>
               </div>
 
               <!-- Pertanyaan lanjutan -->
               <div v-else-if="current.state === 'followup'" class="mt-6 rounded-xl border-[2.5px] border-[color:var(--ink)] p-4 sm:p-5 bg-[#fffbe0]" data-tour="lisan-lanjutan">
-                <p class="u-chip u-chip-kuning">Pertanyaan lanjutan · sekali saja</p>
+                <p class="u-chip u-chip-kuning">Pertanyaan lanjutan dari AI · bacakan ke peserta</p>
                 <p class="u-display mt-3 text-xl font-bold leading-snug">{{ current.followup_question }}</p>
-                <p class="mt-2 text-sm text-[color:var(--ink-soft)]">Jawab dengan suara, maksimal 2 menit. Lewati bila tidak tahu.</p>
+                <p class="mt-2 text-sm text-[color:var(--ink-soft)]">Tekan rekam, bacakan pertanyaannya, lalu biarkan peserta menjawab (maksimal 2 menit). Lewati bila peserta tidak tahu.</p>
                 <div class="mt-4 grid sm:grid-cols-2 gap-2">
-                  <button class="u-btn u-btn-merah u-btn-besar" :disabled="stage !== 'idle'" @click="mulai('followup')"><MicrophoneIcon class="w-6 h-6" />Jawab sekarang</button>
+                  <button class="u-btn u-btn-merah u-btn-besar" :disabled="stage !== 'idle'" @click="mulai('followup')"><MicrophoneIcon class="w-6 h-6" />Rekam jawaban lanjutan</button>
                   <button class="u-btn u-btn-besar" :disabled="stage !== 'idle'" @click="lewatiLanjutan">Lewati, lanjut soal berikutnya</button>
                 </div>
               </div>
 
               <!-- Jawaban terekam, rekaman terputus (mis. halaman dimuat ulang) -->
               <div v-else-if="current.state === 'answering' && current.recorded" class="mt-6 rounded-xl border-2 border-[color:var(--ink)] p-4 bg-white">
-                <p class="font-bold">Rekaman tadi terputus, tetapi jawaban Anda sudah tersimpan.</p>
+                <p class="font-bold">Rekaman tadi terputus, tetapi jawaban peserta sudah tersimpan.</p>
                 <button class="u-btn u-btn-hitam u-btn-besar w-full mt-3" :disabled="stage !== 'idle'" @click="kirimJawaban">Kirim jawaban & lanjut</button>
               </div>
             </template>
@@ -153,14 +154,15 @@ import { mmss } from '../../utils/competency'
 
 const ATURAN = [
   'Ada 4 soal berjenjang, L1 sampai L4, dikerjakan berurutan. Soal L3 dan L4 bobotnya lebih besar.',
-  'Soal baru terlihat setelah Anda menekan "Buka soal & mulai rekam". Waktu langsung berjalan dan tidak bisa diulang.',
-  'Jawab dengan suara seperti menjelaskan ke asesor: sebut langkahnya urut dan alasan teknisnya.',
-  'Bila jawaban kurang dalam, muncul satu pertanyaan lanjutan. Ini normal, bukan berarti salah.',
-  'Nilai dihitung AI dengan rubrik 6 aspek, lalu diperiksa asesor sebelum disahkan.',
+  'Soal baru terlihat setelah Anda menekan "Buka soal & mulai rekam". Bacakan soalnya ke peserta; waktu langsung berjalan dan tidak bisa diulang.',
+  'Minta peserta menjelaskan langkahnya urut beserta alasan teknisnya. Hindari memberi petunjuk jawaban.',
+  'Bila jawaban kurang dalam, AI memberi satu pertanyaan lanjutan untuk Anda bacakan.',
+  'Nilai dihitung AI dengan rubrik 6 aspek (suara Anda diabaikan), lalu Anda periksa dan sahkan di rincian peserta.',
 ]
 
 const route = useRoute()
 const oralId = Number(route.params.oralId)
+const kembali = computed(() => (data.value ? `/dashboard/asesmen/rekap/${data.value.participant_id}` : '/dashboard/asesmen/rekap'))
 const loading = ref(true)
 const error = ref('')
 const data = ref(null)
@@ -244,11 +246,11 @@ async function lewatiLanjutan() {
   try { terima(await competencyApi.oralFollowupFinish(current.value.id)) } catch (e) { pesan.value = e.message } finally { stage.value = 'idle' }
 }
 
-const tour = useTour('peserta-lisan', () => [
-  { title: 'Ujian lisan mandiri', text: 'Anda menjawab 4 soal dengan suara, tanpa asesor di samping. Penilaian memakai rubrik yang sama dengan ujian lisan bersama asesor.' },
+const tour = useTour('asesor-lisan', () => [
+  { title: 'Ujian lisan bersama peserta', text: 'Anda membacakan 4 soal dan merekam jawaban peserta dari HP atau laptop ini. AI menilai rekamannya dengan rubrik 6 aspek.' },
   { element: '[data-tour="lisan-tangga"]', title: 'Tangga soal L1–L4', text: 'Soal dikerjakan berurutan dari L1. Kotak kuning = soal sekarang, hitam = selesai. Persentase = bobot soal.', side: 'bottom' },
-  { element: '[data-tour="lisan-aturan"]', title: 'Baca aturannya', text: 'Centang persetujuan rekaman sekali di awal.', side: 'bottom' },
-  { element: '[data-tour="lisan-mulai"]', title: 'Soal terbuka saat rekaman mulai', text: 'Tekan tombol ini bila sudah siap. Soal muncul dan waktu berjalan. Tekan "Selesai menjawab" bila sudah cukup.', side: 'top' },
+  { element: '[data-tour="lisan-aturan"]', title: 'Persetujuan peserta', text: 'Pastikan peserta setuju direkam, lalu centang sekali di awal.', side: 'bottom' },
+  { element: '[data-tour="lisan-mulai"]', title: 'Soal terbuka saat rekaman mulai', text: 'Tekan bila peserta siap, lalu bacakan soalnya. Tekan "Peserta selesai menjawab" bila sudah cukup.', side: 'top' },
   { element: '[data-tour="lisan-help"]', title: 'Lihat lagi kapan saja', text: 'Tombol ? memutar panduan ini lagi.', side: 'bottom', align: 'end' },
 ])
 

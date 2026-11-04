@@ -5,6 +5,16 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.11.0',
+    date: '2026-11-05',
+    title: 'Ujian lisan dijalankan asesor, lead memilih A–D',
+    items: [
+      { type: 'ubah', text: 'Ujian lisan kini direkam oleh asesor atau admin bersama peserta: buka Rekap & Validasi, pilih peserta, lalu tekan Mulai ujian lisan. Asesor membacakan soal dan pertanyaan lanjutan AI; AI mengabaikan suara asesor saat menilai.' },
+      { type: 'ubah', text: 'Asesmen Saya untuk peserta hanya berisi tes studi kasus (ujian tulis), penilaian, dan hasil. Ujian lisan tidak lagi muncul di sana.' },
+      { type: 'ubah', text: 'Form penilaian lead Asesmen Terpadu memakai pilihan A, B, C, D (bukan L1–L4) supaya lead menilai dari deskripsi perilaku, bukan label level.' },
+    ],
+  },
+  {
     version: '1.10.0',
     date: '2026-11-04',
     title: 'Ujian lisan: proses AI lebih andal + lampirkan rekaman',
