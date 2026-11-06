@@ -73,6 +73,7 @@
           <button class="u-btn u-btn-merah u-btn-besar mt-6 w-full" :disabled="busy" @click="mulai">
             <PlayIcon class="h-6 w-6" />{{ busy ? 'Menyiapkan soal…' : 'Mulai sekarang' }}
           </button>
+          <button v-if="kelas" class="mt-3 w-full text-center text-sm font-bold underline" @click="keKelas">Bukan tes saya, kembali ke daftar</button>
         </div>
       </section>
 
@@ -143,6 +144,7 @@
             <span class="u-chip mt-3" :class="STATUS[st.status]?.chip">{{ STATUS[st.status]?.label }}</span>
           </template>
           <p v-else class="mt-4 rounded-xl bg-[color:var(--grid-bg)] p-4 text-[15px]">Nilai akan diumumkan oleh HR setelah peninjauan.</p>
+          <button v-if="kelas" class="u-btn mt-5" @click="keKelas">Kembali ke daftar tes</button>
         </div>
 
         <div v-if="st.review?.length" class="mt-6 space-y-4">
@@ -194,8 +196,9 @@ import '@fontsource-variable/bricolage-grotesque'
 import '../../styles/exam.css'
 import '../../styles/asesmen.css'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ClockIcon, ExclamationTriangleIcon, PlayIcon } from '@heroicons/vue/24/outline'
+import { pilihDb } from '../../utils/leader'
 
 const STATUS = {
   passed: { label: 'Lulus', chip: 'u-chip-hijau' },
@@ -206,6 +209,9 @@ const STATUS = {
 const route = useRoute()
 const token = String(route.params.token || '')
 const db = String(route.query.db || '')
+const kelas = String(route.query.kelas || '') // dibuka dari QR kelas
+const router = useRouter()
+const keKelas = () => router.push({ path: `/kelas-kabeng/${kelas}`, query: { db } })
 
 const loading = ref(true)
 const busy = ref(false)
@@ -243,7 +249,7 @@ async function siapkanDb() {
     otherDb.value = { name: localStorage.getItem('name') || localStorage.getItem('username') || 'pengguna lain' }
     return false
   }
-  if (!loggedIn) await fetch(`/web/login?db=${encodeURIComponent(db)}`, { credentials: 'include', redirect: 'follow' })
+  if (!loggedIn) await pilihDb(db)
   return true
 }
 

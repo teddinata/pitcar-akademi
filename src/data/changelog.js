@@ -5,6 +5,15 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.13.0',
+    date: '2026-11-06',
+    title: 'QR kelas Assessment Calon Kabeng',
+    items: [
+      { type: 'baru', text: 'Tombol QR kelas di Peserta & Penugasan: tampilkan QR di layar kelas. Peserta memindai, memilih nama, memasukkan 4 digit terakhir nomor WhatsApp, lalu langsung mengerjakan tes. Tidak perlu mengirim tautan satu per satu.' },
+      { type: 'perbaikan', text: 'Tautan ujian peserta langsung terbuka tanpa diminta login dan tanpa perlu dimuat ulang.' },
+    ],
+  },
+  {
     version: '1.12.0',
     date: '2026-11-06',
     title: 'Assessment Calon Kabeng',

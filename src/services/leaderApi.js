@@ -38,6 +38,7 @@ export const leaderApi = {
   participantDelete: (id) => op('participant_delete', { id }),
   employees: (q) => op('employees', { q }),
   assign: (payload) => op('assign', payload),
+  kiosk: (programId, regenerate = false) => op('kiosk', { program_id: programId, regenerate }),
   attempts: (filters) => op('attempts', filters),
   attemptDetail: (id) => op('attempt_detail', { id }),
   attemptUpdate: (id, data) => op('attempt_update', { id, data }),

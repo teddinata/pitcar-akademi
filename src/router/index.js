@@ -16,6 +16,13 @@ const routes = [
     meta: { bare: true }
   },
   {
+    // QR kelas: peserta memindai QR program, memilih nama, lalu membuka tesnya (tanpa login)
+    path: '/kelas-kabeng/:kiosk',
+    name: 'LeaderKiosk',
+    component: () => import('../views/leader/LeaderKiosk.vue'),
+    meta: { bare: true }
+  },
+  {
     path: '',
     redirect: '/dashboard/lms',
     meta: { requiresAuth: true }

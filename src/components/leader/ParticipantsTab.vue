@@ -31,7 +31,10 @@
       <section>
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h3 class="u-display text-xl font-extrabold">Penugasan ({{ filtered.length }})</h3>
-          <button type="button" class="u-btn u-btn-merah" :disabled="!participants.length || !program.topics.length" @click="assignOpen = true"><PaperAirplaneIcon class="h-5 w-5" aria-hidden="true" />Bagikan soal</button>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="u-btn" @click="kioskOpen = true"><QrCodeIcon class="h-5 w-5" aria-hidden="true" />QR kelas</button>
+            <button type="button" class="u-btn u-btn-merah" :disabled="!participants.length || !program.topics.length" @click="assignOpen = true"><PaperAirplaneIcon class="h-5 w-5" aria-hidden="true" />Bagikan soal</button>
+          </div>
         </div>
         <div class="mt-3 grid gap-3 sm:grid-cols-3">
           <div><label for="af-topic" class="sr-only">Materi</label><select id="af-topic" v-model="f.topic" class="u-input"><option value="">Semua materi</option><option v-for="t in program.topics" :key="t.id" :value="t.id">{{ t.name }}</option></select></div>
@@ -96,6 +99,7 @@
     </LDialog>
     <ConfirmDialog :open="!!pDelete" title="Hapus peserta?" :message="`${pDelete?.name} akan dihapus. Bila sudah punya penugasan, peserta hanya dinonaktifkan.`" confirm-label="Hapus" :busy="saving" @cancel="pDelete = null" @confirm="doParticipantDelete" />
 
+    <KioskDialog :open="kioskOpen" :program="program" @close="kioskOpen = false; load(true)" />
     <AssignDialog :open="assignOpen" :program="program" :participants="participants" @close="assignOpen = false" @done="load(true)" />
     <AttemptDialog :attempt-id="detailId" @close="detailId = null" />
 
@@ -117,13 +121,14 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { notify } from './notice'
-import { ClipboardDocumentIcon, PaperAirplaneIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { ClipboardDocumentIcon, PaperAirplaneIcon, PencilSquareIcon, PlusIcon, QrCodeIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { leaderApi } from '../../services/leaderApi'
 import LDialog from './LDialog.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import ErrorState from './ErrorState.vue'
 import LChip from './LChip.vue'
 import AssignDialog from './AssignDialog.vue'
+import KioskDialog from './KioskDialog.vue'
 import AttemptDialog from './AttemptDialog.vue'
 import { ATTEMPT_STATE, KIND_LABEL, RESULT_STATUS, copyText, fmtScore, timeNote, utcToWibInput, wibInputToUtc } from '../../utils/leader'
 
@@ -143,6 +148,7 @@ const error = ref('')
 const saving = ref(false)
 const f = reactive({ topic: '', participant: '', state: '' })
 const assignOpen = ref(false)
+const kioskOpen = ref(false)
 const detailId = ref(null)
 const act = ref(null)
 

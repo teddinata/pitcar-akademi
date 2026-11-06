@@ -93,3 +93,15 @@ export const copyText = async (text) => {
 }
 
 export const fmtScore = (v) => (v === null || v === undefined || v === false ? '-' : Number(v).toFixed(Number.isInteger(Number(v)) ? 0 : 1))
+
+/**
+ * Pilih database sesi (tanpa login) untuk halaman publik. Odoo menjawab /web/login?db=
+ * dengan pengalihan yang di produksi mengarah ke http:// (diblokir browser); cookie sesi
+ * sudah tersimpan dari respons pengalihan itu, jadi pengalihannya tidak diikuti.
+ */
+export const pilihDb = async (db) => {
+  if (!db) return
+  try {
+    await fetch(`/web/login?db=${encodeURIComponent(db)}`, { credentials: 'include', redirect: 'manual' })
+  } catch { /* cookie tetap tersimpan; panggilan berikutnya yang menentukan */ }
+}
