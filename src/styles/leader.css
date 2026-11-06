@@ -1,0 +1,47 @@
+/* Assessment Calon Kabeng (kelola): tambahan kecil di atas exam.css & asesmen.css. */
+.ujian .u-btn-ghost { background: transparent; border-color: transparent; box-shadow: none; }
+.ujian .u-btn-ghost:hover:not(:disabled) { background: #fffbe0; border-color: var(--ink); }
+.ujian .u-btn-bahaya { color: var(--merah); }
+.ujian .u-btn-kecil { min-height: 44px; padding: .4rem .8rem; font-size: .85rem; }
+.ujian .u-help { margin-top: .3rem; font-size: .78rem; line-height: 1.4; color: var(--ink-soft); }
+.ujian .u-notice { border: 2px solid var(--ink); border-radius: 10px; background: #fff6bf; padding: .55rem .75rem; font-size: .82rem; font-weight: 700; }
+.ujian .u-chip-abu { background: #ececec; }
+
+/* Dialog di-teleport ke body: bawa variabel & gaya .ujian, tanpa kertas kotak. */
+.ujian.l-dialog { min-height: 0; background-color: var(--paper); background-image: none; }
+
+/* Tarikan pilihan (radio) sebagai tombol */
+.ujian .u-pilih { display: flex; min-height: 44px; flex: 1; align-items: center; justify-content: center; cursor: pointer;
+  border: 2px solid var(--ink); border-radius: 10px; font-weight: 800; font-size: .9rem; background: var(--paper); }
+.ujian .u-pilih.is-on { background: var(--ink); color: #fff; box-shadow: 3px 3px 0 var(--merah); }
+
+/* Sel rekap */
+.ujian .l-cell { display: inline-flex; min-width: 72px; flex-direction: column; align-items: center; padding: .25rem .5rem;
+  border: 2px solid var(--ink); border-radius: 8px; }
+.ujian .l-cell.t-green { background: #d9f2e3; }
+.ujian .l-cell.t-amber { background: #fff6bf; }
+.ujian .l-cell.t-red { background: #ffd6d6; }
+.ujian .l-cell.t-gray { background: #f1f1f1; }
+
+@media print {
+  body * { visibility: hidden; }
+  #leader-recap, #leader-recap * { visibility: visible; }
+  #leader-recap { position: absolute; left: 0; top: 0; width: 100%; }
+  #leader-recap .print-title { display: block !important; margin-bottom: 12px; }
+  #leader-recap .print-title h1 { font-size: 16pt; font-weight: 800; }
+  #leader-recap .print-title p { font-size: 9pt; color: #555; }
+  #leader-recap table { font-size: 9pt; width: 100%; }
+  #leader-recap .u-table th { position: static; }
+  @page { size: A4 landscape; margin: 12mm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+.ujian .l-bg-green { background: #d9f2e3; }
+.ujian .l-bg-amber { background: #fff6bf; }
+.ujian .l-bg-red { background: #ffd6d6; }
+.ujian .l-bg-gray { background: #f1f1f1; }
+.ujian .u-table tbody th {
+  position: static; padding: .65rem .7rem; text-align: left; font-size: .9rem; font-weight: 800;
+  letter-spacing: 0; text-transform: none; white-space: normal;
+  background: var(--paper); color: var(--ink); border-top: 2px solid var(--ink);
+}

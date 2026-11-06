@@ -5,6 +5,16 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.12.0',
+    date: '2026-11-06',
+    title: 'Assessment Calon Kabeng',
+    items: [
+      { type: 'baru', text: 'Menu baru Asesmen > Assessment Calon Kabeng (admin): kelola program, materi, dan soal pilihan ganda langsung di halaman, termasuk impor/ekspor Excel dan bahan materi.' },
+      { type: 'baru', text: 'Tambah peserta, lalu bagikan soal. Tiap peserta mendapat tautan pribadi yang bisa disalin atau dikirim lewat WhatsApp. Admin bisa memperpanjang masa berlaku, menambah menit, mengakhiri, atau mengulang ujian peserta.' },
+      { type: 'baru', text: 'Peserta mengerjakan ujian lewat tautan pribadi tanpa perlu login. Hasil dan jawaban peserta bisa dilihat admin, dan rekap nilai semua materi bisa dicetak atau disimpan sebagai PDF.' },
+    ],
+  },
+  {
     version: '1.11.0',
     date: '2026-11-05',
     title: 'Ujian lisan dijalankan asesor, lead memilih A–D',

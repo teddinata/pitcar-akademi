@@ -9,6 +9,13 @@ const routes = [
     component: () => import('../views/Login.vue')
   },
   {
+    // Ujian Calon Kepala Bengkel: tautan pribadi bertoken, tanpa login (?db= database Akademi)
+    path: '/ujian-kabeng/:token',
+    name: 'LeaderTake',
+    component: () => import('../views/leader/LeaderTake.vue'),
+    meta: { bare: true }
+  },
+  {
     path: '',
     redirect: '/dashboard/lms',
     meta: { requiresAuth: true }
@@ -186,6 +193,8 @@ const routes = [
   { path: '/dashboard/asesmen/periode/:id', name: 'AsesmenCycle', component: () => import('../views/asesmen/AsesmenCycle.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard/asesmen/rekap', name: 'AsesmenRekap', component: () => import('../views/asesmen/AsesmenRekap.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard/asesmen/rekap/:id', name: 'AsesmenParticipant', component: () => import('../views/asesmen/AsesmenParticipant.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/calon-kabeng', name: 'LeaderOverview', component: () => import('../views/leader/LeaderOverview.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/asesmen/calon-kabeng/materi/:id', name: 'LeaderTopic', component: () => import('../views/leader/LeaderTopic.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard/asesmen/paket', name: 'AsesmenPackage', component: () => import('../views/asesmen/AsesmenPackage.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard/asesmen/soal-lisan', redirect: { path: '/dashboard/asesmen/paket', query: { bagian: 'lisan' } } },
   { path: '/dashboard/asesmen/studi-kasus', redirect: { path: '/dashboard/asesmen/paket', query: { bagian: 'kasus' } } },

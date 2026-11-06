@@ -23,7 +23,7 @@
         >
           {{ item.name }}
         </span>
-        <span v-if="isExpanded && item.badge" class="u-new ml-auto shrink-0" :class="item.badgeTone === 'abu' ? 'is-abu' : ''">{{ item.badge }}</span>
+        <span v-if="isExpanded && item.badge" class="u-new ml-auto shrink-0" :class="item.badgeTone === 'abu' ? 'is-abu' : item.badgeTone === 'hot' ? 'is-hot' : ''">{{ item.badge }}</span>
       </div>
     </a>
   </router-link>

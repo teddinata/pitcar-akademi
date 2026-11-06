@@ -429,7 +429,7 @@
           class="relative flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
           :class="isRouteActive(item.path) ? 'border-red-200 bg-red-50' : ''"
         >
-          <span v-if="item.badge" class="u-new absolute -top-1.5 -right-1 !text-[8px]" :class="item.badgeTone === 'abu' ? 'is-abu' : ''">{{ item.badge }}</span>
+          <span v-if="item.badge" class="u-new absolute -top-1.5 -right-1 !text-[8px]" :class="item.badgeTone === 'abu' ? 'is-abu' : item.badgeTone === 'hot' ? 'is-hot' : ''">{{ item.badge }}</span>
           <div class="w-9 h-9 rounded-full flex items-center justify-center mb-1.5 shadow-sm"
             :class="isRouteActive(item.path) ? 'bg-[#B70000] text-white' : 'bg-red-50 text-[#B70000]'">
             <component :is="item.icon" class="w-4 h-4" />
@@ -544,6 +544,7 @@ import {
   ListBulletIcon,
   DocumentTextIcon,
   Squares2X2Icon,
+  UserGroupIcon,
   CalendarDaysIcon,
   CheckBadgeIcon,
   RectangleGroupIcon,
@@ -657,6 +658,7 @@ const asesmenItems = [
   { name: 'Periode Asesmen', icon: CalendarDaysIcon, path: '/dashboard/asesmen', adminOnly: true, badge: 'NEW', exact: true },
   { name: 'Paket Asesmen', icon: RectangleGroupIcon, path: '/dashboard/asesmen/paket', adminOnly: true, badge: 'NEW' },
   { name: 'Rekap & Validasi', icon: CheckBadgeIcon, path: '/dashboard/asesmen/rekap', adminOnly: true, badge: 'NEW' },
+  { name: 'Assessment Calon Kabeng', icon: UserGroupIcon, path: '/dashboard/asesmen/calon-kabeng', adminOnly: true, badge: 'HOT!', badgeTone: 'hot' },
   { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true, badge: '360°', badgeTone: 'abu' },
 ]
 const filteredAsesmenItems = computed(() => asesmenItems.filter((i) => !i.adminOnly || _isAdmin()))

@@ -67,6 +67,7 @@
   box-shadow: 1.5px 1.5px 0 #141414; transform: rotate(-3deg);
 }
 .u-new.is-abu { background: #ececec; transform: none; box-shadow: none; }
+.u-new.is-hot { background: #e11d1d; color: #fff; border-color: #8f0000; box-shadow: 1.5px 1.5px 0 #8f0000; }
 
 /* Pemutar rekaman + transkrip */
 .ujian .u-audio { width: 100%; height: 44px; }
