@@ -5,7 +5,7 @@
       <div class="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
         <div class="min-w-0 flex-1">
           <p class="truncate text-xs font-bold uppercase tracking-wide text-[color:var(--ink-soft)]">
-            {{ st?.program || 'Assessment Calon Kepala Bengkel' }}
+            {{ st?.program || (academy ? 'Quiz Akademi Pitcar' : 'Assessment Calon Kepala Bengkel') }}
           </p>
           <p class="u-display truncate text-lg font-extrabold leading-tight sm:text-xl">{{ st?.topic || 'Memuat…' }}</p>
         </div>
@@ -211,7 +211,8 @@ const token = String(route.params.token || '')
 const db = String(route.query.db || '')
 const kelas = String(route.query.kelas || '') // dibuka dari QR kelas
 const router = useRouter()
-const keKelas = () => router.push({ path: `/kelas-kabeng/${kelas}`, query: { db } })
+const academy = route.path.startsWith('/quiz/')
+const keKelas = () => router.push({ path: `${academy ? '/kelas' : '/kelas-kabeng'}/${kelas}`, query: { db } })
 
 const loading = ref(true)
 const busy = ref(false)
@@ -355,7 +356,7 @@ const wib = (utc) => new Date(`${utc.replace(' ', 'T')}Z`).toLocaleString('id-ID
 })
 
 onMounted(() => {
-  document.title = 'Assessment Calon Kepala Bengkel'
+  document.title = academy ? 'Quiz Akademi Pitcar' : 'Assessment Calon Kepala Bengkel'
   document.addEventListener('visibilitychange', onVisibility)
   muat()
 })

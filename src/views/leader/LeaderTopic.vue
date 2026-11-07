@@ -2,7 +2,7 @@
 <template>
   <div class="ujian min-h-screen p-4 md:p-6">
     <LNotice />
-    <router-link to="/dashboard/asesmen/calon-kabeng" class="inline-flex min-h-[44px] items-center gap-1 text-sm font-bold hover:underline underline-offset-4"><ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />Assessment Calon Kabeng</router-link>
+    <router-link :to="$route.meta.academy ? '/dashboard/akademi-offline?tab=kurikulum' : '/dashboard/asesmen/calon-kabeng'" class="inline-flex min-h-[44px] items-center gap-1 text-sm font-bold hover:underline underline-offset-4"><ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />{{ $route.meta.academy ? 'Kelas Offline' : 'Assessment Calon Kabeng' }}</router-link>
 
     <div v-if="loading" class="mt-4 space-y-3" aria-busy="true"><div class="u-card h-16 animate-pulse"></div><div class="u-card h-48 animate-pulse"></div></div>
     <ErrorState v-else-if="error" class="mt-4" :message="error" @retry="load" />

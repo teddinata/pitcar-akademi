@@ -659,6 +659,7 @@ const asesmenItems = [
   { name: 'Paket Asesmen', icon: RectangleGroupIcon, path: '/dashboard/asesmen/paket', adminOnly: true, badge: 'NEW' },
   { name: 'Rekap & Validasi', icon: CheckBadgeIcon, path: '/dashboard/asesmen/rekap', adminOnly: true, badge: 'NEW' },
   { name: 'Assessment Calon Kabeng', icon: UserGroupIcon, path: '/dashboard/asesmen/calon-kabeng', adminOnly: true, badge: 'HOT!', badgeTone: 'hot' },
+  { name: 'Kelas Offline', icon: UserGroupIcon, path: '/dashboard/akademi-offline', adminOnly: true, badge: 'NEW' },
   { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true, badge: '360°', badgeTone: 'abu' },
 ]
 const filteredAsesmenItems = computed(() => asesmenItems.filter((i) => !i.adminOnly || _isAdmin()))

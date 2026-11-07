@@ -23,6 +23,27 @@ const routes = [
     meta: { bare: true }
   },
   {
+    // Kelas Offline Akademi: siswa memindai QR kelas, pilih nama + 4 digit WA -> progres & quiz (tanpa login)
+    path: '/kelas/:kiosk',
+    name: 'AcademyStudent',
+    component: () => import('../views/academy/AcademyStudent.vue'),
+    meta: { bare: true }
+  },
+  {
+    // Quiz Kelas Offline: tautan bertoken (halaman sama dengan ujian Calon Kabeng)
+    path: '/quiz/:token',
+    name: 'AcademyQuiz',
+    component: () => import('../views/leader/LeaderTake.vue'),
+    meta: { bare: true }
+  },
+  {
+    // Mentor Kelas Offline: tautan pribadi bertoken untuk menjalankan kelas (tanpa login)
+    path: '/mentor/:token',
+    name: 'AcademyMentor',
+    component: () => import('../views/academy/AcademyMentor.vue'),
+    meta: { bare: true }
+  },
+  {
     path: '',
     redirect: '/dashboard/lms',
     meta: { requiresAuth: true }
@@ -202,6 +223,8 @@ const routes = [
   { path: '/dashboard/asesmen/rekap/:id', name: 'AsesmenParticipant', component: () => import('../views/asesmen/AsesmenParticipant.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard/asesmen/calon-kabeng', name: 'LeaderOverview', component: () => import('../views/leader/LeaderOverview.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard/asesmen/calon-kabeng/materi/:id', name: 'LeaderTopic', component: () => import('../views/leader/LeaderTopic.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/akademi-offline', name: 'AcademyOverview', component: () => import('../views/academy/AcademyOverview.vue'), meta: { requiresAuth: true } },
+  { path: '/dashboard/akademi-offline/materi/:id', name: 'AcademyTopic', component: () => import('../views/leader/LeaderTopic.vue'), meta: { requiresAuth: true, academy: true } },
   { path: '/dashboard/asesmen/paket', name: 'AsesmenPackage', component: () => import('../views/asesmen/AsesmenPackage.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard/asesmen/soal-lisan', redirect: { path: '/dashboard/asesmen/paket', query: { bagian: 'lisan' } } },
   { path: '/dashboard/asesmen/studi-kasus', redirect: { path: '/dashboard/asesmen/paket', query: { bagian: 'kasus' } } },

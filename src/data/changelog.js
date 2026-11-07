@@ -5,6 +5,19 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.14.0',
+    date: '2026-11-08',
+    title: 'Kelas Offline: absen oleh mentor, progres materi, evaluasi',
+    items: [
+      { type: 'baru', text: 'Menu baru Kelas Offline (admin): buat angkatan/periode (mis. 4 bulan), atau salin kurikulum, quiz, bahan, dan mentor dari angkatan sebelumnya.' },
+      { type: 'baru', text: 'Kurikulum, siswa, dan jadwal bisa diisi manual atau diimpor dari Excel/CSV. Kurikulum juga bisa ditempel sebagai teks dari dokumen. Impor ulang memperbarui data yang sudah ada.' },
+      { type: 'baru', text: 'Mentor (nama bebas atau dari karyawan) mendapat tautan pribadi tanpa login. Mulai kelas = absen masuk mentor dan semua siswa tercatat Hadir; mentor cukup menandai yang terlambat, izin, sakit, alpa, atau pulang awal; Selesai = absen pulang.' },
+      { type: 'baru', text: 'Mentor mencentang materi yang disampaikan, memberi nilai praktik 1-4 dan tanda Kompeten, serta catatan per siswa. Siswa yang tidak hadir saat materi diajarkan otomatis tercatat Tertinggal (perlu susulan).' },
+      { type: 'baru', text: 'Ringkasan angkatan untuk manajemen: kurikulum tersampaikan, rata-rata kehadiran, siswa perlu perhatian, sesi yang belum dijalankan atau lupa ditutup, jam mengajar mentor. Ada matriks progres siswa x materi (bisa dicetak) dan evaluasi mingguan dengan rubrik 1-4.' },
+      { type: 'baru', text: 'Siswa memindai QR kelas, memilih nama + 4 digit WhatsApp, lalu melihat progres belajarnya dan mengerjakan quiz yang dikirim. Data siswa tidak terhubung ke akun pengguna.' },
+    ],
+  },
+  {
     version: '1.13.0',
     date: '2026-11-06',
     title: 'QR kelas Assessment Calon Kabeng',

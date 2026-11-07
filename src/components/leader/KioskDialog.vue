@@ -1,14 +1,19 @@
 <!-- QR kelas: satu QR per program. Peserta memindai, memilih nama (+ 4 digit terakhir No. WA), lalu mengerjakan tesnya. -->
 <template>
-  <LDialog :open="open" title="QR kelas" subtitle="Tampilkan di layar kelas. Peserta memindai, memilih nama, lalu langsung mengerjakan tes yang dibagikan." @close="$emit('close')">
+  <LDialog :open="open" title="QR kelas" :subtitle="academy ? 'Tampilkan di layar kelas. Siswa memindai, memilih nama, lalu melihat progres dan mengerjakan quiz yang dikirim.' : 'Tampilkan di layar kelas. Peserta memindai, memilih nama, lalu langsung mengerjakan tes yang dibagikan.'" @close="$emit('close')">
     <div v-if="loading" class="mx-auto aspect-square w-64 animate-pulse rounded-xl bg-[color:var(--grid-bg)]"></div>
     <ErrorState v-else-if="error" :message="error" @retry="load()" />
     <template v-else-if="info">
       <div class="mx-auto w-full max-w-[18rem] rounded-xl border-[2.5px] border-[color:var(--ink)] bg-white p-3">
         <img :src="qr" alt="QR kelas" class="block h-auto w-full" />
       </div>
-      <p class="mt-3 text-center text-sm font-bold">{{ info.open_count }} tes terbuka di program ini</p>
-      <ol class="mt-4 space-y-1 text-sm leading-relaxed">
+      <p class="mt-3 text-center text-sm font-bold">{{ info.open_count }} {{ academy ? 'quiz' : 'tes' }} terbuka di {{ academy ? 'angkatan' : 'program' }} ini</p>
+      <ol v-if="academy" class="mt-4 space-y-1 text-sm leading-relaxed">
+        <li>1. Kirim quiz ke siswa (tab <b>Siswa & Kirim Quiz</b>, tombol <b>Kirim quiz</b>).</li>
+        <li>2. Siswa memindai QR, memilih nama, lalu memasukkan 4 digit terakhir nomor WhatsApp.</li>
+        <li>3. Siswa melihat progres belajarnya dan mengerjakan quiz yang terbuka. Nilai masuk ke tab Nilai Quiz.</li>
+      </ol>
+      <ol v-else class="mt-4 space-y-1 text-sm leading-relaxed">
         <li>1. Bagikan soal dulu ke peserta (tombol <b>Bagikan soal</b>). Hanya peserta dengan tes terbuka yang tampil.</li>
         <li>2. Peserta memindai QR, memilih nama, lalu memasukkan 4 digit terakhir nomor WhatsApp (bila nomornya terisi).</li>
         <li>3. Nilai masuk ke Penugasan dan Rekap Nilai seperti biasa.</li>
@@ -19,7 +24,7 @@
       </div>
     </template>
     <template #footer>
-      <button type="button" class="u-btn" :disabled="!info || busy" @click="regenerate">{{ busy ? 'Membuat…' : 'Buat QR baru' }}</button>
+      <button v-if="!api" type="button" class="u-btn" :disabled="!info || busy" @click="regenerate">{{ busy ? 'Membuat…' : 'Buat QR baru' }}</button>
       <button type="button" class="u-btn u-btn-merah" :disabled="!info" @click="besar = true"><ArrowsPointingOutIcon class="h-5 w-5" aria-hidden="true" />Tampilkan besar</button>
     </template>
   </LDialog>
@@ -30,7 +35,7 @@
     <div v-if="besar" class="ujian fixed inset-0 z-[90] flex flex-col items-center justify-center gap-5 bg-white p-6 text-center" role="dialog" aria-modal="true" aria-label="QR kelas" @keydown.esc="besar = false" tabindex="-1">
       <p class="u-display text-2xl font-extrabold sm:text-4xl">{{ info?.program }}</p>
       <img :src="qr" alt="QR kelas" class="h-auto w-[min(70vh,85vw)] max-w-full" />
-      <p class="text-lg font-bold sm:text-2xl">Pindai, pilih nama Anda, lalu mulai tes.</p>
+      <p class="text-lg font-bold sm:text-2xl">{{ academy ? 'Pindai, pilih nama Anda, lalu lihat progres & quiz.' : 'Pindai, pilih nama Anda, lalu mulai tes.' }}</p>
       <button type="button" class="u-btn" @click="besar = false"><XMarkIcon class="h-5 w-5" aria-hidden="true" />Tutup</button>
     </div>
   </Teleport>
@@ -47,7 +52,7 @@ import LDialog from './LDialog.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import ErrorState from './ErrorState.vue'
 
-const props = defineProps({ open: Boolean, program: Object })
+const props = defineProps({ open: Boolean, program: Object, academy: Boolean, api: { type: Object, default: null } })
 defineEmits(['close'])
 
 const loading = ref(false)
@@ -67,7 +72,7 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    await tampilkan(await leaderApi.kiosk(props.program.id))
+    await tampilkan(await (props.api || leaderApi).kiosk(props.program.id))
   } catch (e) {
     error.value = e.message
   } finally {
