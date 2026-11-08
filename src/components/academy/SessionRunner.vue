@@ -30,6 +30,16 @@
         </div>
       </section>
 
+      <!-- Bahan materi rencana/hari ini -->
+      <section v-if="bahanHariIni.length" class="mt-5">
+        <h3 class="u-display text-xl font-extrabold">Bahan materi</h3>
+        <p class="u-help">PDF/slide untuk materi sesi ini. Yang bertanda khusus pengajar tidak terlihat siswa.</p>
+        <div v-for="t in bahanHariIni" :key="t.id" class="u-card mt-3 p-3 sm:p-4">
+          <p class="font-extrabold">{{ t.code ? `${t.code} · ` : '' }}{{ t.name }}</p>
+          <MaterialList class="mt-2" :materials="t.materials" :download="unduhBahan" show-internal />
+        </div>
+      </section>
+
       <template v-if="d.session.state !== 'planned' && d.session.state !== 'cancelled'">
         <!-- Absen -->
         <section class="mt-5">
@@ -159,6 +169,8 @@ import { CheckIcon, PlayIcon } from '@heroicons/vue/24/outline'
 import LChip from '../leader/LChip.vue'
 import LDialog from '../leader/LDialog.vue'
 import ConfirmDialog from '../leader/ConfirmDialog.vue'
+import MaterialList from './MaterialList.vue'
+import { downloadBase64 } from '../../services/leaderApi'
 import { notify } from '../leader/notice'
 import { ATT_STATUS, SESSION_FLAG, SESSION_STATE, tanggal } from '../../services/academyApi'
 
@@ -179,6 +191,11 @@ const delivered = computed(() => new Set(d.value?.session.delivered_topic_ids ||
 const planned = computed(() => new Set(d.value?.session.planned_topic_ids || []))
 const hitung = computed(() => (d.value?.attendance || []).reduce((acc, a) => { acc[a.status] = (acc[a.status] || 0) + 1; return acc }, {}))
 const hadir = computed(() => (d.value?.attendance || []).filter((a) => a.status === 'present' || a.status === 'late'))
+const bahanHariIni = computed(() => (d.value?.topics || []).filter((t) => t.materials?.length && (planned.value.has(t.id) || delivered.value.has(t.id))))
+const unduhBahan = async (m) => {
+  const f = await props.api.materialDownload(m.id)
+  downloadBase64(f.filename, f.content, f.mimetype)
+}
 const praktik = computed(() => (d.value?.topics || []).filter((t) => t.practice && delivered.value.has(t.id)))
 const perModul = computed(() => (d.value?.topics || []).reduce((acc, t) => {
   const k = t.module_name || 'Materi'

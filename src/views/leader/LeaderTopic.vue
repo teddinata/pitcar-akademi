@@ -332,7 +332,7 @@ const downloadFile = async (m) => {
 }
 const removeMaterial = async (m) => {
   try {
-    await leaderApi.materialDelete(m.id)
+    await leaderApi.materialDelete(m.id, { topic_id: topic.value.id })
     notify.success('Bahan dihapus')
     await load(true)
   } catch (e) { notify.error(e.message) }

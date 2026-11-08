@@ -30,6 +30,18 @@
           <div class="rounded-lg border-2 border-[color:var(--ink)] py-2"><p class="u-display text-lg font-extrabold">{{ t.material_count }}</p><p class="text-[11px] font-bold">bahan</p></div>
         </div>
         <p v-if="t.missing_key" class="u-notice mt-3">Beberapa soal belum punya kunci jawaban. Nilai peserta belum akurat sampai kunci diisi.</p>
+        <div v-if="academy" class="mt-3">
+          <p class="text-xs font-extrabold uppercase tracking-[.06em] text-[color:var(--ink-soft)]">Bahan materi</p>
+          <MaterialList v-if="t.materials?.length" class="mt-1.5" :materials="t.materials" :download="downloadMaterial" show-internal removable @remove="removeDoc($event, { topic_id: t.id })" />
+          <p v-else class="mt-1 text-sm text-[color:var(--ink-soft)]">Belum ada PDF/slide. Siswa bisa membukanya setelah materi ini disampaikan di kelas.</p>
+          <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <label class="u-btn u-btn-kecil cursor-pointer" :class="{ 'opacity-60': uploadingTopic === t.id }">
+              <ArrowUpTrayIcon class="h-4 w-4" aria-hidden="true" />{{ uploadingTopic === t.id ? 'Mengunggah…' : 'Unggah bahan' }}
+              <input type="file" multiple class="sr-only" :disabled="uploadingTopic === t.id" @change="uploadTopic(t, $event)" />
+            </label>
+            <label class="flex min-h-11 items-center gap-2 text-sm"><input v-model="internalFor[t.id]" type="checkbox" class="u-check" />Khusus pengajar</label>
+          </div>
+        </div>
         <div class="mt-3 flex flex-wrap gap-2">
           <router-link :to="topicPath(t)" class="u-btn u-btn-hitam">{{ academy ? 'Quiz & bahan' : 'Buka soal & bahan' }}</router-link>
           <button type="button" class="u-btn u-btn-ghost" @click="openTopic(t)"><PencilSquareIcon class="h-5 w-5" />Ubah</button>
@@ -46,7 +58,7 @@
           <span class="min-w-0 truncate font-bold">{{ d.name }}</span>
           <span class="flex shrink-0 gap-1">
             <button type="button" class="u-btn u-btn-ghost" @click="download(d)"><ArrowDownTrayIcon class="h-5 w-5" />Unduh</button>
-            <button type="button" class="u-btn u-btn-ghost u-btn-bahaya !w-11 !p-0" @click="removeDoc(d)"><TrashIcon class="h-5 w-5" /><span class="sr-only">Hapus</span></button>
+            <button type="button" class="u-btn u-btn-ghost u-btn-bahaya !w-11 !p-0" @click="removeDoc(d, { program_id: program.id })"><TrashIcon class="h-5 w-5" /><span class="sr-only">Hapus</span></button>
           </span>
         </li>
       </ul>
@@ -90,6 +102,7 @@ import { ArrowDownTrayIcon, ArrowUpTrayIcon, PencilSquareIcon, PlusIcon, TrashIc
 import { downloadMaterial, fileToBase64, leaderApi } from '../../services/leaderApi'
 import LDialog from './LDialog.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
+import MaterialList from '../academy/MaterialList.vue'
 import LChip from './LChip.vue'
 import { notify } from './notice'
 
@@ -102,6 +115,8 @@ const saving = ref(false)
 const toDelete = ref(null)
 const uploading = ref(false)
 const docs = ref([])
+const uploadingTopic = ref(null)
+const internalFor = reactive({})
 const BLANK = { id: null, name: '', schedule_label: '', time_limit_minutes: 30, sequence: 10, module_name: '', code: '', week: 0, planned_hours: 0, practice: false }
 const form = reactive({ ...BLANK })
 
@@ -162,13 +177,31 @@ const upload = async (ev) => {
   }
 }
 
+const uploadTopic = async (t, ev) => {
+  const files = [...(ev.target.files || [])]
+  ev.target.value = ''
+  if (!files.length) return
+  uploadingTopic.value = t.id
+  try {
+    for (const file of files) {
+      await leaderApi.materialUpload({ topic_id: t.id, filename: file.name, content: await fileToBase64(file), internal: !!internalFor[t.id] })
+    }
+    notify.success(files.length > 1 ? `${files.length} bahan terunggah` : 'Bahan terunggah')
+    emit('changed')
+  } catch (e) {
+    notify.error(e.message)
+  } finally {
+    uploadingTopic.value = null
+  }
+}
+
 const download = async (d) => {
   try { await downloadMaterial(d) } catch { notify.error('Dokumen belum bisa diunduh. Coba lagi.') }
 }
 
-const removeDoc = async (d) => {
+const removeDoc = async (d, owner) => {
   try {
-    await leaderApi.materialDelete(d.id)
+    await leaderApi.materialDelete(d.id, owner)
     notify.success('Dokumen dihapus')
     emit('changed')
   } catch (e) {

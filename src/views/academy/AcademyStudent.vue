@@ -2,6 +2,7 @@
      belajar dan kerjakan quiz yang terbuka. -->
 <template>
   <div class="ujian min-h-screen">
+    <LNotice />
     <header class="sticky top-0 z-30 border-b-[2.5px] border-[color:var(--ink)] bg-[color:var(--paper)]">
       <div class="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
         <div class="min-w-0 flex-1">
@@ -45,6 +46,17 @@
               </span>
               <span class="u-btn u-btn-merah shrink-0"><PlayIcon class="h-5 w-5" />{{ t.state === 'in_progress' ? 'Lanjut' : 'Mulai' }}</span>
             </button>
+          </div>
+        </div>
+
+        <div class="mt-8">
+          <h2 class="u-display text-xl font-extrabold">Bahan belajar</h2>
+          <p class="u-help">PDF/slide materi yang sudah disampaikan di kelas. Bahan materi berikutnya terbuka setelah diajarkan.</p>
+          <p v-if="!bahan.length" class="u-card mt-3 p-4 text-[15px]">Belum ada bahan yang dibagikan.</p>
+          <div v-for="t in bahan" :key="t.topic_id" class="u-card mt-3 p-3 sm:p-4">
+            <p class="font-extrabold">{{ t.name }}</p>
+            <p v-if="t.module_name" class="text-xs text-[color:var(--ink-soft)]">{{ t.module_name }}</p>
+            <MaterialList class="mt-2" :materials="t.materials" :download="unduhBahan" />
           </div>
         </div>
 
@@ -105,12 +117,16 @@
 import '@fontsource-variable/bricolage-grotesque'
 import '../../styles/exam.css'
 import '../../styles/asesmen.css'
+import '../../styles/leader.css'
 import '../../styles/academy.css'
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ChevronRightIcon, ExclamationTriangleIcon, MagnifyingGlassIcon, PlayIcon } from '@heroicons/vue/24/outline'
 import { pilihDb } from '../../utils/leader'
 import StudentProgress from '../../components/academy/StudentProgress.vue'
+import MaterialList from '../../components/academy/MaterialList.vue'
+import LNotice from '../../components/leader/LNotice.vue'
+import { downloadBase64 } from '../../services/leaderApi'
 
 const route = useRoute()
 const router = useRouter()
@@ -217,6 +233,12 @@ async function konfirmasi() {
   } finally {
     busy.value = false
   }
+}
+
+const bahan = computed(() => (hasil.value?.progress?.topics || []).filter((t) => t.materials?.length))
+async function unduhBahan(m) {
+  const f = await call('material', { participant_id: dipilih.value.id, pin: pin.value, material_id: m.id })
+  downloadBase64(f.filename, f.content, f.mimetype)
 }
 
 const buka = (t) => router.push({ path: `/quiz/${t.token}`, query: { db, kelas: kiosk } })

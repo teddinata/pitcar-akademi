@@ -40,6 +40,7 @@ function client(op) {
     template: (target) => op('academy_template', { target }),
     kiosk: (programId) => op('kiosk', { program_id: programId }),
     mentorHome: () => op('mentor_home'),
+    materialDownload: (id) => op('material_download', { id }),
   }
 }
 

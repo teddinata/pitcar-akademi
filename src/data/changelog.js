@@ -5,6 +5,18 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.15.0',
+    date: '2026-11-09',
+    title: 'Kelas Offline: menu sendiri + bahan materi untuk mentor & siswa',
+    items: [
+      { type: 'ubah', text: 'Kelas Offline pindah dari grup Asesmen ke grup menu sendiri di sidebar (dan di lembar LMS pada ponsel).' },
+      { type: 'baru', text: 'Kartu kurikulum menampilkan PDF/slide tiap materi. Unggah bahan (bisa beberapa file sekaligus), tandai khusus pengajar, buka, atau hapus langsung dari kartu.' },
+      { type: 'baru', text: 'Mentor bisa membuka bahan materi dari tautannya: di sesi kelas (materi rencana & yang disampaikan) dan di beranda (semua materi), termasuk file khusus pengajar.' },
+      { type: 'baru', text: 'Siswa melihat bagian Bahan belajar di halaman QR kelas. Bahan terbuka setelah materinya disampaikan di kelas, juga untuk siswa yang saat itu tidak hadir. File khusus pengajar tidak pernah tampil.' },
+      { type: 'perbaikan', text: 'Menghapus bahan di angkatan hasil salinan tidak lagi ikut menghapus bahan yang sama di angkatan lama.' },
+    ],
+  },
+  {
     version: '1.14.0',
     date: '2026-11-08',
     title: 'Kelas Offline: absen oleh mentor, progres materi, evaluasi',

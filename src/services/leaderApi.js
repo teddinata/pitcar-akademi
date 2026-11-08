@@ -32,7 +32,7 @@ export const leaderApi = {
   questionsImport: (payload) => op('questions_import', payload, { timeout: UPLOAD_TIMEOUT }),
   questionsExport: (topicId) => op('questions_export', { topic_id: topicId }),
   materialUpload: (payload) => op('material_upload', payload, { timeout: UPLOAD_TIMEOUT }),
-  materialDelete: (id) => op('material_delete', { id }),
+  materialDelete: (id, owner = {}) => op('material_delete', { id, ...owner }),
   participants: (programId, strict = false) => op('participants', { program_id: programId, strict }),
   participantSave: (id, data) => op('participant_save', { id, data }),
   participantDelete: (id) => op('participant_delete', { id }),

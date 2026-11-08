@@ -71,6 +71,31 @@
         </div>
       </div>
 
+      <!-- ── KELAS OFFLINE SECTION (admin) ── -->
+      <div v-if="filteredKelasItems.length" class="mb-4">
+        <div
+          class="flex items-center px-3 h-9 text-xs font-bold uppercase tracking-wider mb-1 cursor-pointer rounded-lg transition-all duration-200"
+          :class="[
+            isExpanded ? 'justify-between' : 'justify-center',
+            showKelas || kelasActive ? 'text-amber-600' : 'text-gray-400 hover:text-amber-600'
+          ]"
+          @click="toggleKelas"
+        >
+          <div class="flex items-center gap-3">
+            <BuildingLibraryIcon class="w-5 h-5 shrink-0" />
+            <span class="transition-all duration-300 overflow-hidden whitespace-nowrap" :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Kelas Offline</span>
+            <span v-if="isExpanded" class="u-new">NEW</span>
+          </div>
+          <ChevronDownIcon v-if="isExpanded" class="w-4 h-4 transition-transform duration-200" :class="showKelas ? 'rotate-180' : ''" />
+        </div>
+        <div v-show="showKelas && isExpanded" class="space-y-0.5 pl-2">
+          <NavItem v-for="item in filteredKelasItems" :key="item.path" :item="item" :is-expanded="isExpanded" active-class="kelas-active" />
+        </div>
+        <div v-show="!isExpanded" class="space-y-0.5">
+          <NavItem v-for="item in filteredKelasItems" :key="`kl-${item.path}`" :item="item" :is-expanded="false" active-class="kelas-active" />
+        </div>
+      </div>
+
       <!-- ── KELOLA SECTION (admin) ── -->
       <div v-if="filteredKelolaItems.length" class="mb-4">
         <div
@@ -438,6 +463,26 @@
         </button>
       </div>
 
+      <!-- Kelas Offline (admin) -->
+      <template v-if="filteredKelasItems.length">
+        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">Kelas Offline <span class="u-new">NEW</span></h3>
+        <div class="grid grid-cols-4 gap-2 mb-4">
+          <button
+            v-for="item in filteredKelasItems"
+            :key="item.path"
+            @click="navigateAndClose(item.path, 'lms')"
+            class="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
+            :class="route.path.startsWith(item.path) ? 'border-amber-200 bg-amber-50' : ''"
+          >
+            <div class="w-9 h-9 rounded-full flex items-center justify-center mb-1.5 shadow-sm"
+              :class="route.path.startsWith(item.path) ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-600'">
+              <component :is="item.icon" class="w-4 h-4" />
+            </div>
+            <span class="text-[9px] font-bold text-gray-700 leading-snug">{{ item.name }}</span>
+          </button>
+        </div>
+      </template>
+
       <!-- Admin section -->
       <template v-if="authStore.user?.is_admin">
         <div class="h-px bg-gray-100 mb-3"></div>
@@ -548,6 +593,7 @@ import {
   CalendarDaysIcon,
   CheckBadgeIcon,
   RectangleGroupIcon,
+  BuildingLibraryIcon,
 } from '@heroicons/vue/24/outline'
 import NavItem from './NavItem.vue'
 import ChangelogModal from './ChangelogModal.vue'
@@ -659,13 +705,20 @@ const asesmenItems = [
   { name: 'Paket Asesmen', icon: RectangleGroupIcon, path: '/dashboard/asesmen/paket', adminOnly: true, badge: 'NEW' },
   { name: 'Rekap & Validasi', icon: CheckBadgeIcon, path: '/dashboard/asesmen/rekap', adminOnly: true, badge: 'NEW' },
   { name: 'Assessment Calon Kabeng', icon: UserGroupIcon, path: '/dashboard/asesmen/calon-kabeng', adminOnly: true, badge: 'HOT!', badgeTone: 'hot' },
-  { name: 'Kelas Offline', icon: UserGroupIcon, path: '/dashboard/akademi-offline', adminOnly: true, badge: 'NEW' },
   { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true, badge: '360°', badgeTone: 'abu' },
 ]
 const filteredAsesmenItems = computed(() => asesmenItems.filter((i) => !i.adminOnly || _isAdmin()))
 const showAsesmen = ref(true)
 const toggleAsesmen = () => { if (isExpanded.value) showAsesmen.value = !showAsesmen.value }
 const asesmenActive = computed(() => route.path.startsWith('/dashboard/asesmen') || route.path.startsWith('/dashboard/lms/my-competency') || route.path.startsWith('/dashboard/lms/competency-map'))
+// Grup Kelas Offline: siswa akademi tatap muka, terpisah dari Asesmen.
+const kelasItems = [
+  { name: 'Angkatan & Kelas', icon: BuildingLibraryIcon, path: '/dashboard/akademi-offline', adminOnly: true },
+]
+const filteredKelasItems = computed(() => kelasItems.filter((i) => !i.adminOnly || _isAdmin()))
+const showKelas = ref(true)
+const toggleKelas = () => { if (isExpanded.value) showKelas.value = !showKelas.value }
+const kelasActive = computed(() => route.path.startsWith('/dashboard/akademi-offline'))
 const kelolaItems = [
   { name: 'Modul & Section', icon: PuzzlePieceIcon, path: '/dashboard/lms/modules', adminOnly: true },
   { name: 'Kategori', icon: TagIcon, path: '/dashboard/lms/categories', adminOnly: true },
@@ -729,7 +782,7 @@ const closeAllMobileSheets = () => {
 
 const isRouteActive = (path) => route.path === path
 
-const isLmsRoute = computed(() => route.path.startsWith('/dashboard/lms') || route.path.startsWith('/dashboard/asesmen'))
+const isLmsRoute = computed(() => route.path.startsWith('/dashboard/lms') || route.path.startsWith('/dashboard/asesmen') || route.path.startsWith('/dashboard/akademi-offline'))
 
 const kelolaRoutePrefixes = ['/dashboard/quiz/program', '/dashboard/quiz/manage', '/dashboard/quiz/admin']
 const isKelolaRoute = computed(() => kelolaRoutePrefixes.some(p => route.path.startsWith(p)))
@@ -778,6 +831,11 @@ onUnmounted(() => document.removeEventListener('click', closeDropdown))
 .lms-active {
   background: linear-gradient(to right, #eff6ff, #dbeafe);
   border: 1px solid rgba(37, 99, 235, 0.15);
+}
+
+.kelas-active {
+  background: linear-gradient(to right, #fffbeb, #fef3c7);
+  border: 1px solid rgba(217, 119, 6, 0.2);
 }
 
 .journey-active {

@@ -54,6 +54,21 @@
           </div>
         </section>
 
+        <section v-if="bahanProgram.length" class="mt-6">
+          <h2 class="u-display text-xl font-extrabold">Bahan materi</h2>
+          <p class="u-help">Semua PDF/slide kurikulum, termasuk yang khusus pengajar. Ketuk materi untuk melihat bahannya.</p>
+          <div v-for="p in bahanProgram" :key="p.id" class="mt-3">
+            <p v-if="multi" class="text-xs font-extrabold uppercase tracking-[.06em] text-[color:var(--ink-soft)]">{{ p.name }}</p>
+            <details v-for="t in p.topics" :key="t.id" class="u-card mt-2 p-3">
+              <summary class="flex min-h-11 cursor-pointer items-center gap-2 font-bold">
+                <span class="min-w-0 flex-1">{{ t.code ? `${t.code} · ` : '' }}{{ t.name }}</span>
+                <span class="u-chip u-chip-abu !py-0">{{ t.materials.length }} file</span>
+              </summary>
+              <MaterialList class="mt-2" :materials="t.materials" :download="unduhBahan" show-internal />
+            </details>
+          </div>
+        </section>
+
         <section v-if="home.upcoming.length" class="mt-6">
           <h2 class="u-display text-xl font-extrabold">7 hari ke depan</h2>
           <ul class="mt-3 space-y-3"><li v-for="s in home.upcoming" :key="s.id"><SessionCard :s="s" :show-program="multi" @open="bukaSesi(s.id)" /></li></ul>
@@ -78,6 +93,8 @@ import { mentorClient, tanggal } from '../../services/academyApi'
 import { pilihDb } from '../../utils/leader'
 import LNotice from '../../components/leader/LNotice.vue'
 import KioskDialog from '../../components/leader/KioskDialog.vue'
+import MaterialList from '../../components/academy/MaterialList.vue'
+import { downloadBase64 } from '../../services/leaderApi'
 import SessionCard from '../../components/academy/SessionCard.vue'
 import SessionRunner from '../../components/academy/SessionRunner.vue'
 
@@ -94,6 +111,13 @@ const sesiId = ref(Number(route.query.sesi) || null)
 const berubah = ref(false)
 const kioskProgram = ref(null)
 const multi = computed(() => (home.value?.programs.length || 0) > 1)
+const bahanProgram = computed(() => (home.value?.programs || [])
+  .map((p) => ({ ...p, topics: p.topics.filter((t) => t.materials?.length) }))
+  .filter((p) => p.topics.length))
+const unduhBahan = async (m) => {
+  const f = await api.materialDownload(m.id)
+  downloadBase64(f.filename, f.content, f.mimetype)
+}
 
 async function siapkanDb() {
   if (!db) return true
