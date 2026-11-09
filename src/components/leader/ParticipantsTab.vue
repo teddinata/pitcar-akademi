@@ -141,7 +141,7 @@ import AttemptDialog from './AttemptDialog.vue'
 import { ATTEMPT_STATE, KIND_LABEL, RESULT_STATUS, copyText, fmtScore, timeNote, utcToWibInput, wibInputToUtc } from '../../utils/leader'
 
 const props = defineProps({ program: Object, config: Object, academy: Boolean })
-defineEmits(['import', 'open-student'])
+const emit = defineEmits(['import', 'open-student', 'changed'])
 const STUDENT_STATE = { active: 'Aktif', leave: 'Cuti', graduated: 'Lulus', dropped: 'Keluar' }
 
 const ACT_TITLE = { extend: 'Perpanjang masa berlaku', minutes: 'Tambah menit', finish: 'Akhiri sekarang', reset: 'Ulang dari awal', delete: 'Hapus penugasan' }
@@ -223,6 +223,7 @@ const saveParticipant = async () => {
     await leaderApi.participantSave(id, { ...data, program_id: props.program.id })
     pDialog.value = false
     notify.success(props.academy ? 'Siswa tersimpan' : 'Peserta tersimpan')
+    emit('changed')
     await load(true)
   } catch (e) {
     notify.error(e.message)
@@ -237,6 +238,7 @@ const doParticipantDelete = async () => {
     await leaderApi.participantDelete(pDelete.value.id)
     pDelete.value = null
     notify.success('Peserta dihapus')
+    emit('changed')
     await load(true)
   } catch (e) {
     notify.error(e.message)

@@ -58,7 +58,7 @@
       <OverviewTab v-if="tab === 'ringkasan'" ref="tabRef" :program="program" class="mt-5" @open-session="bukaSesi" @open-student="bukaSiswa" />
       <ScheduleTab v-else-if="tab === 'jadwal'" ref="tabRef" :program="program" class="mt-5" @open-session="bukaSesi" @import="impor = 'schedule'" @changed="load(true)" />
       <MaterialsTab v-else-if="tab === 'kurikulum'" :program="program" :config="config" academy class="mt-5" @changed="load(true)" @import="impor = 'curriculum'" />
-      <ParticipantsTab v-else-if="tab === 'siswa'" ref="tabRef" :program="program" :config="config" academy class="mt-5" @import="impor = 'students'" @open-student="bukaSiswa" />
+      <ParticipantsTab v-else-if="tab === 'siswa'" ref="tabRef" :program="program" :config="config" academy class="mt-5" @import="impor = 'students'" @open-student="bukaSiswa" @changed="load(true)" />
       <ProgressTab v-else-if="tab === 'progres'" :program="program" class="mt-5" @open-student="bukaSiswa" />
       <EvaluationTab v-else-if="tab === 'evaluasi'" :program="program" class="mt-5" />
       <RecapTab v-else-if="tab === 'quiz'" :program="program" class="mt-5" />

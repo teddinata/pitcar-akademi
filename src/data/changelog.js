@@ -5,6 +5,14 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.15.1',
+    date: '2026-11-09',
+    title: 'Kelas Offline: jumlah siswa langsung diperbarui',
+    items: [
+      { type: 'perbaikan', text: 'Jumlah siswa di kartu angkatan langsung berubah setelah siswa ditambah, diubah, atau dihapus (sebelumnya tetap 0 sampai halaman dimuat ulang).' },
+    ],
+  },
+  {
     version: '1.15.0',
     date: '2026-11-09',
     title: 'Kelas Offline: menu sendiri + bahan materi untuk mentor & siswa',
