@@ -36,7 +36,7 @@
         <p class="u-help">PDF/slide untuk materi sesi ini. Yang bertanda khusus pengajar tidak terlihat siswa.</p>
         <div v-for="t in bahanHariIni" :key="t.id" class="u-card mt-3 p-3 sm:p-4">
           <p class="font-extrabold">{{ t.code ? `${t.code} · ` : '' }}{{ t.name }}</p>
-          <MaterialList class="mt-2" :materials="t.materials" :download="unduhBahan" show-internal />
+          <MaterialList class="mt-2" :materials="t.materials" :download="unduhBahan" :fetch-blob="bahanBlob" show-internal />
         </div>
       </section>
 
@@ -170,7 +170,7 @@ import LChip from '../leader/LChip.vue'
 import LDialog from '../leader/LDialog.vue'
 import ConfirmDialog from '../leader/ConfirmDialog.vue'
 import MaterialList from './MaterialList.vue'
-import { downloadBase64 } from '../../services/leaderApi'
+import { base64ToBlob, downloadBase64 } from '../../services/leaderApi'
 import { notify } from '../leader/notice'
 import { ATT_STATUS, SESSION_FLAG, SESSION_STATE, tanggal } from '../../services/academyApi'
 
@@ -195,6 +195,10 @@ const bahanHariIni = computed(() => (d.value?.topics || []).filter((t) => t.mate
 const unduhBahan = async (m) => {
   const f = await props.api.materialDownload(m.id)
   downloadBase64(f.filename, f.content, f.mimetype)
+}
+const bahanBlob = async (m) => {
+  const f = await props.api.materialDownload(m.id)
+  return base64ToBlob(f.content, f.mimetype)
 }
 const praktik = computed(() => (d.value?.topics || []).filter((t) => t.practice && delivered.value.has(t.id)))
 const perModul = computed(() => (d.value?.topics || []).reduce((acc, t) => {

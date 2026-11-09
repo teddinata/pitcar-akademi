@@ -11,6 +11,53 @@
 
     <div v-if="!program.topics.length" class="u-card mt-4 p-8 text-center font-bold">{{ academy ? 'Kurikulum masih kosong. Impor dari Excel/CSV/teks atau tambah materi satu per satu.' : 'Belum ada materi. Tambah materi pertama, lalu isi soalnya.' }}</div>
 
+    <!-- Kelas Offline: peta minggu (kiri) + kartu materi ringkas minggu terpilih (kanan) -->
+    <div v-else-if="academy" class="mt-4 grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+      <WeekNav v-model="minggu" :weeks="mingguList" :lengkap="lengkap" />
+      <div class="min-w-0 space-y-3">
+        <div>
+          <p class="text-xs font-bold tabular-nums text-[color:var(--ink-soft)]">{{ mingguAktif.week ? `Minggu ${mingguAktif.week}` : 'Tanpa minggu' }} · {{ mingguAktif.topics.length }} materi · {{ jamMinggu }} jam</p>
+          <h4 class="u-display text-xl font-extrabold leading-tight">{{ mingguAktif.module }}</h4>
+        </div>
+        <article v-for="t in mingguAktif.topics" :key="t.id" class="u-card p-4">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-xs font-bold tabular-nums text-[color:var(--ink-soft)]">{{ [t.code, t.planned_hours ? `${t.planned_hours} jam` : ''].filter(Boolean).join(' · ') }}<span v-if="t.practice" class="u-chip u-chip-kuning ml-2 !py-0 !text-[10px]">Praktik</span></p>
+              <router-link :to="topicPath(t)" class="font-bold leading-snug hover:underline underline-offset-4">{{ t.name }}</router-link>
+            </div>
+            <div class="flex gap-1.5">
+              <template v-if="t.question_count">
+                <span class="u-chip !text-[11px]" :class="t.pre_count ? 'u-chip-hijau' : ''">Pre {{ t.pre_count || 0 }}</span>
+                <span class="u-chip !text-[11px]" :class="t.post_count ? 'u-chip-hijau' : ''">Post {{ t.post_count || 0 }}</span>
+              </template>
+              <span v-else class="u-chip !text-[11px]">Tanpa quiz</span>
+            </div>
+          </div>
+          <p v-if="t.missing_key" class="u-notice mt-2">Beberapa soal belum punya kunci jawaban.</p>
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            <button v-for="m in t.materials || []" :key="m.id" type="button"
+              class="inline-flex max-w-full items-center gap-1.5 rounded-lg border-2 border-[color:var(--ink)] bg-white px-2 py-1 text-xs font-semibold hover:bg-[#fffbe0]"
+              :title="`Pratinjau ${m.name}`" @click="pratinjau = { ...m, topic_id: t.id }">
+              <EyeIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" /><span class="truncate">{{ m.name }}</span>
+              <span v-if="m.internal" class="text-[10px] font-extrabold text-[color:var(--merah-tua)]">pengajar</span>
+            </button>
+            <label class="u-btn !min-h-8 !px-3 !text-xs cursor-pointer" :class="{ 'opacity-60': uploadingTopic === t.id }">
+              <ArrowUpTrayIcon class="h-4 w-4" aria-hidden="true" />{{ uploadingTopic === t.id ? 'Mengunggah…' : t.materials?.length ? 'Tambah bahan' : 'Unggah bahan' }}
+              <input type="file" multiple class="sr-only" :disabled="uploadingTopic === t.id" @change="uploadTopic(t, $event)" />
+            </label>
+            <label class="flex items-center gap-1.5 text-xs"><input v-model="internalFor[t.id]" type="checkbox" class="u-check" />Khusus pengajar</label>
+            <span class="ml-auto flex gap-1">
+              <button type="button" class="u-btn !min-h-8 !px-3 !text-xs" @click="$emit('open-quiz', t)">Quiz →</button>
+              <button type="button" class="u-btn !min-h-8 !px-2.5 !text-xs" :aria-label="`Ubah ${t.name}`" @click="openTopic(t)"><PencilSquareIcon class="h-4 w-4" /></button>
+              <button type="button" class="u-btn u-btn-ghost u-btn-bahaya !min-h-8 !px-2.5 !text-xs" :aria-label="`Hapus ${t.name}`" @click="toDelete = t"><TrashIcon class="h-4 w-4" /></button>
+            </span>
+          </div>
+        </article>
+      </div>
+      <FilePreview :open="!!pratinjau" :name="pratinjau?.name || ''" :load="() => fetchMaterialBlob(pratinjau)" removable
+        @close="pratinjau = null" @remove="hapusDariPratinjau" />
+    </div>
+
     <ul v-else class="mt-4 grid gap-4 lg:grid-cols-2">
       <li v-for="(t, i) in program.topics" :key="t.id" class="u-card p-4">
         <div class="flex flex-wrap items-start justify-between gap-3">
@@ -92,14 +139,17 @@
       </template>
     </LDialog>
 
+    <ConfirmDialog :open="!!hapusBahan" title="Hapus bahan?" :message="`&quot;${hapusBahan?.name}&quot; dihapus dari materi ini. Siswa dan mentor tidak bisa membukanya lagi.`" confirm-label="Hapus" @cancel="hapusBahan = null" @confirm="konfirmasiHapusBahan" />
     <ConfirmDialog :open="!!toDelete" title="Hapus materi?" :message="`Materi &quot;${toDelete?.name}&quot; beserta soalnya akan dihapus. Bila sudah ada penugasan, materi hanya diarsipkan.`" confirm-label="Hapus" :busy="saving" @cancel="toDelete = null" @confirm="doDelete" />
   </div>
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
-import { ArrowDownTrayIcon, ArrowUpTrayIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
-import { downloadMaterial, fileToBase64, leaderApi } from '../../services/leaderApi'
+import { computed, reactive, ref, watch } from 'vue'
+import { ArrowDownTrayIcon, ArrowUpTrayIcon, EyeIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { downloadMaterial, fetchMaterialBlob, fileToBase64, leaderApi } from '../../services/leaderApi'
+import WeekNav from '../academy/WeekNav.vue'
+import FilePreview from '../academy/FilePreview.vue'
 import LDialog from './LDialog.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import MaterialList from '../academy/MaterialList.vue'
@@ -107,7 +157,34 @@ import LChip from './LChip.vue'
 import { notify } from './notice'
 
 const props = defineProps({ program: Object, config: Object, academy: Boolean })
-const emit = defineEmits(['changed', 'import'])
+const emit = defineEmits(['changed', 'import', 'open-quiz'])
+
+// Kelas Offline: materi dikelompokkan per minggu.
+const mingguList = computed(() => {
+  const map = new Map()
+  for (const t of props.program.topics) {
+    const w = t.week || 0
+    if (!map.has(w)) map.set(w, { week: w, module: t.module_name || (w ? `Minggu ${w}` : 'Tanpa minggu'), topics: [] })
+    map.get(w).topics.push(t)
+  }
+  return [...map.values()].sort((a, b) => (a.week || 99) - (b.week || 99))
+})
+const minggu = ref(Number(sessionStorage.getItem('akademiMinggu')) || null)
+const mingguAktif = computed(() => mingguList.value.find((w) => w.week === minggu.value) || mingguList.value[0] || { week: 0, module: '', topics: [] })
+watch(minggu, (v) => { try { sessionStorage.setItem('akademiMinggu', v) } catch { /* abaikan */ } })
+const jamMinggu = computed(() => mingguAktif.value.topics.reduce((a, t) => a + (t.planned_hours || 0), 0))
+const lengkap = (w) => w.topics.filter((t) => t.materials?.length && t.question_count).length
+const pratinjau = ref(null)
+const hapusBahan = ref(null)
+function hapusDariPratinjau() {
+  hapusBahan.value = pratinjau.value
+  pratinjau.value = null
+}
+async function konfirmasiHapusBahan() {
+  const m = hapusBahan.value
+  hapusBahan.value = null
+  await removeDoc(m, { topic_id: m.topic_id })
+}
 const topicPath = (t) => `${props.academy ? '/dashboard/akademi-offline' : '/dashboard/asesmen/calon-kabeng'}/materi/${t.id}`
 
 const dialog = ref(false)

@@ -46,6 +46,13 @@ export const leaderApi = {
   attemptFinish: (id) => op('attempt_finish', { id }),
   attemptDelete: (id) => op('attempt_delete', { id }),
   recap: (programId) => op('recap', { program_id: programId }),
+  // Kelas Offline: pre-test/post-test, sesi QR, nilai manual
+  questionsCopySet: (topicId, quizSet, mode = 'append') => op('questions_copy_set', { topic_id: topicId, quiz_set: quizSet, mode }),
+  quizSessionOpen: (topicId, quizSet) => op('quiz_session_open', { topic_id: topicId, quiz_set: quizSet }),
+  quizSessionClose: (topicId) => op('quiz_session_close', { topic_id: topicId }),
+  quizSessionStatus: (topicId) => op('quiz_session_status', { topic_id: topicId }),
+  quizGrid: (programId) => op('quiz_grid', { program_id: programId }),
+  attemptManual: (payload) => op('attempt_manual', payload),
 }
 
 const MIME = {
@@ -82,6 +89,20 @@ export function fileToBase64(file) {
     reader.onerror = () => reject(new Error('File tidak bisa dibaca.'))
     reader.readAsDataURL(file)
   })
+}
+
+/** Ambil file bahan sebagai Blob (pratinjau admin), lewat sesi login. */
+export async function fetchMaterialBlob(material) {
+  const res = await apiClient.get(`/web/v1/leader/material/${material.id}`, { responseType: 'blob', timeout: UPLOAD_TIMEOUT })
+  return res.data
+}
+
+/** Base64 (balasan API mentor/siswa) -> Blob untuk pratinjau. */
+export function base64ToBlob(content, mimetype) {
+  const bin = atob(content || '')
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return new Blob([bytes], { type: mimetype || 'application/octet-stream' })
 }
 
 /** Unduh bahan lewat axios blob supaya header sesi ikut terkirim. */

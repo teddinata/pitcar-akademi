@@ -66,9 +66,23 @@
               <li :class="s.complete ? 'text-[color:var(--hijau)]' : ''">{{ s.complete ? '✓' : '○' }} Semua komponen selesai dinilai</li>
               <li :class="!s.open_flags ? 'text-[color:var(--hijau)]' : ''">{{ !s.open_flags ? '✓' : '○' }} Jawaban lisan bertanda sudah diperiksa{{ s.open_flags ? ` (sisa ${s.open_flags})` : '' }}</li>
             </ul>
+            <div v-if="d.oral?.ai_state === 'done'" class="mt-3 rounded-xl border-2 border-dashed border-[color:var(--ink)] bg-[#fffbe0] p-3 text-sm">
+              <p class="font-extrabold">Periksa dulu sebelum mengesahkan</p>
+              <p class="mt-0.5">Nilai ujian lisan berasal dari AI. Dengarkan rekaman dan cocokkan dengan kutipan AI, terutama soal berikut:</p>
+              <ul class="mt-1.5 flex flex-wrap gap-1.5">
+                <li v-for="l in perluDicek" :key="l.id">
+                  <button type="button" class="u-chip !text-xs" :class="l.reviewed_at ? 'u-chip-hijau' : 'u-chip-merah'" @click="lompatKe(l.id)">
+                    L{{ l.level }} · {{ l.passed ? 'bertanda' : `belum lulus ${num(l.substance)}` }}{{ l.reviewed_at ? ' · diperiksa' : '' }}
+                  </button>
+                </li>
+              </ul>
+              <p class="mt-1.5 text-xs text-[color:var(--ink-soft)]">{{ jumlahDiperiksa }}/{{ d.oral.lines.length }} soal sudah diperiksa asesor. Bila nilai AI kurang tepat, ubah skor aspeknya di soal itu.</p>
+              <label class="mt-2 flex items-start gap-2 font-bold"><input v-model="sudahPeriksa" type="checkbox" class="u-check mt-0.5" />Saya sudah mendengarkan rekaman dan memeriksa penilaian AI</label>
+            </div>
             <div class="mt-3 grid sm:grid-cols-[1fr_auto] gap-2">
               <input v-model="catatanSah" class="u-input" placeholder="Catatan asesor (opsional), mis. rekaman L3 sudah saya dengar" />
-              <button class="u-btn u-btn-merah" :disabled="busy || !s.complete || s.open_flags > 0 || d.cycle.state === 'closed'" @click="sahkan(false)"><CheckBadgeIcon class="w-5 h-5" />Sahkan L{{ s.final_level || '?' }}</button>
+              <button class="u-btn u-btn-merah" :disabled="busy || !s.complete || s.open_flags > 0 || d.cycle.state === 'closed' || (d.oral?.ai_state === 'done' && !sudahPeriksa)"
+                :title="d.oral?.ai_state === 'done' && !sudahPeriksa ? 'Centang konfirmasi pemeriksaan dulu' : undefined" @click="sahkan(false)"><CheckBadgeIcon class="w-5 h-5" />Sahkan L{{ s.final_level || '?' }}</button>
             </div>
           </template>
         </div>
@@ -134,7 +148,7 @@
         </div>
 
         <!-- Tabel skor -->
-        <div v-if="d.oral.ai_state === 'done'" class="overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] shadow-[4px_4px_0_var(--ink)] bg-white mb-5">
+        <div v-if="d.oral.ai_state === 'done'" id="tabel-lisan" class="overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] shadow-[4px_4px_0_var(--ink)] bg-white mb-5">
           <table class="u-table min-w-[54rem]">
             <thead><tr><th>Level</th><th v-for="a in d.rubric.aspects" :key="a.code" class="!whitespace-normal !text-[10px] leading-tight">{{ a.name }}</th><th>Skor</th><th>Substansi</th><th>Skor × bobot</th><th>Hasil</th></tr></thead>
             <tbody>
@@ -150,7 +164,7 @@
               <tr><td :colspan="d.rubric.aspects.length + 3" class="text-right font-extrabold">Skor akhir</td><td class="u-display text-lg font-extrabold">{{ pct(d.oral.percent) }}</td><td><span class="u-level" :class="levelClass(d.oral.ladder)">{{ d.oral.ladder ? `L${d.oral.ladder}` : '<L1' }}</span></td></tr>
             </tbody>
           </table>
-          <p class="px-3 py-2 text-xs border-t-2 border-[color:var(--ink)]">Skor = rata-rata dua penilaian AI terpisah; garis biru = diubah asesor. Lulus bila substansi (4 aspek pertama) ≥ {{ num(d.rubric.pass_substance) }}.</p>
+          <p class="px-3 py-2 text-xs border-t-2 border-[color:var(--ink)]"><b>Skor</b> = rata-rata 6 aspek; <b>Substansi</b> = rata-rata 4 aspek pertama, soal lulus bila ≥ {{ num(d.rubric.pass_substance) }}. Nilai tiap aspek = rata-rata dua penilaian AI terpisah; garis biru = diubah asesor. Klik baris untuk membuka rincian & rekaman soal itu.</p>
         </div>
 
         <!-- Per soal -->
@@ -159,11 +173,29 @@
             <div class="flex flex-wrap items-center gap-2">
               <span class="u-nomor">L{{ l.level }}</span>
               <span class="text-sm font-bold">Bobot {{ l.weight }}%</span>
-              <span v-if="l.score != null" class="u-chip">Skor {{ num(l.score) }} · substansi {{ num(l.substance) }}</span>
               <span v-for="f in l.flags" :key="f.code" class="u-chip u-chip-kuning">{{ f.label }}</span>
               <span v-if="l.reviewed_at" class="u-chip u-chip-hijau">Diperiksa {{ l.reviewed_by }}</span>
             </div>
             <p class="u-display mt-3 text-lg font-bold leading-snug">{{ l.question || 'Soal belum dibuka.' }}</p>
+            <!-- Skor soal & substansi: angka yang sama dengan baris soal ini di tabel Ujian lisan -->
+            <div v-if="l.score != null" class="mt-4 grid gap-3 sm:grid-cols-[auto_auto_minmax(0,1fr)] sm:items-center">
+              <div class="rounded-xl border-[2.5px] border-[color:var(--ink)] bg-white px-4 py-2.5">
+                <p class="text-[11px] font-extrabold uppercase tracking-[.06em]">Skor soal</p>
+                <p class="u-display text-[2.1rem] font-extrabold leading-none tabular-nums">{{ num(l.score) }}<span class="text-base font-bold text-[color:var(--ink-soft)]"> / 5</span></p>
+                <p class="mt-0.5 text-[11px] text-[color:var(--ink-soft)]">rata-rata 6 aspek</p>
+              </div>
+              <div class="rounded-xl border-[2.5px] px-4 py-2.5" :class="l.passed ? 'border-[color:var(--hijau)] bg-[#dcf3e6]' : 'border-[color:var(--merah)] bg-[color:var(--merah-muda)]'">
+                <p class="text-[11px] font-extrabold uppercase tracking-[.06em]">Substansi · syarat lulus {{ num(d.rubric.pass_substance) }}</p>
+                <p class="u-display text-[2.1rem] font-extrabold leading-none tabular-nums">{{ num(l.substance) }}</p>
+                <p class="mt-0.5 text-[11px] font-bold" :class="l.passed ? 'text-[color:var(--hijau)]' : 'text-[color:var(--merah-tua)]'">
+                  {{ l.passed ? 'Lulus soal ini' : `Belum lulus · kurang ${num(d.rubric.pass_substance - l.substance)}` }}</p>
+              </div>
+              <p class="text-xs leading-relaxed text-[color:var(--ink-soft)]">
+                <b class="text-[color:var(--ink)]">Substansi</b> = rata-rata 4 aspek pertama (pemahaman, logika, urutan, ketepatan) dan menentukan lulus soal.
+                Bobot {{ l.weight }}% menyumbang {{ num((l.score * l.weight) / 100, 3) }} ke skor akhir.
+                Angka ini sama dengan <button type="button" class="font-bold text-[color:var(--ink)] underline underline-offset-2" @click="keTabel">baris L{{ l.level }} di tabel Ujian lisan</button>.
+              </p>
+            </div>
             <details v-if="l.key_points" class="mt-2 text-sm">
               <summary class="cursor-pointer font-bold">Kunci jawaban</summary>
               <ul class="mt-1 list-disc pl-5 space-y-0.5"><li v-for="(k, i) in l.key_points.split('\n').filter(Boolean)" :key="i">{{ k }}</li></ul>
@@ -409,6 +441,11 @@ async function run(fn) {
 }
 const periksa = (l, ubah) => run(() => competencyApi.reviewOral(l.id, ubah ? { ...review[l.id].scores } : {}, review[l.id].note))
 const sahkan = (undo) => run(() => competencyApi.validate(d.value.id, catatanSah.value, undo))
+// Periksa dulu sebelum sahkan: soal belum lulus / bertanda, dan konfirmasi asesor.
+const sudahPeriksa = ref(false)
+const perluDicek = computed(() => (d.value?.oral?.lines || []).filter((l) => l.score != null && (!l.passed || l.flags.length)))
+const jumlahDiperiksa = computed(() => (d.value?.oral?.lines || []).filter((l) => l.reviewed_at).length)
+function keTabel() { document.getElementById('tabel-lisan')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
 const nilaiUlangLisan = () => run(() => competencyApi.requeueOral(d.value.oral.id))
 
 // --- Proses AI lisan: progres + muat ulang otomatis --------------------------

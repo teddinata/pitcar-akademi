@@ -15,6 +15,68 @@
           </div>
         </div>
         <div v-if="!participants.length" class="u-card mt-3 p-6 text-center text-sm text-[color:var(--ink-soft)]">{{ academy ? 'Belum ada siswa. Tambah atau impor siswa dulu.' : 'Belum ada peserta. Tambah peserta dulu sebelum membagikan soal.' }}</div>
+        <!-- Kelas Offline: satu baris per siswa dengan kehadiran, progres materi, quiz, perhatian -->
+        <div v-else-if="academy" class="u-card mt-3 overflow-x-auto">
+          <table class="w-full min-w-[900px] text-sm">
+            <thead class="text-left text-xs uppercase tracking-[.06em]">
+              <tr class="border-b-2 border-[color:var(--ink)]">
+                <th class="px-4 py-2.5">Siswa</th><th class="px-4 py-2.5">Kehadiran</th><th class="px-4 py-2.5">Progres materi</th>
+                <th class="px-4 py-2.5">Quiz</th><th class="px-4 py-2.5">Perlu perhatian</th><th class="px-4 py-2.5"><span class="sr-only">Aksi</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="p in participants" :key="p.id" class="border-b border-[color:var(--ink)]/15 align-top last:border-b-0 hover:bg-[#fffbe0]">
+                <td class="px-4 py-3">
+                  <button type="button" class="text-left font-bold hover:underline underline-offset-4" @click="$emit('open-student', p)">{{ p.name }}</button>
+                  <span v-if="p.student_state && p.student_state !== 'active'" class="u-chip u-chip-abu ml-2 !py-0">{{ STUDENT_STATE[p.student_state] }}</span>
+                  <p class="text-xs tabular-nums text-[color:var(--ink-soft)]">{{ [p.phone, p.origin, p.join_date ? `masuk ${p.join_date}` : ''].filter(Boolean).join(' · ') || 'Belum ada detail' }}</p>
+                </td>
+                <td class="px-4 py-3">
+                  <template v-if="prog(p)?.attendance.rate != null">
+                    <p class="text-lg font-extrabold tabular-nums" :class="prog(p).attendance.rate < riskAttendance ? 'text-[color:var(--merah)]' : ''">{{ angka(prog(p).attendance.rate) }}%</p>
+                    <p class="text-xs tabular-nums text-[color:var(--ink-soft)]">{{ hadir(p) }} dari {{ prog(p).attendance.sessions }} sesi · syarat {{ riskAttendance }}%</p>
+                  </template>
+                  <p v-else class="text-xs text-[color:var(--ink-soft)]">Belum ada sesi</p>
+                </td>
+                <td class="px-4 py-3">
+                  <template v-if="disampaikan(p)">
+                    <div class="flex h-2.5 w-40 overflow-hidden rounded-full border-2 border-[color:var(--ink)] bg-white"
+                      :aria-label="`${kompeten(p)} kompeten, ${prog(p).tally.attended} diikuti, ${prog(p).tally.missed} tertinggal`">
+                      <span class="bg-[color:var(--hijau)]" :style="{ width: `${(kompeten(p) / disampaikan(p)) * 100}%` }"></span>
+                      <span class="bg-[color:var(--ink)]" :style="{ width: `${(prog(p).tally.attended / disampaikan(p)) * 100}%` }"></span>
+                      <span class="bg-[color:var(--merah)]" :style="{ width: `${(prog(p).tally.missed / disampaikan(p)) * 100}%` }"></span>
+                    </div>
+                    <p class="mt-1 text-xs tabular-nums">{{ kompeten(p) }} kompeten/praktik · {{ prog(p).tally.attended }} diikuti<template v-if="prog(p).tally.missed"> · <b class="text-[color:var(--merah)]">{{ prog(p).tally.missed }} tertinggal</b></template></p>
+                    <p class="text-xs text-[color:var(--ink-soft)]">dari {{ disampaikan(p) }} materi yang sudah disampaikan</p>
+                  </template>
+                  <p v-else class="text-xs text-[color:var(--ink-soft)]">Belum ada materi disampaikan</p>
+                </td>
+                <td class="px-4 py-3">
+                  <p class="flex flex-wrap items-baseline gap-x-2 tabular-nums">
+                    <span class="text-xs font-bold text-[color:var(--ink-soft)]">Pre</span><b class="text-lg">{{ angka(prog(p)?.pre_avg) }}</b>
+                    <span class="text-xs font-bold text-[color:var(--ink-soft)]">Post</span><b class="text-lg" :class="prog(p)?.quiz_avg != null && prog(p).quiz_avg < (program.pass_score || 80) ? 'text-[color:var(--merah)]' : ''">{{ angka(prog(p)?.quiz_avg) }}</b>
+                    <span v-if="naik(p) != null" class="u-chip !py-0 !text-[11px]" :class="naik(p) >= 0 ? 'u-chip-hijau' : 'u-chip-merah'">{{ naik(p) >= 0 ? '+' : '' }}{{ angka(naik(p)) }}</span>
+                  </p>
+                  <p class="text-xs text-[color:var(--ink-soft)]">rata-rata · {{ prog(p)?.quiz_done || 0 }} post-test selesai</p>
+                </td>
+                <td class="px-4 py-3">
+                  <ul v-if="prog(p)?.risk?.length" class="flex flex-wrap gap-1">
+                    <li v-for="r in prog(p).risk" :key="r" class="u-chip u-chip-merah !text-[11px]">{{ r }}</li>
+                  </ul>
+                  <span v-else-if="prog(p)" class="u-chip u-chip-hijau !text-[11px]">Aman</span>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <span class="inline-flex gap-1">
+                    <button type="button" class="u-btn u-btn-ghost !min-h-9 !px-2.5" :aria-label="`Ubah ${p.name}`" @click="openParticipant(p)"><PencilSquareIcon class="h-4 w-4" /></button>
+                    <button type="button" class="u-btn u-btn-ghost u-btn-bahaya !min-h-9 !px-2.5" :aria-label="`Hapus ${p.name}`" @click="pDelete = p"><TrashIcon class="h-4 w-4" /></button>
+                    <button type="button" class="u-btn !min-h-9 whitespace-nowrap" @click="$emit('open-student', p)">Detail →</button>
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="border-t-2 border-[color:var(--ink)] px-4 py-2 text-xs text-[color:var(--ink-soft)]">Kehadiran dari absen mentor, progres dari jurnal sesi, quiz dari tab Quiz (pre-test mengukur kemampuan awal; lulus dari post-test, termasuk nilai manual).</p>
+        </div>
         <ul v-else class="u-card mt-3 ">
           <li v-for="p in participants" :key="p.id" class="flex flex-wrap items-center justify-between gap-2 border-t-2 border-[color:var(--ink)] px-4 py-3 first:border-t-0">
             <div class="min-w-0">
@@ -30,8 +92,8 @@
         </ul>
       </section>
 
-      <!-- Penugasan -->
-      <section>
+      <!-- Penugasan (Calon Kabeng). Kelas Offline: kirim quiz lewat QR sesi di tab Quiz. -->
+      <section v-if="!academy">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h3 class="u-display text-xl font-extrabold">{{ academy ? 'Quiz terkirim' : 'Penugasan' }} ({{ filtered.length }})</h3>
           <div class="flex flex-wrap gap-2">
@@ -131,6 +193,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { notify } from './notice'
 import { ArrowUpTrayIcon, ClipboardDocumentIcon, PaperAirplaneIcon, PencilSquareIcon, PlusIcon, QrCodeIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { leaderApi } from '../../services/leaderApi'
+import { academyApi } from '../../services/academyApi'
 import LDialog from './LDialog.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import ErrorState from './ErrorState.vue'
@@ -152,6 +215,15 @@ const ACT_TEXT = {
 }
 
 const participants = ref([])
+// Kelas Offline: ringkasan per siswa (kehadiran, progres, quiz, risiko)
+const progres = ref({})
+const prog = (p) => progres.value[p.id]
+const angka = (n) => (n == null ? '–' : Number(n).toLocaleString('id-ID', { maximumFractionDigits: 1 }))
+const riskAttendance = computed(() => props.config?.risk?.attendance ?? 90)
+const hadir = (p) => (prog(p)?.attendance.present || 0) + (prog(p)?.attendance.late || 0)
+const kompeten = (p) => (prog(p)?.tally.competent || 0) + (prog(p)?.tally.practice || 0)
+const disampaikan = (p) => (prog(p) ? kompeten(p) + prog(p).tally.attended + prog(p).tally.missed : 0)
+const naik = (p) => (prog(p)?.pre_avg != null && prog(p)?.quiz_avg != null ? Math.round((prog(p).quiz_avg - prog(p).pre_avg) * 10) / 10 : null)
 const attempts = ref([])
 const loading = ref(true)
 const error = ref('')
@@ -169,9 +241,12 @@ const load = async (silent = false) => {
   if (!silent) loading.value = true
   error.value = ''
   try {
-    const [p, a] = await Promise.all([leaderApi.participants(props.program.id, props.academy), leaderApi.attempts({ program_id: props.program.id })])
+    const [p, a, pr] = await Promise.all([leaderApi.participants(props.program.id, props.academy),
+      props.academy ? Promise.resolve([]) : leaderApi.attempts({ program_id: props.program.id }),
+      props.academy ? academyApi.progress(props.program.id) : Promise.resolve(null)])
     participants.value = p
     attempts.value = a
+    progres.value = pr ? Object.fromEntries(pr.rows.map((r) => [r.participant.id, r])) : {}
   } catch (e) {
     error.value = e.message
   } finally {

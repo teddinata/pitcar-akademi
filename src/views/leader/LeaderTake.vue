@@ -46,7 +46,7 @@
           <p class="text-sm font-bold text-[color:var(--ink-soft)]">Halo,</p>
           <p class="u-display text-2xl font-extrabold sm:text-3xl">{{ st.participant }}</p>
           <p class="mt-3 text-[15px] leading-relaxed">
-            Anda akan mengerjakan <b>{{ st.kind === 'remedial' ? 'tes susulan' : 'assessment' }} materi {{ st.topic }}</b>.
+            Anda akan mengerjakan <b>{{ st.kind === 'remedial' ? 'tes susulan' : st.quiz_set === 'pre' ? 'pre-test' : st.quiz_set === 'post' ? 'post-test' : 'assessment' }} materi {{ st.topic }}</b>.
           </p>
           <dl class="mt-5 grid grid-cols-3 gap-3">
             <div class="rounded-xl border-2 border-[color:var(--ink)] p-3 text-center">

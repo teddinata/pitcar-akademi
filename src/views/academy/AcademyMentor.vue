@@ -64,7 +64,7 @@
                 <span class="min-w-0 flex-1">{{ t.code ? `${t.code} · ` : '' }}{{ t.name }}</span>
                 <span class="u-chip u-chip-abu !py-0">{{ t.materials.length }} file</span>
               </summary>
-              <MaterialList class="mt-2" :materials="t.materials" :download="unduhBahan" show-internal />
+              <MaterialList class="mt-2" :materials="t.materials" :download="unduhBahan" :fetch-blob="bahanBlob" show-internal />
             </details>
           </div>
         </section>
@@ -94,7 +94,7 @@ import { pilihDb } from '../../utils/leader'
 import LNotice from '../../components/leader/LNotice.vue'
 import KioskDialog from '../../components/leader/KioskDialog.vue'
 import MaterialList from '../../components/academy/MaterialList.vue'
-import { downloadBase64 } from '../../services/leaderApi'
+import { base64ToBlob, downloadBase64 } from '../../services/leaderApi'
 import SessionCard from '../../components/academy/SessionCard.vue'
 import SessionRunner from '../../components/academy/SessionRunner.vue'
 
@@ -117,6 +117,10 @@ const bahanProgram = computed(() => (home.value?.programs || [])
 const unduhBahan = async (m) => {
   const f = await api.materialDownload(m.id)
   downloadBase64(f.filename, f.content, f.mimetype)
+}
+const bahanBlob = async (m) => {
+  const f = await api.materialDownload(m.id)
+  return base64ToBlob(f.content, f.mimetype)
 }
 
 async function siapkanDb() {

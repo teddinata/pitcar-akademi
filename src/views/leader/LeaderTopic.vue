@@ -14,7 +14,8 @@
           <h1 class="u-display text-[1.6rem] sm:text-[2rem] font-extrabold leading-tight">{{ topic.name }}</h1>
           <p class="mt-1 text-sm text-[color:var(--ink-soft)]">{{ topic.question_count }} soal · {{ topic.total_points }} poin<template v-if="topic.missing_key"> · <span class="font-bold text-[color:var(--merah-tua)]">ada soal tanpa kunci</span></template></p>
         </div>
-        <button type="button" class="u-btn u-btn-merah" :disabled="!topic.question_count || !participants.length" @click="assignOpen = true"><PaperAirplaneIcon class="h-5 w-5" aria-hidden="true" />Bagikan ke peserta</button>
+        <router-link v-if="isAcademy" :to="`/dashboard/akademi-offline?tab=quiz`" class="u-btn u-btn-merah"><QrCodeIcon class="h-5 w-5" aria-hidden="true" />Buka QR di tab Quiz</router-link>
+        <button v-else type="button" class="u-btn u-btn-merah" :disabled="!topic.question_count || !participants.length" @click="assignOpen = true"><PaperAirplaneIcon class="h-5 w-5" aria-hidden="true" />Bagikan ke peserta</button>
       </div>
       <p v-if="!participants.length" class="u-help">Belum ada peserta di program ini. Tambahkan di tab Peserta & Penugasan.</p>
 
@@ -39,7 +40,16 @@
       <!-- Soal -->
       <section class="mt-6">
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 class="u-display text-xl font-extrabold">Soal ({{ topic.questions.length }})</h2>
+          <div v-if="isAcademy" class="flex flex-wrap items-center gap-3">
+            <h2 class="u-display text-xl font-extrabold">Soal</h2>
+            <div class="inline-flex rounded-xl border-[2.5px] border-[color:var(--ink)] bg-white p-1" role="tablist" aria-label="Set soal">
+              <button v-for="st in SETS" :key="st.v" type="button" role="tab" :aria-selected="setAktif === st.v" class="rounded-lg px-3 py-1.5 text-sm font-bold"
+                :class="setAktif === st.v ? 'bg-[color:var(--ink)] text-white' : 'hover:bg-[#fffbe0]'" @click="pilihSet(st.v)">
+                {{ st.label }} ({{ topic.questions.filter((q) => q.quiz_set === st.v).length }})
+              </button>
+            </div>
+          </div>
+          <h2 v-else class="u-display text-xl font-extrabold">Soal ({{ topic.questions.length }})</h2>
           <div class="flex flex-wrap gap-2">
             <button type="button" class="u-btn" @click="importOpen = true"><ArrowUpTrayIcon class="h-5 w-5" aria-hidden="true" />Impor soal</button>
             <button type="button" class="u-btn" :disabled="!topic.questions.length" @click="exportQuestions"><ArrowDownTrayIcon class="h-5 w-5" aria-hidden="true" />Ekspor</button>
@@ -53,8 +63,8 @@
 
         <div v-if="editing && !editing.id" class="mt-4"><QuestionForm :model="editing" :categories="categories" :saving="savingQ" @save="saveQuestion" @cancel="editing = null" /></div>
 
-        <div v-if="!topic.questions.length && !editing" class="u-card mt-4 p-8 text-center text-sm text-[color:var(--ink-soft)]">Belum ada soal. Tambah satu per satu atau impor dari file Excel.</div>
-        <div v-else-if="!shown.length && topic.questions.length" class="u-card mt-4 p-6 text-center text-sm text-[color:var(--ink-soft)]">Tidak ada soal yang cocok.</div>
+        <div v-if="!daftar.length && !editing" class="u-card mt-4 p-8 text-center text-sm text-[color:var(--ink-soft)]">{{ isAcademy ? `Belum ada soal ${labelSet}. Tambah satu per satu, impor dari file Excel, atau salin dari set lain di tab Quiz.` : 'Belum ada soal. Tambah satu per satu atau impor dari file Excel.' }}</div>
+        <div v-else-if="!shown.length && daftar.length" class="u-card mt-4 p-6 text-center text-sm text-[color:var(--ink-soft)]">Tidak ada soal yang cocok.</div>
         <ol class="mt-4 space-y-3">
           <li v-for="q in shown" :key="q.id">
             <QuestionForm v-if="editing?.id === q.id" :model="editing" :categories="categories" :saving="savingQ" @save="saveQuestion" @cancel="editing = null" />
@@ -104,7 +114,7 @@
     </template>
 
     <!-- Impor soal -->
-    <LDialog :open="importOpen" title="Impor soal" subtitle="Unggah file Excel atau CSV, periksa pratinjau, lalu simpan." wide @close="closeImport">
+    <LDialog :open="importOpen" :title="isAcademy ? `Impor soal ${labelSet}` : 'Impor soal'" :subtitle="isAcademy ? `Soal masuk ke ${labelSet} saja; set lain tidak berubah.` : 'Unggah file Excel atau CSV, periksa pratinjau, lalu simpan.'" wide @close="closeImport">
       <div class="space-y-4">
         <button type="button" class="u-btn" @click="downloadTemplate"><ArrowDownTrayIcon class="h-5 w-5" aria-hidden="true" />Unduh contoh file</button>
         <div>
@@ -122,11 +132,11 @@
       </div>
       <template #footer>
         <button type="button" class="u-btn" @click="closeImport">Batal</button>
-        <button type="button" class="u-btn" :disabled="!preview?.questions.length || importing || !topic.questions.length" @click="replaceAsk = true">Ganti semua soal</button>
+        <button type="button" class="u-btn" :disabled="!preview?.questions.length || importing || !daftar.length" @click="replaceAsk = true">{{ isAcademy ? `Ganti semua soal ${labelSet}` : 'Ganti semua soal' }}</button>
         <button type="button" class="u-btn u-btn-merah" :disabled="!preview?.questions.length || importing" @click="runImport('append')">{{ importing ? 'Menyimpan...' : 'Tambahkan' }}</button>
       </template>
     </LDialog>
-    <ConfirmDialog :open="replaceAsk" title="Ganti semua soal?" :message="`Semua ${topic?.questions.length} soal sekarang akan diganti dengan isi file. Soal yang sudah dijawab peserta tetap tersimpan di riwayat mereka.`" confirm-label="Ganti semua" :busy="importing" @cancel="replaceAsk = false" @confirm="runImport('replace')" />
+    <ConfirmDialog :open="replaceAsk" title="Ganti semua soal?" :message="`Semua ${daftar.length} soal ${isAcademy ? labelSet + ' ' : ''}sekarang akan diganti dengan isi file. Soal yang sudah dijawab peserta tetap tersimpan di riwayat mereka.`" confirm-label="Ganti semua" :busy="importing" @cancel="replaceAsk = false" @confirm="runImport('replace')" />
     <ConfirmDialog :open="!!qDelete" title="Hapus soal?" message="Soal ini akan dihapus dari bank soal." confirm-label="Hapus" :busy="savingQ" @cancel="qDelete = null" @confirm="doDeleteQuestion" />
     <AssignDialog v-if="program" :open="assignOpen" :program="program" :participants="participants" :preset-topic-id="topic?.id" @close="assignOpen = false" />
   </div>
@@ -140,7 +150,7 @@ import '../../styles/leader.css'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { notify } from '../../components/leader/notice'
-import { ArrowDownIcon, ArrowDownTrayIcon, ArrowLeftIcon, ArrowUpIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, PaperAirplaneIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { ArrowDownIcon, ArrowDownTrayIcon, ArrowLeftIcon, ArrowUpIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, PaperAirplaneIcon, PencilSquareIcon, PlusIcon, QrCodeIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { downloadBase64, downloadMaterial, fileToBase64, leaderApi } from '../../services/leaderApi'
 import LNotice from '../../components/leader/LNotice.vue'
 import LDialog from '../../components/leader/LDialog.vue'
@@ -176,11 +186,18 @@ const replaceAsk = ref(false)
 
 const program = computed(() => config.value?.programs.find((p) => p.id === topic.value?.program_id) || null)
 const categories = computed(() => [...new Set((topic.value?.questions || []).map((q) => q.category).filter(Boolean))])
+// Kelas Offline: soal per set Pre-test / Post-test (?set=pre|post dari tab Quiz)
+const SETS = [{ v: 'pre', label: 'Pre-test' }, { v: 'post', label: 'Post-test' }]
+const isAcademy = computed(() => !!route.meta.academy)
+const setAktif = ref(route.query.set === 'post' ? 'post' : 'pre')
+const labelSet = computed(() => (setAktif.value === 'pre' ? 'pre-test' : 'post-test'))
+const pilihSet = (v) => { setAktif.value = v; editing.value = null }
+const daftar = computed(() => (isAcademy.value ? (topic.value?.questions || []).filter((q) => q.quiz_set === setAktif.value) : topic.value?.questions || []))
 const shown = computed(() => {
   const s = search.value.trim().toLowerCase()
-  return topic.value.questions.filter((q) => (!catFilter.value || q.category === catFilter.value) && (!s || q.text.toLowerCase().includes(s)))
+  return daftar.value.filter((q) => (!catFilter.value || q.category === catFilter.value) && (!s || q.text.toLowerCase().includes(s)))
 })
-const numberOf = (q) => topic.value.questions.findIndex((x) => x.id === q.id) + 1
+const numberOf = (q) => daftar.value.findIndex((x) => x.id === q.id) + 1
 
 const INFO_FIELDS = ['name', 'schedule_label', 'description', 'instructions', 'time_limit_minutes', 'pass_score', 'result_visibility']
 
@@ -214,7 +231,8 @@ const saveInfo = async () => {
 }
 
 // Soal
-const blankQuestion = () => ({ id: null, category: '', text: '', options: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }], answer_key: '', explanation: '', points: 1, reference: '', active: true })
+const blankQuestion = () => ({ id: null, category: '', text: '', options: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }], answer_key: '', explanation: '', points: 1, reference: '', active: true,
+  ...(isAcademy.value ? { quiz_set: setAktif.value } : {}) })
 const startNew = () => { editing.value = blankQuestion(); search.value = ''; catFilter.value = '' }
 const startEdit = (q) => { editing.value = { ...q, options: q.options.map((o) => ({ text: o.text })), answer_key: q.answer_key || '' } }
 
@@ -253,14 +271,17 @@ const doDeleteQuestion = async () => {
 }
 
 const canMove = (q, dir) => {
-  const i = topic.value.questions.findIndex((x) => x.id === q.id)
-  return i + dir >= 0 && i + dir < topic.value.questions.length
+  const i = daftar.value.findIndex((x) => x.id === q.id)
+  return i + dir >= 0 && i + dir < daftar.value.length
 }
 const move = async (q, dir) => {
-  const list = [...topic.value.questions]
-  const i = list.findIndex((x) => x.id === q.id)
-  const [item] = list.splice(i, 1)
-  list.splice(i + dir, 0, item)
+  // Urutan diubah di dalam set yang tampil; soal set lain tetap di belakang.
+  const set = [...daftar.value]
+  const i = set.findIndex((x) => x.id === q.id)
+  const [item] = set.splice(i, 1)
+  set.splice(i + dir, 0, item)
+  const ids = new Set(set.map((x) => x.id))
+  const list = [...set, ...topic.value.questions.filter((x) => !ids.has(x.id))]
   const before = topic.value.questions
   topic.value.questions = list
   try {
@@ -291,7 +312,7 @@ const pickImport = async (ev) => {
   previewing.value = true
   try {
     importFile.value = { filename: file.name, content: await fileToBase64(file) }
-    preview.value = await leaderApi.questionsImport({ topic_id: topic.value.id, ...importFile.value, preview: true, mode: 'append' })
+    preview.value = await leaderApi.questionsImport({ topic_id: topic.value.id, ...importFile.value, preview: true, mode: 'append', ...(isAcademy.value ? { quiz_set: setAktif.value } : {}) })
   } catch (e) {
     importFile.value = null
     notify.error(e.message)
@@ -302,8 +323,8 @@ const pickImport = async (ev) => {
 const runImport = async (mode) => {
   importing.value = true
   try {
-    const res = await leaderApi.questionsImport({ topic_id: topic.value.id, ...importFile.value, preview: false, mode })
-    notify.success(`${res.imported} soal masuk`)
+    const res = await leaderApi.questionsImport({ topic_id: topic.value.id, ...importFile.value, preview: false, mode, ...(isAcademy.value ? { quiz_set: setAktif.value } : {}) })
+    notify.success(`${res.imported} soal masuk${isAcademy.value ? ` ke ${labelSet.value}` : ''}`)
     replaceAsk.value = false
     closeImport()
     await load(true)

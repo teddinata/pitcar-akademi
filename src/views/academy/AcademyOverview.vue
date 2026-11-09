@@ -1,5 +1,5 @@
-<!-- Kelas Offline Akademi (admin): CRUD angkatan/periode, lalu ringkasan, jadwal & absen, kurikulum & quiz,
-     siswa & quiz terkirim, progres materi, evaluasi, nilai quiz, mentor. -->
+<!-- Kelas Offline Akademi (admin): CRUD angkatan/periode, lalu ringkasan, jadwal & absen, kurikulum (per minggu,
+     pratinjau bahan), quiz (pre/post, sesi QR, nilai + nilai manual), siswa (ringkasan terpadu), progres, evaluasi, mentor. -->
 <template>
   <div class="ujian min-h-screen p-4 md:p-6">
     <LNotice />
@@ -57,11 +57,11 @@
 
       <OverviewTab v-if="tab === 'ringkasan'" ref="tabRef" :program="program" class="mt-5" @open-session="bukaSesi" @open-student="bukaSiswa" />
       <ScheduleTab v-else-if="tab === 'jadwal'" ref="tabRef" :program="program" class="mt-5" @open-session="bukaSesi" @import="impor = 'schedule'" @changed="load(true)" />
-      <MaterialsTab v-else-if="tab === 'kurikulum'" :program="program" :config="config" academy class="mt-5" @changed="load(true)" @import="impor = 'curriculum'" />
+      <MaterialsTab v-else-if="tab === 'kurikulum'" :program="program" :config="config" academy class="mt-5" @changed="load(true)" @import="impor = 'curriculum'" @open-quiz="bukaQuiz" />
+      <QuizTab v-else-if="tab === 'quiz'" :program="program" :focus-topic="fokusQuiz" class="mt-5" @changed="load(true)" />
       <ParticipantsTab v-else-if="tab === 'siswa'" ref="tabRef" :program="program" :config="config" academy class="mt-5" @import="impor = 'students'" @open-student="bukaSiswa" @changed="load(true)" />
       <ProgressTab v-else-if="tab === 'progres'" :program="program" class="mt-5" @open-student="bukaSiswa" />
       <EvaluationTab v-else-if="tab === 'evaluasi'" :program="program" class="mt-5" />
-      <RecapTab v-else-if="tab === 'quiz'" :program="program" class="mt-5" />
       <MentorsTab v-else :program="program" :programs="config.programs" class="mt-5" @changed="load(true)" />
     </template>
 
@@ -129,7 +129,7 @@ import KioskDialog from '../../components/leader/KioskDialog.vue'
 import { notify } from '../../components/leader/notice'
 import MaterialsTab from '../../components/leader/MaterialsTab.vue'
 import ParticipantsTab from '../../components/leader/ParticipantsTab.vue'
-import RecapTab from '../../components/leader/RecapTab.vue'
+import QuizTab from '../../components/academy/QuizTab.vue'
 import OverviewTab from '../../components/academy/OverviewTab.vue'
 import ScheduleTab from '../../components/academy/ScheduleTab.vue'
 import ProgressTab from '../../components/academy/ProgressTab.vue'
@@ -142,11 +142,11 @@ import ImportDialog from '../../components/academy/ImportDialog.vue'
 const TABS = [
   { value: 'ringkasan', label: 'Ringkasan' },
   { value: 'jadwal', label: 'Jadwal & Absen' },
-  { value: 'kurikulum', label: 'Kurikulum & Quiz' },
-  { value: 'siswa', label: 'Siswa & Kirim Quiz' },
+  { value: 'kurikulum', label: 'Kurikulum' },
+  { value: 'quiz', label: 'Quiz' },
+  { value: 'siswa', label: 'Siswa' },
   { value: 'progres', label: 'Progres Materi' },
   { value: 'evaluasi', label: 'Evaluasi' },
-  { value: 'quiz', label: 'Nilai Quiz' },
   { value: 'mentor', label: 'Mentor' },
 ]
 
@@ -158,6 +158,9 @@ const error = ref('')
 const programId = ref(Number(localStorage.getItem('academyProgramId')) || null)
 const tab = ref(TABS.some((t) => t.value === route.query.tab) ? route.query.tab : 'ringkasan')
 const tabRef = ref(null)
+// "Quiz →" dari kartu kurikulum: buka materi itu di tab Quiz.
+const fokusQuiz = ref(null)
+function bukaQuiz(t) { fokusQuiz.value = t.id; setTab('quiz') }
 const form = ref(null)
 const salinDari = ref(null)
 const saving = ref(false)

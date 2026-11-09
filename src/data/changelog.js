@@ -5,6 +5,20 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.17.0',
+    date: '2026-11-09',
+    title: 'Kelas Offline: kurikulum per minggu, tab Quiz pre/post, scan QR',
+    items: [
+      { type: 'ubah', text: 'Kurikulum ditampilkan per minggu: pilih minggu di kiri, materinya tampil ringkas di kanan, tidak menumpuk lagi.' },
+      { type: 'baru', text: 'Bahan materi (PDF, PPTX, Word, gambar) bisa diklik dan langsung dipratinjau di layar, juga untuk mentor dan siswa.' },
+      { type: 'baru', text: 'Tab Quiz terpisah: pre-test dan post-test punya soal sendiri. Impor 10 soal pre + 10 soal post tetap 10 + 10, dan soal bisa disalin dari set lain.' },
+      { type: 'baru', text: 'Kirim quiz cukup dengan QR sesi: buka QR pre-test/post-test di kelas, siswa scan, pilih nama, isi 4 angka WA, lalu mengerjakan. Daftar siapa yang sudah masuk dan selesai diperbarui otomatis.' },
+      { type: 'baru', text: 'Nilai tes yang terlewat (mis. ujian kertas susulan) bisa diisi manual dengan catatan sumbernya. Nilai manual diberi tanda.' },
+      { type: 'ubah', text: 'Tab Siswa menyatukan kehadiran, progres materi, rata-rata pre/post-test, dan tanda perlu perhatian per siswa.' },
+      { type: 'ubah', text: 'Ujian lisan: skor dan substansi tiap soal ditampilkan besar dan tertaut ke tabel, dan hasil baru bisa disahkan setelah dicentang sudah diperiksa.' },
+    ],
+  },
+  {
     version: '1.16.0',
     date: '2026-11-09',
     title: 'Penilaian lead lebih adil + progres penilaian AI yang jelas',
