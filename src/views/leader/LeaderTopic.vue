@@ -52,7 +52,7 @@
           <h2 v-else class="u-display text-xl font-extrabold">Soal ({{ topic.questions.length }})</h2>
           <div class="flex flex-wrap gap-2">
             <button type="button" class="u-btn" @click="importOpen = true"><ArrowUpTrayIcon class="h-5 w-5" aria-hidden="true" />Impor soal</button>
-            <button type="button" class="u-btn" :disabled="!topic.questions.length" @click="exportQuestions"><ArrowDownTrayIcon class="h-5 w-5" aria-hidden="true" />Ekspor</button>
+            <button type="button" class="u-btn" :disabled="!(isAcademy ? daftar.length : topic.questions.length)" @click="exportQuestions"><ArrowDownTrayIcon class="h-5 w-5" aria-hidden="true" />Ekspor</button>
             <button type="button" class="u-btn u-btn-merah" @click="startNew"><PlusIcon class="h-5 w-5" aria-hidden="true" />Tambah soal</button>
           </div>
         </div>
@@ -301,7 +301,7 @@ const downloadTemplate = async () => {
 }
 const exportQuestions = async () => {
   try {
-    const f = await leaderApi.questionsExport(topic.value.id)
+    const f = await leaderApi.questionsExport(topic.value.id, isAcademy.value ? setAktif.value : null)
     downloadBase64(f.filename, f.content)
   } catch (e) { notify.error(e.message) }
 }

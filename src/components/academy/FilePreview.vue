@@ -57,7 +57,11 @@ const jenis = computed(() => {
   return 'lain'
 })
 
+// Nomor permintaan: file yang selesai dimuat setelah ditutup/diganti tidak menimpa file yang sedang dibuka.
+let req = 0
+
 function bersihkan() {
+  req++
   if (url.value) URL.revokeObjectURL(url.value)
   url.value = ''
   blob.value = null
@@ -68,9 +72,12 @@ function bersihkan() {
 
 async function buka() {
   bersihkan()
+  const my = req
+  const basi = () => my !== req
   loading.value = true
   try {
     const b = await props.load()
+    if (basi()) return
     const tipe = { pdf: 'application/pdf' }[ext.value]
     blob.value = tipe && b.type !== tipe ? new Blob([b], { type: tipe }) : b
     await nextTick()
@@ -78,25 +85,32 @@ async function buka() {
       url.value = URL.createObjectURL(blob.value)
     } else if (jenis.value === 'pptx') {
       const { init } = await import('pptx-preview')
+      if (basi()) return
       // Mode daftar: `height` = tinggi area gulir semua slide, jadi diisi setinggi jendela pratinjau.
       const area = wadah.value.parentElement
       const lebar = Math.min(wadah.value.clientWidth - 24, 960)
       const viewer = init(wadah.value, { width: lebar, height: Math.max(area.clientHeight - 32, Math.round(lebar * 9 / 16)), mode: 'list' })
-      await viewer.preview(await blob.value.arrayBuffer())
+      const buf = await blob.value.arrayBuffer()
+      if (basi()) return
+      await viewer.preview(buf)
       slides.value = viewer.slideCount || wadah.value.querySelectorAll('.pptx-preview-slide-wrapper').length || 0
     } else if (jenis.value === 'docx') {
       const { renderAsync } = await import('docx-preview')
+      if (basi()) return
       await renderAsync(blob.value, wadah.value, null, { inWrapper: true })
     } else {
       error.value = `File .${ext.value} belum bisa ditampilkan di sini. Unduh untuk membukanya.`
     }
   } catch (e) {
+    if (basi()) return
     error.value = jenis.value === 'pptx'
       ? 'Slide ini tidak bisa dirender di browser (mis. animasi/objek khusus). Unduh untuk membuka di PowerPoint, atau unggah versi PDF.'
       : e.message || 'File tidak bisa dibuka.'
   } finally {
-    loading.value = false
-    nextTick(() => tutupBtn.value?.focus())
+    if (!basi()) {
+      loading.value = false
+      nextTick(() => tutupBtn.value?.focus())
+    }
   }
 }
 

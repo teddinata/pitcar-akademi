@@ -531,7 +531,9 @@ async function lampirkan(l, e) {
 }
 const nilaiUlangKasus = (a) => run(() => competencyApi.requeueCase(a.id))
 function ke(id) { if (id) router.push(`/dashboard/asesmen/rekap/${id}`) }
-watch(() => route.params.id, (id) => { if (id) { catatanSah.value = ''; load(id); window.scrollTo({ top: 0 }) } })
+watch(() => route.params.id, (id) => { if (id) { catatanSah.value = ''; sudahPeriksa.value = false; load(id); window.scrollTo({ top: 0 }) } })
+// Konfirmasi periksa berlaku untuk hasil AI yang sedang tampil; dinilai ulang = periksa lagi.
+watch(() => `${d.value?.oral?.id}|${d.value?.oral?.ai_state}`, () => { sudahPeriksa.value = false })
 
 const tour = useTour('asesmen-rincian', () => [
   { element: '[data-tour="det-kesimpulan"]', title: 'Kesimpulan di atas', text: 'Jenjang akhir, nilai tiap komponen, dan poin latihan. Dihitung otomatis dari nilai AI dan lead.', side: 'bottom' },

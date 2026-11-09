@@ -30,7 +30,7 @@ export const leaderApi = {
   questionsReorder: (ids) => op('questions_reorder', { ids }),
   importTemplate: () => op('import_template'),
   questionsImport: (payload) => op('questions_import', payload, { timeout: UPLOAD_TIMEOUT }),
-  questionsExport: (topicId) => op('questions_export', { topic_id: topicId }),
+  questionsExport: (topicId, quizSet) => op('questions_export', { topic_id: topicId, quiz_set: quizSet || undefined }),
   materialUpload: (payload) => op('material_upload', payload, { timeout: UPLOAD_TIMEOUT }),
   materialDelete: (id, owner = {}) => op('material_delete', { id, ...owner }),
   participants: (programId, strict = false) => op('participants', { program_id: programId, strict }),

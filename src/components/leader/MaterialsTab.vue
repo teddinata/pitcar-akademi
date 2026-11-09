@@ -169,8 +169,13 @@ const mingguList = computed(() => {
   }
   return [...map.values()].sort((a, b) => (a.week || 99) - (b.week || 99))
 })
-const minggu = ref(Number(sessionStorage.getItem('akademiMinggu')) || null)
+const mingguTersimpan = () => { try { const v = sessionStorage.getItem('akademiMinggu'); return v === null ? null : Number(v) } catch { return null } }
+const minggu = ref(mingguTersimpan())
 const mingguAktif = computed(() => mingguList.value.find((w) => w.week === minggu.value) || mingguList.value[0] || { week: 0, module: '', topics: [] })
+// Minggu terpilih selalu salah satu minggu angkatan ini, supaya tombolnya tersorot.
+watch(mingguList, (list) => {
+  if (list.length && !list.some((w) => w.week === minggu.value)) minggu.value = list[0].week
+}, { immediate: true })
 watch(minggu, (v) => { try { sessionStorage.setItem('akademiMinggu', v) } catch { /* abaikan */ } })
 const jamMinggu = computed(() => mingguAktif.value.topics.reduce((a, t) => a + (t.planned_hours || 0), 0))
 const lengkap = (w) => w.topics.filter((t) => t.materials?.length && t.question_count).length

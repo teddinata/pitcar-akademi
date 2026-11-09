@@ -179,6 +179,10 @@ const mingguList = computed(() => {
 })
 const minggu = ref(null)
 const mingguAktif = computed(() => mingguList.value.find((w) => w.week === minggu.value) || mingguList.value[0] || { week: 0, topics: [] })
+// Minggu terpilih selalu salah satu minggu yang ada, supaya tombolnya tersorot.
+watch(mingguList, (list) => {
+  if (list.length && !list.some((w) => w.week === minggu.value)) minggu.value = list[0].week
+}, { immediate: true })
 const buka = ref(null)
 const setAktif = ref('pre')
 const setLain = computed(() => (setAktif.value === 'pre' ? 'post' : 'pre'))
@@ -222,7 +226,11 @@ async function salin(t) {
 // nilai
 const grid = ref(null)
 async function muatNilai() {
-  try { grid.value = await leaderApi.quizGrid(props.program.id) } catch (e) { notify.error(e.message) }
+  const pid = props.program.id
+  try {
+    const res = await leaderApi.quizGrid(pid)
+    if (pid === props.program.id) grid.value = res // abaikan jawaban angkatan sebelumnya
+  } catch (e) { notify.error(e.message) }
 }
 const sel = (s, t, set) => grid.value?.cells[`${s.id}-${t.id}`]?.[set] || null
 const nilaiTopik = computed(() => mingguAktif.value.topics.filter((t) => t.question_count))
@@ -275,9 +283,16 @@ watch(sesi, (v, old) => {
   if (v && v.quiz_set) {
     poll = setInterval(async () => {
       if (document.hidden || !sesi.value) return
-      try { sesi.value = { ...sesi.value, ...(await leaderApi.quizSessionStatus(sesi.value.topic_id)) } } catch { /* coba lagi */ }
+      const id = sesi.value.topic_id
+      try {
+        const res = await leaderApi.quizSessionStatus(id)
+        if (sesi.value?.topic_id !== id) return // dialog sudah ditutup / ganti materi saat menunggu
+        if (!res.url) qr.value = '' // sesi ditutup dari tempat lain
+        sesi.value = { ...sesi.value, ...res }
+      } catch { /* coba lagi */ }
     }, 4000)
   } else if (!v && old) muatNilai()
+  if (!v?.url) qr.value = ''
 })
 onBeforeUnmount(() => clearInterval(poll))
 
