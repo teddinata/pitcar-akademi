@@ -83,6 +83,7 @@ export const competencyApi = {
   recapParticipant: (id) => op('terpadu_participant', { id }),
   reviewOral: (lineId, scores, note) => op('oral_review', { line_id: lineId, scores, note }),
   requeueOral: (oralId) => op('oral_requeue', { oral_id: oralId }),
+  oralStatus: (ids) => op('oral_status', { ids }),
   requeueCase: (attemptId) => op('terpadu_requeue_case', { attempt_id: attemptId }),
   retranscribeOral: (recordingId) => op('oral_retranscribe', { recording_id: recordingId }),
   useOralRecording: (recordingId, used) => op('oral_recording_use', { recording_id: recordingId, used }),

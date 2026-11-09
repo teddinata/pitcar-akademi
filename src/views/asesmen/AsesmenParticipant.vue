@@ -97,11 +97,40 @@
           <p class="mt-1 text-sm">Bila ada rekaman bermasalah, tekan <b>Transkripsi ulang</b> atau <b>Lampirkan rekaman</b> di soal itu. Penilaian lalu berjalan lagi otomatis.</p>
           <button class="u-btn u-btn-hitam mt-2 !min-h-9" :disabled="busy" @click="nilaiUlangLisan"><ArrowPathIcon class="w-4 h-4" />Proses ulang</button>
         </div>
-        <div v-else-if="sedangDiproses" class="u-card p-4 mb-3">
-          <p class="font-bold">AI sedang memproses ujian ini: {{ teksProgres }}</p>
-          <p v-if="d.oral.ai_error" class="mt-1 text-sm text-[color:var(--merah-tua)]">Percobaan sebelumnya gagal dan akan diulang otomatis: {{ d.oral.ai_error }}</p>
-          <p class="mt-1 text-xs text-[color:var(--ink-soft)]">Halaman ini memperbarui sendiri tiap 15 detik.</p>
-          <button class="u-btn mt-2 !min-h-9" :disabled="busy" @click="nilaiUlangLisan"><ArrowPathIcon class="w-4 h-4" />Proses sekarang</button>
+        <div v-else-if="sedangDiproses" class="u-card p-4 mb-3" aria-live="polite">
+          <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <p class="font-bold flex items-center gap-2">
+              <span class="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin motion-reduce:animate-none" aria-hidden="true"></span>
+              Penilaian AI berjalan di server
+            </p>
+            <span class="u-chip u-chip-kuning !text-xs">{{ etaTeks }}</span>
+          </div>
+          <div class="mt-3 h-2.5 rounded-full border-2 border-[color:var(--ink)] bg-white overflow-hidden" role="progressbar"
+            :aria-valuenow="persenProses" aria-valuemin="0" aria-valuemax="100" :aria-label="`Progres penilaian AI ${persenProses}%`">
+            <div class="h-full bg-[color:var(--ink)] transition-[width] duration-700" :style="{ width: `${persenProses}%` }"></div>
+          </div>
+          <ol class="mt-3 grid gap-1.5 sm:grid-cols-3 text-sm">
+            <li v-for="t in tahapan" :key="t.key" class="flex items-center gap-2" :class="t.state === 'todo' ? 'text-[color:var(--ink-soft)]' : ''">
+              <CheckCircleIcon v-if="t.state === 'done'" class="w-5 h-5 shrink-0 text-[color:var(--hijau)]" aria-hidden="true" />
+              <span v-else-if="t.state === 'now'" class="h-4 w-4 mx-0.5 shrink-0 rounded-full border-2 border-current border-t-transparent animate-spin motion-reduce:animate-none" aria-hidden="true"></span>
+              <span v-else class="h-4 w-4 mx-0.5 shrink-0 rounded-full border-2 border-[color:var(--ink-soft)]" aria-hidden="true"></span>
+              <span :class="t.state === 'now' ? 'font-bold' : ''">{{ t.label }}</span>
+            </li>
+          </ol>
+          <p class="mt-3 text-sm">
+            <b>Halaman ini boleh ditutup.</b> Proses tetap berjalan dan hasil tersimpan otomatis. Selama Akademi terbuka,
+            penanda di pojok kanan bawah menunjukkan progresnya dan memberi tahu saat selesai.
+          </p>
+          <p class="mt-1 text-xs text-[color:var(--ink-soft)]">
+            {{ sejakTeks }}<template v-if="d.oral.progress?.queue_ahead"> · {{ d.oral.progress.queue_ahead }} ujian lain diproses lebih dulu</template>
+            · estimasi dari lama proses ujian sebelumnya
+          </p>
+          <p v-if="d.oral.ai_error" class="mt-1 text-sm text-[color:var(--merah-tua)]">Percobaan sebelumnya gagal dan diulang otomatis: {{ d.oral.ai_error }}</p>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <button v-if="notifSupported && izinNotif === 'default'" class="u-btn !min-h-9" @click="izinkanNotif"><BellIcon class="w-4 h-4" />Beri tahu saya saat selesai</button>
+            <span v-else-if="izinNotif === 'granted'" class="text-xs font-semibold">Notifikasi browser aktif.</span>
+            <button class="text-xs font-semibold underline underline-offset-2 disabled:opacity-50" :disabled="busy" @click="nilaiUlangLisan">Tampak macet? Proses sekarang</button>
+          </div>
         </div>
 
         <!-- Tabel skor -->
@@ -283,10 +312,11 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowPathIcon, CheckBadgeIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, MicrophoneIcon, PaperClipIcon, PlayCircleIcon,
-  QuestionMarkCircleIcon,
+  QuestionMarkCircleIcon, CheckCircleIcon, BellIcon,
 } from '@heroicons/vue/24/outline'
 import RecordingPlayer from '../../components/asesmen/RecordingPlayer.vue'
 import { competencyApi } from '../../services/competencyApi'
+import { formatEta, mintaIzinNotifikasi, notifSupported, watchOral } from '../../composables/useAiWatch'
 import { useTour } from '../../composables/useTour'
 import { fmtDateTime } from '../../utils/competency'
 import {
@@ -383,17 +413,40 @@ const nilaiUlangLisan = () => run(() => competencyApi.requeueOral(d.value.oral.i
 
 // --- Proses AI lisan: progres + muat ulang otomatis --------------------------
 const sedangDiproses = computed(() => ['queued', 'running'].includes(d.value?.oral?.ai_state))
-const teksProgres = computed(() => {
+const persenProses = computed(() => {
   const p = d.value?.oral?.progress
-  if (!p) return 'menunggu antrean'
-  if (p.transcribed < p.recordings) return `transkripsi ${p.transcribed}/${p.recordings} rekaman`
-  return `penilaian AI ${p.passes}/${p.total_passes}`
+  return p?.steps_total ? Math.round((p.steps_done / p.steps_total) * 100) : 0
 })
+const tahapan = computed(() => {
+  const p = d.value?.oral?.progress || { recordings: 0, transcribed: 0, passes: 0, total_passes: 2 }
+  const transkripSelesai = p.transcribed >= p.recordings
+  const hasil = [{ key: 't', label: `Transkripsi rekaman ${p.transcribed}/${p.recordings}`, state: transkripSelesai ? 'done' : 'now' }]
+  for (let i = 1; i <= p.total_passes; i++) {
+    const selesai = p.passes >= i
+    hasil.push({ key: `p${i}`, label: `Penilaian AI ${i} dari ${p.total_passes}`,
+      state: selesai ? 'done' : transkripSelesai && p.passes === i - 1 ? 'now' : 'todo' })
+  }
+  return hasil
+})
+const sekarang = ref(Date.now())
+const etaTeks = computed(() => formatEta(d.value?.oral?.progress?.eta_seconds))
+const sejakTeks = computed(() => {
+  const q = d.value?.oral?.progress?.queued_at
+  if (!q) return 'Menunggu giliran'
+  const menit = Math.max(0, Math.floor((sekarang.value - new Date(q).getTime()) / 60000))
+  return menit < 1 ? 'Masuk antrean baru saja' : `Berjalan ${menit} menit`
+})
+const izinNotif = ref(notifSupported ? Notification.permission : 'unsupported')
+async function izinkanNotif() { izinNotif.value = await mintaIzinNotifikasi() }
 let timer = null
 watch(sedangDiproses, (on) => {
   clearInterval(timer)
-  timer = on ? setInterval(segarkan, 15000) : null
-})
+  timer = on ? setInterval(() => { sekarang.value = Date.now(); segarkan() }, 15000) : null
+  // Masukkan ke pemantau latar supaya halaman boleh ditinggal.
+  if (on && d.value?.oral?.id) {
+    watchOral({ oral_id: d.value.oral.id, participant_id: d.value.id, name: d.value.employee?.name || '' })
+  }
+}, { immediate: true })
 async function segarkan() {
   if (busy.value || document.hidden || !d.value) return
   try {

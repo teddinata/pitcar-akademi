@@ -27,7 +27,7 @@
         <template v-else-if="data.rater_type === 'self'">Pilih level yang paling menggambarkan cara Anda bekerja <b>saat ini</b>, bukan target. Penilaian diri tidak ikut nilai akhir; dipakai untuk melihat perbedaan cara pandang.</template>
         <template v-else-if="data.require_evidence">
           <p class="font-semibold">Anda ditunjuk sebagai lead penilai.</p>
-          <p class="mt-1">Pilih deskripsi A, B, C, atau D yang paling sesuai dengan kerja yang <b>Anda lihat sendiri</b>, lalu tulis satu contoh kejadian nyata sebagai bukti (wajib). Bila belum pernah melihat pekerjaan di pilar itu, pilih <b>Belum pernah melihat</b>; pilar itu tidak dihitung dari Anda.</p>
+          <p class="mt-1">Pilih deskripsi A, B, C, atau D yang paling sesuai dengan kerja yang <b>Anda lihat sendiri</b>. Urutan pilihan sengaja diacak, jadi baca isinya, jangan pilih dari posisinya. Contoh kejadian nyata boleh ditambahkan (opsional) dan sangat membantu. Bila belum pernah melihat pekerjaan di pilar itu, pilih <b>Belum pernah melihat</b>; pilar itu tidak dihitung dari Anda.</p>
         </template>
         <template v-else>Pilih level yang paling sesuai dengan perilaku yang Anda lihat sendiri. Tambahkan contoh kejadian bila ada; catatan membantu kabeng berkembang.</template>
       </div>
@@ -42,18 +42,18 @@
           <legend class="sr-only">{{ p.name }}</legend>
           <div class="flex items-baseline justify-between gap-2">
             <h2 class="text-base font-bold text-gray-900">{{ p.name }}</h2>
-            <span v-if="levels[p.id]?.level" class="text-xs font-semibold text-gray-500">{{ label(levels[p.id].level) }} dipilih</span>
+            <span v-if="levels[p.id]?.level" class="text-xs font-semibold text-gray-500">{{ label(levels[p.id].level, p.id) }} dipilih</span>
             <span v-else-if="levels[p.id]?.level === 0" class="text-xs font-semibold text-gray-500">Belum pernah melihat</span>
           </div>
           <p class="text-xs text-gray-500 mt-0.5 max-w-prose">{{ p.description }}</p>
           <div class="mt-3 grid sm:grid-cols-2 gap-2">
             <label
-              v-for="n in [1, 2, 3, 4]" :key="n"
+              v-for="n in urutan(p.id)" :key="n"
               class="flex gap-3 rounded-xl border p-3 cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-blue-300"
               :class="levels[p.id]?.level === n ? 'border-gray-900 bg-gray-50 ring-1 ring-gray-900' : 'border-gray-200 hover:border-gray-300 bg-white'"
             >
               <input v-model="levels[p.id].level" type="radio" :name="`pilar-${p.id}`" :value="n" class="sr-only" :disabled="closed" />
-              <span class="grid place-items-center w-9 h-9 rounded-lg text-sm font-bold shrink-0 ring-1" :class="huruf ? 'bg-white text-gray-900 ring-gray-300' : LEVEL_STYLE[n].cell">{{ label(n) }}</span>
+              <span class="grid place-items-center w-9 h-9 rounded-lg text-sm font-bold shrink-0 ring-1" :class="huruf ? 'bg-white text-gray-900 ring-gray-300' : LEVEL_STYLE[n].cell">{{ label(n, p.id) }}</span>
               <span class="text-sm leading-snug text-gray-700">{{ p.rubric[n] }}</span>
             </label>
           </div>
@@ -64,9 +64,8 @@
           <input
             v-if="!(data.require_evidence && levels[p.id].level === 0)"
             v-model="levels[p.id].note" type="text" :disabled="closed"
-            class="mt-3 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-            :class="data.require_evidence && levels[p.id].level && (levels[p.id].note || '').trim().length < 15 ? 'border-amber-400' : 'border-gray-200'"
-            :placeholder="data.rater_type === 'self' ? 'Contoh nyata (opsional)' : data.require_evidence ? 'Bukti: kejadian nyata yang Anda lihat (wajib, mis. kapan & mobil apa)' : 'Contoh kejadian yang Anda lihat (opsional)'"
+            class="mt-3 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+            :placeholder="data.rater_type === 'self' ? 'Contoh nyata (opsional)' : data.require_evidence ? 'Contoh kejadian yang Anda lihat (opsional, mis. kapan & mobil apa)' : 'Contoh kejadian yang Anda lihat (opsional)'"
           />
         </fieldset>
       </template>
@@ -127,9 +126,34 @@ const loading = ref(true)
 const error = ref('')
 const data = ref(null)
 const levels = reactive({})
-// Lead Asesmen Terpadu memilih deskripsi A-D (urut sama dengan L1-L4) tanpa melihat label level.
+// Lead Asesmen Terpadu memilih deskripsi A-D tanpa melihat label level. Urutan deskripsi diacak per
+// pilar supaya level tidak bisa ditebak dari posisi; acakan tetap sama untuk satu penilaian (seed =
+// id penilaian + id pilar), jadi tidak berubah saat dimuat ulang. Yang dikirim tetap levelnya.
 const huruf = computed(() => !!data.value?.require_evidence)
-const label = (n) => (huruf.value ? 'ABCD'[n - 1] : `L${n}`)
+function acak(seed) {
+  let t = seed >>> 0
+  return () => {
+    t = (t + 0x6D2B79F5) >>> 0
+    let r = Math.imul(t ^ (t >>> 15), 1 | t)
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296
+  }
+}
+const urutanCache = {}
+function urutan(pillarId) {
+  if (!huruf.value) return [1, 2, 3, 4]
+  if (!urutanCache[pillarId]) {
+    const rnd = acak(ratingId * 7919 + pillarId * 104729)
+    const arr = [1, 2, 3, 4]
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rnd() * (i + 1))
+      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    }
+    urutanCache[pillarId] = arr
+  }
+  return urutanCache[pillarId]
+}
+const label = (n, pillarId) => (huruf.value ? 'ABCD'[urutan(pillarId).indexOf(n)] : `L${n}`)
 const answers = reactive({})
 const note = ref('')
 const saving = ref(false)
@@ -142,13 +166,12 @@ const terisi = computed(() => (data.value?.rater_type === 'team'
   ? data.value.questions.filter((q) => answers[q.id]).length
   : (data.value?.pillars || []).filter((p) => {
     const row = levels[p.id]
-    if (!data.value.require_evidence) return row?.level
-    return row?.level === 0 || (row?.level && (row.note || '').trim().length >= 15)
+    return row?.level || (data.value.require_evidence && row?.level === 0)
   }).length))
 const lengkap = computed(() => total.value > 0 && terisi.value === total.value)
 const progressLabel = computed(() => (data.value?.rater_type === 'team'
   ? `${terisi.value}/${total.value} pernyataan dijawab`
-  : `${terisi.value}/${total.value} pilar dinilai${data.value?.require_evidence ? ' (dengan bukti)' : ''}`))
+  : `${terisi.value}/${total.value} pilar dinilai`))
 
 function isi(d) {
   data.value = d

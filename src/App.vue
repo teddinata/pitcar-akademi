@@ -5,6 +5,7 @@ import { useAuthStore } from './stores/auth'
 // Pastikan nama import sesuai dengan nama file
 // import PWAUpdatePopUp from './components/PWAUpdatePopUp.vue'  // Sesuaikan dengan nama file yang sebenarnya
 import Sidebar from './components/Sidebar.vue'
+import AiWatchPill from './components/AiWatchPill.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -24,6 +25,7 @@ onMounted(async () => {
     <div class="flex-1 overflow-auto md:pb-0" :class="route.meta.focusMode ? '' : 'pb-16'">
       <router-view></router-view>
     </div>
+    <AiWatchPill />
   </div>
 
   <!-- Non-Autentikasi Layout -->

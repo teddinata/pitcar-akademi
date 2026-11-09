@@ -5,6 +5,17 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.16.0',
+    date: '2026-11-09',
+    title: 'Penilaian lead lebih adil + progres penilaian AI yang jelas',
+    items: [
+      { type: 'ubah', text: 'Penilaian lead: urutan pilihan A–D diacak per pilar, jadi level tidak bisa ditebak dari posisi. Urutan tetap sama selama satu penilaian.' },
+      { type: 'ubah', text: 'Penilaian lead: contoh kejadian/bukti tidak wajib lagi. Cukup pilih deskripsi yang sesuai atau "Belum pernah melihat".' },
+      { type: 'baru', text: 'Ujian lisan: kartu proses AI menampilkan tahapan (transkripsi, penilaian AI 1 dan 2), bilah progres, perkiraan sisa waktu, dan lama berjalan.' },
+      { type: 'baru', text: 'Halaman boleh ditinggal: penanda di pojok kanan bawah memantau penilaian AI di semua halaman Akademi dan memberi tahu saat selesai, termasuk notifikasi browser bila diizinkan.' },
+    ],
+  },
+  {
     version: '1.15.1',
     date: '2026-11-09',
     title: 'Kelas Offline: jumlah siswa langsung diperbarui',
