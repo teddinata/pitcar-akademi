@@ -49,8 +49,11 @@
           <div v-if="!pkg.oral_enabled" class="u-card p-4 mb-4 bg-[#f6f6f6] font-bold">Ujian lisan tidak dipakai di paket ini. Nyalakan di langkah 4.</div>
           <OralBankPanel :profile-id="profileId" :questions="pkg.questions" :rubric="rubric" :level-names="pkg.profile.level_names" @changed="segarkan" />
         </template>
-        <CasesPanel v-else-if="step === 'kasus'" :key="`k-${profileId}`" :profile-id="profileId" :cases="pkg.cases" :pillars="pkg.pillars"
+        <template v-else-if="step === 'kasus'">
+          <PillarCoverage :pillars="pkg.pillars" :cases="pkg.cases.filter((c) => pkg.case_ids.includes(c.id))" :mode="pkg.case_mode" :lead-enabled="pkg.lead_enabled" />
+          <CasesPanel :key="`k-${profileId}`" :profile-id="profileId" :cases="pkg.cases" :pillars="pkg.pillars"
           :level-names="pkg.profile.level_names" :selected="pkg.case_ids" @update:selected="pilihKasus" @changed="segarkan" />
+        </template>
         <template v-else-if="step === 'lead'">
           <div v-if="!pkg.lead_enabled" class="u-card p-4 mb-4 bg-[#f6f6f6] font-bold">Penilaian lead tidak dipakai di paket ini. Nyalakan di langkah 4.</div>
           <LeadRubricPanel :key="`l-${profileId}`" :profile="pkg.profile" :pillars="pkg.pillars" @changed="segarkan" />
@@ -124,6 +127,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import AsesmenNav from '../../components/asesmen/AsesmenNav.vue'
 import OralBankPanel from '../../components/asesmen/OralBankPanel.vue'
+import PillarCoverage from '../../components/asesmen/PillarCoverage.vue'
 import CasesPanel from '../../components/asesmen/CasesPanel.vue'
 import LeadRubricPanel from '../../components/asesmen/LeadRubricPanel.vue'
 import { competencyApi } from '../../services/competencyApi'

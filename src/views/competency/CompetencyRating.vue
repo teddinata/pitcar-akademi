@@ -1,7 +1,10 @@
 <!-- Form penilaian kompetensi: diri sendiri & atasan memilih level L1-L4 per
      pilar dari rubrik; tim (360) menjawab pernyataan perilaku skala 1-5, anonim. -->
 <template>
-  <div class="min-h-screen clay-surface p-4 md:p-6">
+  <!-- Lead Asesmen Terpadu: form tersendiri bergaya lembar ujian, bukti per pilar wajib -->
+  <LeadRatingForm v-if="data?.require_evidence" v-model:note="note" :data="data" :levels="levels" :urutan="urutan" :label="label"
+                  :closed="closed" :saving="saving" :saved="saved" :save-error="saveError" @kirim="kirim" />
+  <div v-else class="min-h-screen clay-surface p-4 md:p-6">
     <div class="flex items-start gap-3 mb-5">
       <router-link to="/dashboard/lms/my-competency" class="mt-1 p-1.5 rounded-lg text-gray-500 hover:bg-white/70 hover:text-gray-800" title="Kembali">
         <ChevronLeftIcon class="w-5 h-5" />
@@ -25,10 +28,6 @@
           <p class="mt-1 text-violet-900">Yang dinilai dan admin hanya melihat rata-rata dari minimal beberapa penilai, tidak pernah jawaban per orang. Jawab berdasarkan pengalaman kerja sehari-hari.</p>
         </template>
         <template v-else-if="data.rater_type === 'self'">Pilih level yang paling menggambarkan cara Anda bekerja <b>saat ini</b>, bukan target. Penilaian diri tidak ikut nilai akhir; dipakai untuk melihat perbedaan cara pandang.</template>
-        <template v-else-if="data.require_evidence">
-          <p class="font-semibold">Anda ditunjuk sebagai lead penilai.</p>
-          <p class="mt-1">Pilih deskripsi A, B, C, atau D yang paling sesuai dengan kerja yang <b>Anda lihat sendiri</b>. Urutan pilihan sengaja diacak, jadi baca isinya, jangan pilih dari posisinya. Contoh kejadian nyata boleh ditambahkan (opsional) dan sangat membantu. Bila belum pernah melihat pekerjaan di pilar itu, pilih <b>Belum pernah melihat</b>; pilar itu tidak dihitung dari Anda.</p>
-        </template>
         <template v-else>Pilih level yang paling sesuai dengan perilaku yang Anda lihat sendiri. Tambahkan contoh kejadian bila ada; catatan membantu kabeng berkembang.</template>
       </div>
 
@@ -57,15 +56,10 @@
               <span class="text-sm leading-snug text-gray-700">{{ p.rubric[n] }}</span>
             </label>
           </div>
-          <label v-if="data.require_evidence" class="mt-2 inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-            <input type="radio" :name="`pilar-${p.id}`" :checked="levels[p.id].level === 0" :disabled="closed" class="text-gray-900" @change="levels[p.id].level = 0" />
-            Belum pernah melihat pekerjaannya di pilar ini
-          </label>
           <input
-            v-if="!(data.require_evidence && levels[p.id].level === 0)"
             v-model="levels[p.id].note" type="text" :disabled="closed"
             class="mt-3 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-            :placeholder="data.rater_type === 'self' ? 'Contoh nyata (opsional)' : data.require_evidence ? 'Contoh kejadian yang Anda lihat (opsional, mis. kapan & mobil apa)' : 'Contoh kejadian yang Anda lihat (opsional)'"
+            :placeholder="data.rater_type === 'self' ? 'Contoh nyata (opsional)' : 'Contoh kejadian yang Anda lihat (opsional)'"
           />
         </fieldset>
       </template>
@@ -113,6 +107,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { CheckCircleIcon, ChevronLeftIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { competencyApi } from '../../services/competencyApi'
+import LeadRatingForm from '../../components/asesmen/LeadRatingForm.vue'
 import { LEVEL_STYLE, RATER_LABEL } from '../../utils/competency'
 
 const LIKERT = [
@@ -166,7 +161,7 @@ const terisi = computed(() => (data.value?.rater_type === 'team'
   ? data.value.questions.filter((q) => answers[q.id]).length
   : (data.value?.pillars || []).filter((p) => {
     const row = levels[p.id]
-    return row?.level || (data.value.require_evidence && row?.level === 0)
+    return row?.level
   }).length))
 const lengkap = computed(() => total.value > 0 && terisi.value === total.value)
 const progressLabel = computed(() => (data.value?.rater_type === 'team'

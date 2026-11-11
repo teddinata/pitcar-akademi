@@ -5,6 +5,20 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.18.0',
+    date: '2026-11-11',
+    title: 'Rincian asesmen lebih ringkas + bukti lead wajib',
+    items: [
+      { type: 'baru', text: 'Rincian peserta asesmen: navigasi lengket Ringkasan / Ujian lisan / Studi kasus / Penilaian lead lengkap dengan levelnya. Kartu komponen di atas bisa diklik untuk loncat ke bagiannya.' },
+      { type: 'baru', text: 'Ringkasan kini memuat poin studi kasus (kekuatan dan yang perlu dikembangkan) dan level lead per pilar, bukan hanya ujian lisan.' },
+      { type: 'ubah', text: 'Soal ujian lisan L1–L4 bisa dibuka-tutup. Soal yang belum lulus atau bertanda terbuka otomatis; yang tertutup tetap menampilkan skor, substansi, aspek, dan poin terlewat.' },
+      { type: 'baru', text: 'Studi kasus menampilkan Kekuatan dan Perlu dikembangkan dari AI, asal tiap level (esai/lisan, pilihan ganda, atau keduanya), dan pilar yang memang tidak diuji kasus itu, bukan tanda "–".' },
+      { type: 'baru', text: 'Paket Asesmen: tabel cakupan pilar menunjukkan pilar mana yang diuji tiap studi kasus dan mana yang hanya dinilai lead, sebelum periode dimulai.' },
+      { type: 'ubah', text: 'Penilaian lead: setiap pilihan A–D wajib disertai satu kejadian nyata. Kotak bukti muncul tepat di bawah pilihan dengan pancingan Kapan / Mobil-WO / Apa yang dia lakukan / Hasilnya, plus daftar periksa per pilar. Bukti yang sama di pilar lain atau menyalin deskripsi ditolak.' },
+      { type: 'perbaikan', text: 'Layar kosong abu-abu di HP saat halaman melompat ke suatu bagian: kerangka aplikasi tidak lagi ikut tergeser.' },
+    ],
+  },
+  {
     version: '1.17.0',
     date: '2026-11-09',
     title: 'Kelas Offline: kurikulum per minggu, tab Quiz pre/post, scan QR',

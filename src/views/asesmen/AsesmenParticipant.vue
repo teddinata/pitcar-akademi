@@ -22,8 +22,20 @@
       <p class="mt-1.5 text-[15px] text-[color:var(--ink-soft)]">{{ [d.employee.job, d.employee.department, d.cycle.name].filter(Boolean).join(' · ') }}</p>
       <p v-if="error" class="mt-3 rounded-lg border-2 border-[color:var(--merah)] bg-[color:var(--merah-muda)] p-2.5 text-sm font-bold text-[color:var(--merah-tua)]" role="alert">{{ error }}</p>
 
+      <!-- Navigasi lengket ke tiap bagian; bagian yang sedang dibaca menyala -->
+      <nav class="sticky top-0 z-30 -mx-4 md:-mx-6 mt-4 px-4 md:px-6 py-2 bg-[color:var(--grid-bg)] border-b-2 border-[color:var(--ink)]" aria-label="Bagian rincian">
+        <div class="flex gap-1.5 overflow-x-auto">
+          <button v-for="b in bagianAda" :key="b.key" type="button" class="u-tab whitespace-nowrap inline-flex items-center gap-2"
+                  :class="aktifBagian === b.key ? 'is-active' : ''" :aria-current="aktifBagian === b.key ? 'true' : undefined" @click="keBagian(b.key)">
+            {{ b.label }}
+            <span v-if="b.comp && s.components?.[b.comp]" class="u-level !min-w-0 !h-6 !px-1.5 !text-xs !text-[color:var(--ink)]" :class="levelClass(komponenLevel(b.comp, s.components[b.comp]))">{{ komponenLabel(b.comp, s.components[b.comp]) }}</span>
+            <span v-if="b.key === 'lisan' && s.open_flags" class="u-chip u-chip-kuning !text-[10px] !py-0">{{ s.open_flags }} tanda</span>
+          </button>
+        </div>
+      </nav>
+
       <!-- Kesimpulan -->
-      <section class="u-card mt-5 overflow-hidden" data-tour="det-kesimpulan">
+      <section id="sec-ringkasan" class="u-card mt-5 overflow-hidden scroll-mt-20" data-tour="det-kesimpulan">
         <div class="grid lg:grid-cols-[17rem_minmax(0,1fr)]">
           <div class="p-5 border-b-[2.5px] lg:border-b-0 lg:border-r-[2.5px] border-[color:var(--ink)]" :class="s.final_level ? `bg-[#fffbe0]` : 'bg-[#f6f6f6]'">
             <p class="text-xs font-extrabold uppercase tracking-[.08em]">Jenjang akhir</p>
@@ -37,19 +49,56 @@
           </div>
           <div class="p-5">
             <div class="grid sm:grid-cols-3 gap-3">
-              <div v-for="(c, key) in s.components" :key="key" class="rounded-xl border-2 border-[color:var(--ink)] p-3">
+              <button v-for="(c, key) in s.components" :key="key" type="button" class="komp rounded-xl border-2 border-[color:var(--ink)] p-3 text-left"
+                      :title="`Buka bagian ${COMPONENT[key].label}`" @click="keBagian(KOMP_BAGIAN[key])">
                 <p class="text-xs font-extrabold">{{ COMPONENT[key].label }} · bobot {{ s.weights[key] }}</p>
                 <p class="mt-1.5 flex items-center gap-2">
                   <span class="u-level" :class="levelClass(komponenLevel(key, c))">{{ komponenLabel(key, c) }}</span>
                   <span v-if="key === 'oral' && c.percent != null" class="u-display text-xl font-extrabold tabular-nums">{{ pct(c.percent) }}</span>
                 </p>
-                <p class="mt-1 text-xs font-bold text-[color:var(--ink-soft)]">{{ c.status === 'done' ? 'Selesai' : COMPONENT_STATUS[c.status] }}{{ c.total && key !== 'oral' ? ` · ${c.done}/${c.total}` : '' }}</p>
-              </div>
+                <p class="mt-1 text-xs font-bold text-[color:var(--ink-soft)] flex items-center gap-1">{{ c.status === 'done' ? 'Selesai' : COMPONENT_STATUS[c.status] }}{{ c.total && key !== 'oral' ? ` · ${c.done}/${c.total}` : '' }}
+                  <span class="flex-1"></span><span class="komp-buka">Lihat rincian <ChevronRightIcon class="w-3.5 h-3.5 inline -mt-0.5" /></span></p>
+              </button>
             </div>
             <p v-if="s.inconsistent" class="mt-3 rounded-lg border-2 border-[color:var(--merah)] bg-[color:var(--merah-muda)] p-2.5 text-sm font-bold text-[color:var(--merah-tua)]">Sumber berbeda {{ num(s.spread, 1) }} level. Dengarkan rekaman soal yang menentukan sebelum mengesahkan.</p>
-            <ul class="mt-4 space-y-1.5 text-[15px]">
-              <li v-for="(t, i) in kesimpulan" :key="i" class="flex gap-2"><span class="mt-2 w-1.5 h-1.5 rounded-full bg-[color:var(--ink)] shrink-0"></span><span v-html="t"></span></li>
-            </ul>
+            <!-- Kesimpulan per sumber -->
+            <div class="mt-4 grid gap-4 xl:grid-cols-3">
+              <div class="min-w-0">
+                <p class="text-xs font-extrabold uppercase tracking-[.06em]">Ujian lisan</p>
+                <ul class="mt-1.5 space-y-1.5 text-[15px]">
+                  <li v-for="(t, i) in kesimpulanLisan" :key="i" class="flex gap-2"><span class="mt-2 w-1.5 h-1.5 rounded-full bg-[color:var(--ink)] shrink-0"></span><span v-html="t"></span></li>
+                  <li v-if="!kesimpulanLisan.length" class="text-sm text-[color:var(--ink-soft)]">Belum dinilai.</li>
+                </ul>
+              </div>
+              <div class="min-w-0 xl:border-l-2 xl:pl-4 border-[color:var(--ink)]">
+                <p class="text-xs font-extrabold uppercase tracking-[.06em]">Studi kasus</p>
+                <div v-for="(c, i) in caseRows" :key="c.attempt.id" class="mt-2 text-sm">
+                  <button type="button" class="flex items-center gap-2 text-left font-extrabold hover:underline underline-offset-2" @click="keKasus(c.attempt)">
+                    <span class="u-level !min-w-0 !h-6 !px-1.5 !text-xs" :class="levelClass(c.avg)">{{ c.avg ? num(c.avg, 1) : '–' }}</span>Kasus {{ i + 1 }} · {{ c.attempt.case.name }}
+                  </button>
+                  <template v-if="c.attempt.ai_result">
+                    <p v-for="(t, j) in (c.attempt.ai_result.kekuatan || []).slice(0, 2)" :key="`k${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--hijau)]">+</span><span class="line-clamp-2" :title="t">{{ t }}</span></p>
+                    <p v-for="(t, j) in (c.attempt.ai_result.area_pengembangan || []).slice(0, 2)" :key="`a${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--merah-tua)]">−</span><span class="line-clamp-2" :title="t">{{ t }}</span></p>
+                  </template>
+                  <p v-else class="mt-1 text-[color:var(--ink-soft)]">{{ CASE_STATE({ state: c.attempt.state, ai_state: c.attempt.ai_state, started: !!c.attempt.started_at }) }}</p>
+                </div>
+                <p v-if="!caseRows.length" class="mt-1.5 text-sm text-[color:var(--ink-soft)]">Tidak ada studi kasus.</p>
+              </div>
+              <div class="min-w-0 xl:border-l-2 xl:pl-4 border-[color:var(--ink)]">
+                <p class="text-xs font-extrabold uppercase tracking-[.06em]">Penilaian lead</p>
+                <ul v-if="leadRingkas.length" class="mt-1.5 space-y-1.5 text-sm">
+                  <li v-for="l in leadRingkas" :key="`${l.rater}-${l.pillar_id}`" class="flex gap-2">
+                    <span class="u-level !min-w-0 !h-6 !px-1.5 !text-xs shrink-0" :class="levelClass(l.level)">L{{ l.level }}</span>
+                    <span class="min-w-0"><b>{{ pilarNama(l.pillar_id) }}</b><span v-if="l.note && !catatanLeadSama" class="block text-[color:var(--ink-soft)] line-clamp-2" :title="l.note">{{ l.note }}</span></span>
+                  </li>
+                </ul>
+                <p v-else class="mt-1.5 text-sm text-[color:var(--ink-soft)]">{{ leadsAll.length ? 'Lead belum menilai.' : 'Tidak ada penilaian lead.' }}</p>
+                <p v-if="catatanLeadSama" class="mt-2 rounded-lg border-2 border-dashed border-[color:var(--merah)] bg-[color:var(--merah-muda)] px-2.5 py-1.5 text-xs font-bold text-[color:var(--merah-tua)]">
+                  Catatan lead sama persis di semua pilar, jadi bukan bukti per pilar. Pertimbangkan minta lead menilai ulang.</p>
+              </div>
+            </div>
+
+
           </div>
         </div>
 
@@ -89,7 +138,7 @@
       </section>
 
       <!-- Ujian lisan -->
-      <section v-if="d.oral" class="mt-8" data-tour="det-lisan">
+      <section v-if="d.oral" id="sec-lisan" class="mt-8 scroll-mt-20" data-tour="det-lisan">
         <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
           <h2 class="u-display text-2xl font-extrabold">Ujian lisan</h2>
           <p class="text-sm font-bold">{{ ORAL_STATE({ ...d.oral, answered: d.oral.lines.filter((l) => l.state === 'done').length, total: d.oral.lines.length }) }}<span v-if="d.oral.ai_at"> · {{ fmtDateTime(d.oral.ai_at) }}</span></p>
@@ -148,7 +197,7 @@
         </div>
 
         <!-- Tabel skor -->
-        <div v-if="d.oral.ai_state === 'done'" id="tabel-lisan" class="overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] shadow-[4px_4px_0_var(--ink)] bg-white mb-5">
+        <div v-if="d.oral.ai_state === 'done'" id="tabel-lisan" class="scroll-mt-20 overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] shadow-[4px_4px_0_var(--ink)] bg-white mb-5">
           <table class="u-table min-w-[54rem]">
             <thead><tr><th>Level</th><th v-for="a in d.rubric.aspects" :key="a.code" class="!whitespace-normal !text-[10px] leading-tight">{{ a.name }}</th><th>Skor</th><th>Substansi</th><th>Skor × bobot</th><th>Hasil</th></tr></thead>
             <tbody>
@@ -167,18 +216,43 @@
           <p class="px-3 py-2 text-xs border-t-2 border-[color:var(--ink)]"><b>Skor</b> = rata-rata 6 aspek; <b>Substansi</b> = rata-rata 4 aspek pertama, soal lulus bila ≥ {{ num(d.rubric.pass_substance) }}. Nilai tiap aspek = rata-rata dua penilaian AI terpisah; garis biru = diubah asesor. Klik baris untuk membuka rincian & rekaman soal itu.</p>
         </div>
 
-        <!-- Per soal -->
-        <article v-for="l in d.oral.lines" :id="`soal-${l.id}`" :key="l.id" class="u-card mb-5 overflow-hidden">
-          <div class="p-4 sm:p-5 border-b-[2.5px] border-[color:var(--ink)]" :class="l.flags.length && !l.reviewed_at ? 'bg-[#fff6bf]' : ''">
+        <!-- Per soal: accordion. Tertutup tetap menampilkan inti (skor, substansi, aspek, poin terlewat);
+             soal yang perlu diperiksa terbuka otomatis. -->
+        <div v-if="d.oral.lines.length > 1" class="mb-2 flex justify-end gap-3 text-sm font-bold">
+          <button type="button" class="underline underline-offset-2" @click="semuaSoal(true)">Buka semua</button>
+          <button type="button" class="underline underline-offset-2" @click="semuaSoal(false)">Tutup semua</button>
+        </div>
+        <article v-for="l in d.oral.lines" :id="`soal-${l.id}`" :key="l.id" class="u-card mb-4 overflow-hidden scroll-mt-20">
+          <div class="p-4 sm:p-5" :class="[l.flags.length && !l.reviewed_at ? 'bg-[#fff6bf]' : '', terbuka(l) ? 'border-b-[2.5px] border-[color:var(--ink)]' : '']">
             <div class="flex flex-wrap items-center gap-2">
               <span class="u-nomor">L{{ l.level }}</span>
               <span class="text-sm font-bold">Bobot {{ l.weight }}%</span>
+              <span v-if="l.score != null" class="u-chip !text-xs" :class="l.passed ? 'u-chip-hijau' : 'u-chip-merah'">{{ l.passed ? 'Lulus' : 'Belum lulus' }}</span>
               <span v-for="f in l.flags" :key="f.code" class="u-chip u-chip-kuning">{{ f.label }}</span>
               <span v-if="l.reviewed_at" class="u-chip u-chip-hijau">Diperiksa {{ l.reviewed_by }}</span>
+              <span class="flex-1"></span>
+              <button type="button" class="u-btn !min-h-9 !px-3" :aria-expanded="terbuka(l)" :aria-controls="`soal-isi-${l.id}`" @click="buka[l.id] = !terbuka(l)">
+                {{ terbuka(l) ? 'Tutup rincian' : 'Lihat rincian' }}<ChevronDownIcon class="w-4 h-4 transition-transform duration-200" :class="terbuka(l) ? 'rotate-180' : ''" />
+              </button>
             </div>
             <p class="u-display mt-3 text-lg font-bold leading-snug">{{ l.question || 'Soal belum dibuka.' }}</p>
+
+            <!-- Inti saat tertutup -->
+            <div v-if="!terbuka(l) && l.score != null" class="mt-3 space-y-2.5">
+              <p class="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+                <span>Skor <b class="u-display text-xl tabular-nums">{{ num(l.score) }}</b><span class="text-[color:var(--ink-soft)]"> / 5</span></span>
+                <span>Substansi <b class="u-display text-xl tabular-nums" :class="l.passed ? 'text-[color:var(--hijau)]' : 'text-[color:var(--merah-tua)]'">{{ num(l.substance) }}</b><span class="text-[color:var(--ink-soft)]"> · syarat {{ num(d.rubric.pass_substance) }}</span></span>
+              </p>
+              <ul class="flex flex-wrap gap-1.5">
+                <li v-for="a in d.rubric.aspects" :key="a.code" class="inline-flex items-center gap-1.5 rounded-lg border-2 border-[color:var(--ink)] bg-white pl-1 pr-2 py-0.5 text-xs font-bold">
+                  <span class="u-skor !min-w-[1.75rem] !h-6 !text-xs" :class="skorClass(l.scores[a.code])">{{ num(l.scores[a.code], 1) }}</span>{{ a.name }}
+                </li>
+              </ul>
+              <p v-if="l.ai?.poin_terlewat?.length" class="text-sm"><b class="text-[color:var(--merah-tua)]">Terlewat:</b> {{ l.ai.poin_terlewat.slice(0, 2).join(' · ') }}<span v-if="l.ai.poin_terlewat.length > 2" class="text-[color:var(--ink-soft)]"> · +{{ l.ai.poin_terlewat.length - 2 }} lagi</span></p>
+            </div>
+
             <!-- Skor soal & substansi: angka yang sama dengan baris soal ini di tabel Ujian lisan -->
-            <div v-if="l.score != null" class="mt-4 grid gap-3 sm:grid-cols-[auto_auto_minmax(0,1fr)] sm:items-center">
+            <div v-if="terbuka(l) && l.score != null" class="mt-4 grid gap-3 sm:grid-cols-[auto_auto_minmax(0,1fr)] sm:items-center">
               <div class="rounded-xl border-[2.5px] border-[color:var(--ink)] bg-white px-4 py-2.5">
                 <p class="text-[11px] font-extrabold uppercase tracking-[.06em]">Skor soal</p>
                 <p class="u-display text-[2.1rem] font-extrabold leading-none tabular-nums">{{ num(l.score) }}<span class="text-base font-bold text-[color:var(--ink-soft)]"> / 5</span></p>
@@ -196,13 +270,13 @@
                 Angka ini sama dengan <button type="button" class="font-bold text-[color:var(--ink)] underline underline-offset-2" @click="keTabel">baris L{{ l.level }} di tabel Ujian lisan</button>.
               </p>
             </div>
-            <details v-if="l.key_points" class="mt-2 text-sm">
+            <details v-if="terbuka(l) && l.key_points" class="mt-2 text-sm">
               <summary class="cursor-pointer font-bold">Kunci jawaban</summary>
               <ul class="mt-1 list-disc pl-5 space-y-0.5"><li v-for="(k, i) in l.key_points.split('\n').filter(Boolean)" :key="i">{{ k }}</li></ul>
             </details>
           </div>
 
-          <div class="grid xl:grid-cols-2">
+          <div v-show="terbuka(l)" :id="`soal-isi-${l.id}`" class="grid xl:grid-cols-2">
             <div class="p-4 sm:p-5 xl:border-r-[2.5px] border-[color:var(--ink)] space-y-3">
               <p class="font-extrabold">Rekaman & transkrip</p>
               <RecordingPlayer :ref="(el) => setPlayer(l.id, el)" :recordings="l.recordings" :editable="bisaUbahRekaman" :busy="busy"
@@ -279,44 +353,15 @@
       </section>
 
       <!-- Studi kasus -->
-      <section v-if="d.cases.length" class="mt-8" data-tour="det-kasus">
+      <section v-if="d.cases.length" id="sec-kasus" class="mt-8 scroll-mt-20" data-tour="det-kasus">
         <h2 class="u-display text-2xl font-extrabold mb-3">Studi kasus</h2>
-        <article v-for="a in d.cases" :key="a.id" class="u-card mb-5 p-4 sm:p-5">
-          <div class="flex flex-wrap items-center gap-2">
-            <p class="u-display text-lg font-extrabold flex-1">{{ a.case.name }}</p>
-            <span class="u-chip">{{ CASE_STATE({ state: a.state, ai_state: a.ai_state, started: !!a.started_at }) }}</span>
-            <button v-if="a.ai_state === 'failed'" class="u-btn !min-h-9" :disabled="busy" @click="nilaiUlangKasus(a)">Nilai ulang</button>
-          </div>
-          <p v-if="a.ai_error" class="mt-2 text-sm font-bold text-[color:var(--merah-tua)]">{{ a.ai_error }}</p>
-          <div v-if="Object.keys(a.case_levels || {}).length" class="mt-3 flex flex-wrap gap-2">
-            <span v-for="p in d.pillars" :key="p.id" class="inline-flex items-center gap-1.5 rounded-lg border-2 border-[color:var(--ink)] px-2 py-1 text-sm font-bold">
-              {{ p.name }} <span class="u-level !min-w-0 !h-7 !text-sm" :class="levelClass(a.case_levels[p.code])">{{ a.case_levels[p.code] ? num(a.case_levels[p.code], 1) : '–' }}</span>
-            </span>
-          </div>
-          <p v-if="a.ai_result?.ringkasan" class="mt-3 text-[15px]">{{ a.ai_result.ringkasan }}</p>
-          <div v-if="a.ai_result?.pilar?.length" class="mt-3 grid md:grid-cols-2 gap-2">
-            <div v-for="row in a.ai_result.pilar" :key="row.kode" class="rounded-lg border-2 border-[color:var(--ink)] p-2.5 text-sm">
-              <p class="font-extrabold">{{ row.nama }} · L{{ row.level || '–' }}</p>
-              <p class="mt-0.5">{{ row.alasan }}</p>
-              <p v-if="row.kutipan && row.kutipan !== '-'" class="mt-1"><span class="font-mono text-xs font-bold text-[color:var(--biru)] mr-1">{{ row.waktu }}</span><span class="u-kutipan">“{{ row.kutipan }}”</span></p>
-            </div>
-          </div>
-          <details v-if="a.choice_review?.length" class="mt-3 text-sm">
-            <summary class="cursor-pointer font-bold">Jawaban pilihan ganda ({{ a.choice_review.length }})</summary>
-            <ol class="mt-1.5 space-y-1.5 list-decimal pl-5">
-              <li v-for="q in a.choice_review" :key="q.question_id">{{ q.text }}<br /><b>{{ q.answer_text || 'tidak dijawab' }}</b> <span v-if="q.level" class="u-level !min-w-0 !h-6 !text-xs ml-1" :class="`l${q.level}`">L{{ q.level }}</span></li>
-            </ol>
-          </details>
-          <details v-if="a.essay_answers?.some((e) => e.answer)" class="mt-2 text-sm">
-            <summary class="cursor-pointer font-bold">Jawaban esai</summary>
-            <div v-for="(e, i) in a.essay_answers" :key="i" class="mt-2"><p class="font-bold">{{ e.text }}</p><p class="whitespace-pre-line">{{ e.answer || '–' }}</p></div>
-          </details>
-          <div v-if="a.recordings?.length" class="mt-3"><RecordingPlayer :recordings="a.recordings" /></div>
-        </article>
+        <div class="space-y-5">
+          <CaseDetail v-for="(c, i) in caseRows" :key="c.attempt.id" :row="c" :nomor="caseRows.length > 1 ? `K${i + 1}` : ''" :busy="busy" :sorot="sorotKasus" @requeue="nilaiUlangKasus" />
+        </div>
       </section>
 
       <!-- Lead -->
-      <section v-if="d.leads.length" class="mt-8 mb-10" data-tour="det-lead">
+      <section v-if="d.leads.length" id="sec-lead" class="mt-8 mb-24 scroll-mt-20" data-tour="det-lead">
         <h2 class="u-display text-2xl font-extrabold mb-3">Penilaian lead</h2>
         <div class="grid lg:grid-cols-2 gap-4">
           <article v-for="r in d.leads" :key="r.id" class="u-card p-4">
@@ -336,6 +381,15 @@
   </div>
 </template>
 
+<style scoped>
+.komp { transition: background-color .15s ease-out, transform .15s ease-out; cursor: pointer; }
+.komp:hover { background: #fffbe0; }
+.komp:active { transform: translate(1px, 1px); }
+.komp:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--stabilo), 0 0 0 5px var(--ink); }
+.komp-buka { opacity: .55; font-weight: 800; }
+.komp:hover .komp-buka { opacity: 1; }
+</style>
+
 <script setup>
 import '@fontsource-variable/bricolage-grotesque'
 import '../../styles/exam.css'
@@ -343,10 +397,11 @@ import '../../styles/asesmen.css'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ArrowPathIcon, CheckBadgeIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, MicrophoneIcon, PaperClipIcon, PlayCircleIcon,
+  ArrowPathIcon, CheckBadgeIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, MicrophoneIcon, PaperClipIcon, PlayCircleIcon,
   QuestionMarkCircleIcon, CheckCircleIcon, BellIcon,
 } from '@heroicons/vue/24/outline'
 import RecordingPlayer from '../../components/asesmen/RecordingPlayer.vue'
+import CaseDetail from '../../components/asesmen/CaseDetail.vue'
 import { competencyApi } from '../../services/competencyApi'
 import { formatEta, mintaIzinNotifikasi, notifSupported, watchOral } from '../../composables/useAiWatch'
 import { useTour } from '../../composables/useTour'
@@ -403,6 +458,12 @@ const kesimpulan = computed(() => {
   return out
 })
 
+// Baris kesimpulan lisan saja (studi kasus & lead punya kolom sendiri)
+const kesimpulanLisan = computed(() => kesimpulan.value.filter((t) => !/^(Jenjang akhir|Studi kasus rata|Penilaian \d+ lead)/.test(t)))
+function keKasus(a) {
+  document.getElementById(`kasus-${a.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 function isiReview(data) {
   ;(data.oral?.lines || []).forEach((l) => {
     const scores = {}
@@ -419,7 +480,75 @@ function putar(l, code) {
   const w = kutipanWaktu(l, code)
   if (w) players[l.id]?.seek(w.followup, w.t)
 }
-function lompatKe(id) { document.getElementById(`soal-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+function lompatKe(id) {
+  buka[id] = true
+  nextTick(() => document.getElementById(`soal-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+}
+
+// --- Navigasi bagian ----------------------------------------------------------
+const BAGIAN = [{ key: 'ringkasan', label: 'Ringkasan' }, { key: 'lisan', label: 'Ujian lisan', comp: 'oral' },
+  { key: 'kasus', label: 'Studi kasus', comp: 'case' }, { key: 'lead', label: 'Penilaian lead', comp: 'lead' }]
+const KOMP_BAGIAN = { oral: 'lisan', case: 'kasus', lead: 'lead' }
+const bagianAda = computed(() => BAGIAN.filter((b) => (b.key === 'lisan' ? d.value?.oral : b.key === 'kasus' ? d.value?.cases.length : b.key === 'lead' ? d.value?.leads.length : true)))
+const aktifBagian = ref('ringkasan')
+function keBagian(key) {
+  document.getElementById(`sec-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+let spy = null
+function pasangSpy() {
+  spy?.disconnect()
+  if (!d.value) return
+  spy = new IntersectionObserver((entries) => {
+    entries.filter((e) => e.isIntersecting).forEach((e) => { aktifBagian.value = e.target.id.replace('sec-', '') })
+  }, { rootMargin: '-20% 0px -70% 0px' })
+  BAGIAN.forEach((b) => { const el = document.getElementById(`sec-${b.key}`); if (el) spy.observe(el) })
+}
+watch(() => d.value?.id, () => nextTick(pasangSpy))
+onBeforeUnmount(() => spy?.disconnect())
+
+// Level studi kasus per pilar beserta asalnya. case_pillars/choice_levels dari backend baru;
+// cadangan: pilar yang dijawab AI + pilar soal pilihan ganda.
+function casePillarCodes(a) {
+  if (a.case_pillars) return a.case_pillars
+  const byName = Object.fromEntries((d.value?.pillars || []).map((p) => [p.name, p.code]))
+  return [...new Set([...(a.ai_result?.pilar || []).map((r) => r.kode), ...(a.choice_review || []).map((q) => byName[q.pillar]).filter(Boolean)])]
+}
+function choiceLevels(a) {
+  if (a.choice_levels) return a.choice_levels
+  const byName = Object.fromEntries((d.value?.pillars || []).map((p) => [p.name, p.code]))
+  const per = {}
+  ;(a.choice_review || []).forEach((q) => { const c = byName[q.pillar]; if (c && q.level) (per[c] ||= []).push(q.level) })
+  return Object.fromEntries(Object.entries(per).map(([c, v]) => [c, v.reduce((x, y) => x + y, 0) / v.length]))
+}
+function sel(a, p) {
+  const tested = a.ai_state === 'done' && casePillarCodes(a).includes(p.code)
+  const ai = (a.ai_result?.pilar || []).find((r) => r.kode === p.code) || null
+  return { pillar: p, attempt: a, tested, ai, pg: choiceLevels(a)[p.code] || null, level: a.case_levels?.[p.code] || null }
+}
+const caseRows = computed(() => (d.value?.cases || []).map((a) => {
+  const cells = d.value.pillars.map((p) => sel(a, p))
+  const tested = cells.filter((c) => c.tested)
+  const nilai = tested.filter((c) => c.level).map((c) => c.level)
+  return { attempt: a, tested, untested: a.ai_state === 'done' ? cells.filter((c) => !c.tested).map((c) => c.pillar) : [],
+    avg: nilai.length ? nilai.reduce((x, y) => x + y, 0) / nilai.length : null }
+}))
+const leadsAll = computed(() => d.value?.leads || [])
+// Lead menempel catatan yang sama di semua pilar = bukan bukti per pilar
+const catatanLeadSama = computed(() => leadsAll.value.some((r) => {
+  const notes = r.lines.filter((l) => l.level && l.note).map((l) => l.note.trim().toLowerCase())
+  return notes.length >= 3 && new Set(notes).size === 1
+}))
+// Ringkasan lead: semua pilar yang dinilai, dari level tertinggi
+const leadRingkas = computed(() => {
+  const lines = leadsAll.value.filter((r) => r.state === 'submitted').flatMap((r) => r.lines.filter((l) => l.level).map((l) => ({ ...l, rater: r.rater })))
+  return [...lines].sort((x, y) => y.level - x.level)
+})
+const sorotKasus = ref('')
+// Accordion soal lisan: default terbuka hanya untuk soal yang perlu diperiksa (belum lulus / bertanda belum diperiksa)
+const buka = reactive({})
+const perluPeriksa = (l) => l.score != null && (!l.passed || (l.flags.length && !l.reviewed_at))
+const terbuka = (l) => buka[l.id] ?? (perluPeriksa(l) || l.score == null)
+function semuaSoal(v) { (d.value?.oral?.lines || []).forEach((l) => { buka[l.id] = v }) }
 
 async function load(id = route.params.id) {
   loading.value = true
@@ -531,7 +660,7 @@ async function lampirkan(l, e) {
 }
 const nilaiUlangKasus = (a) => run(() => competencyApi.requeueCase(a.id))
 function ke(id) { if (id) router.push(`/dashboard/asesmen/rekap/${id}`) }
-watch(() => route.params.id, (id) => { if (id) { catatanSah.value = ''; sudahPeriksa.value = false; load(id); window.scrollTo({ top: 0 }) } })
+watch(() => route.params.id, (id) => { if (id) { Object.keys(buka).forEach((k) => delete buka[k]); catatanSah.value = ''; sudahPeriksa.value = false; load(id); window.scrollTo({ top: 0 }) } })
 // Konfirmasi periksa berlaku untuk hasil AI yang sedang tampil; dinilai ulang = periksa lagi.
 watch(() => `${d.value?.oral?.id}|${d.value?.oral?.ai_state}`, () => { sudahPeriksa.value = false })
 

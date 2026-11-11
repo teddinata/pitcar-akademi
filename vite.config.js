@@ -113,7 +113,8 @@ export default defineConfig({
     },
     proxy: {
       '/web': {
-        target: 'https://sokasistem.pitcar.co.id',
+        // VITE_PROXY_TARGET=https://akademi.pitcar.co.id npm run dev -> backend Akademi
+        target: process.env.VITE_PROXY_TARGET || 'https://sokasistem.pitcar.co.id',
         changeOrigin: true,
         secure: true,
         configure: (proxy, _options) => {
@@ -121,7 +122,7 @@ export default defineConfig({
             console.error('🚨 Proxy error:', err);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            proxyReq.setHeader('Origin', 'https://sokasistem.pitcar.co.id');
+            proxyReq.setHeader('Origin', process.env.VITE_PROXY_TARGET || 'https://sokasistem.pitcar.co.id');
             
             const cookies = req.headers.cookie;
             if (cookies) {

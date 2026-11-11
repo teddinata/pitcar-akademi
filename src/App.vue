@@ -20,9 +20,11 @@ onMounted(async () => {
 
 <template>
   <!-- Autentikasi Layout -->
-  <div v-if="authStore.isAuthenticated && !route.meta.bare" class="flex h-screen bg-gray-50">
+  <!-- overflow-hidden + relative: elemen absolut di halaman (mis. radio sr-only) tetap di dalam area scroll,
+       jadi dokumen tidak ikut ter-scroll dan kerangka aplikasi tidak terdorong keluar layar (layar kosong abu-abu). -->
+  <div v-if="authStore.isAuthenticated && !route.meta.bare" class="flex h-screen overflow-hidden bg-gray-50">
     <Sidebar />
-    <div class="flex-1 overflow-auto md:pb-0" :class="route.meta.focusMode ? '' : 'pb-16'">
+    <div class="relative flex-1 overflow-auto md:pb-0" :class="route.meta.focusMode ? '' : 'pb-16'">
       <router-view></router-view>
     </div>
     <AiWatchPill />
