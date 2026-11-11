@@ -5,6 +5,16 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.19.0',
+    date: '2026-11-11',
+    title: 'Peringkat peserta di Rekap asesmen',
+    items: [
+      { type: 'baru', text: 'Rekap & Validasi kini bisa menampilkan peringkat: diurutkan dari jenjang akhir, lalu nilai gabungan, lalu nilai lisan. Nilai yang sama mendapat nomor yang sama.' },
+      { type: 'baru', text: 'Pilihan Jabatan di Rekap, misalnya Mekanik saja. Peringkat, kartu angka, dan sebaran jenjang dihitung di dalam jabatan itu.' },
+      { type: 'ubah', text: 'Peserta yang belum lengkap ditaruh di bawah tanpa nomor peringkat. Unduh CSV ikut urutan, filter, dan kolom Peringkat.' },
+    ],
+  },
+  {
     version: '1.18.1',
     date: '2026-11-11',
     title: 'Pilar yang tidak diuji studi kasus tampil jelas',
