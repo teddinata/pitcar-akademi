@@ -5,6 +5,14 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.18.1',
+    date: '2026-11-11',
+    title: 'Pilar yang tidak diuji studi kasus tampil jelas',
+    items: [
+      { type: 'ubah', text: 'Studi kasus: pilar yang tidak diuji kasus itu tampil sebagai kartu abu-abu bertanda "–" di daftar pilar, jadi terlihat memang tidak dinilai dari kasus ini.' },
+    ],
+  },
+  {
     version: '1.18.0',
     date: '2026-11-11',
     title: 'Rincian asesmen lebih ringkas + bukti lead wajib',

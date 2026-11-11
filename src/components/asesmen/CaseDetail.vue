@@ -51,10 +51,16 @@
             <p v-if="lengkap[c.pillar.code] && c.ai?.kutipan && c.ai.kutipan !== '-'" class="mt-1.5"><span v-if="c.ai.waktu && c.ai.waktu !== '-'" class="font-mono text-xs font-bold text-[color:var(--biru)] mr-1">{{ c.ai.waktu }}</span><span class="u-kutipan">“{{ c.ai.kutipan }}”</span></p>
           </div>
         </div>
-        <p v-if="row.untested.length" class="mt-3 text-sm text-[color:var(--ink-soft)]">
-          <b class="text-[color:var(--ink)]">Tidak diuji di kasus ini:</b> {{ row.untested.map((p) => p.name).join(', ') }}.
-          Pilar ini tidak masuk “Pilar dinilai” kasus ini, jadi nilainya datang dari kasus lain atau penilaian lead.
-        </p>
+        <!-- Pilar yang tidak masuk "Pilar dinilai" kasus ini: kartu abu-abu bertanda "–" -->
+        <div v-if="row.untested.length" class="mt-3">
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div v-for="p in row.untested" :key="p.code" class="flex items-center gap-2 rounded-xl border-2 border-dashed border-[color:var(--ink-soft)] bg-[#f6f6f6] px-3 py-2 text-sm">
+              <span class="u-level l0 !min-w-[2.6rem] !h-8 !text-sm">–</span>
+              <span class="min-w-0"><span class="block font-extrabold leading-tight">{{ p.name }}</span><span class="block text-xs font-bold text-[color:var(--ink-soft)]">Tidak diuji di kasus ini</span></span>
+            </div>
+          </div>
+          <p class="mt-2 text-xs text-[color:var(--ink-soft)]">Pilar bertanda “–” tidak masuk “Pilar dinilai” kasus ini, jadi tidak ikut dihitung dari kasus ini. Nilainya datang dari kasus lain atau penilaian lead.</p>
+        </div>
       </div>
     </template>
 
