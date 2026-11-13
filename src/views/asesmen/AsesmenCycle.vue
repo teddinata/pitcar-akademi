@@ -98,22 +98,25 @@
         <section class="u-card p-4 sm:p-5 min-w-0" data-tour="asm-peserta">
           <div class="flex flex-wrap items-baseline justify-between gap-2">
             <h2 class="u-display text-xl font-extrabold">Peserta <span class="text-[color:var(--ink-soft)]">{{ participants.length }}</span></h2>
-            <button v-if="form.lead_enabled && participants.length" class="text-sm font-bold underline underline-offset-4" :disabled="busy" @click="pakaiAtasan">Isi lead kosong dengan atasan langsung</button>
           </div>
           <div v-if="cycle.state !== 'closed'" class="mt-3 grid sm:grid-cols-[1fr_auto] gap-2 items-end">
             <div><span class="u-label">Tambah peserta</span><PeoplePicker v-model="tambah" :search="(q) => competencyApi.employees(q)" placeholder="Cari karyawan…" /></div>
             <button class="u-btn u-btn-merah" :disabled="!tambah.length || busy" @click="tambahPeserta"><UserPlusIcon class="w-5 h-5" />Tambah {{ tambah.length || '' }}</button>
           </div>
 
-          <!-- Atur lead massal -->
-          <div v-if="form.lead_enabled && pilih.length" class="mt-4 rounded-xl border-2 border-[color:var(--ink)] bg-[#fffbe0] p-3" data-tour="asm-lead">
-            <p class="font-extrabold">Atur lead untuk {{ pilih.length }} peserta terpilih</p>
-            <PeoplePicker v-model="leadBaru" class="mt-2" :search="(q) => competencyApi.employees(q)" placeholder="Cari lead (kabeng, foreman, …)" />
-            <div class="mt-2 flex flex-wrap gap-2">
-              <button class="u-btn !min-h-9" :disabled="!leadBaru.length || busy" @click="aturLead('add')">Tambahkan</button>
-              <button class="u-btn u-btn-hitam !min-h-9" :disabled="busy" @click="aturLead('replace')">Ganti semua lead</button>
-              <button class="u-btn !min-h-9" :disabled="!leadBaru.length || busy" @click="aturLead('remove')">Lepas</button>
+          <!-- Lead: yang belum punya, dan aksi untuk peserta yang dicentang -->
+          <div v-if="form.lead_enabled && participants.length && cycle.state !== 'closed'" class="mt-4 space-y-2" data-tour="asm-lead">
+            <div v-if="tanpaLead.length" class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border-2 border-[color:var(--merah)] bg-[color:var(--merah-muda)] px-3 py-2">
+              <p class="text-sm font-bold text-[color:var(--merah-tua)]">{{ tanpaLead.length === participants.length ? 'Semua' : `${tanpaLead.length} dari ${participants.length}` }} peserta belum punya lead.</p>
+              <button type="button" class="u-btn u-btn-hitam !min-h-11 cursor-pointer" :disabled="busy" @click="bukaLead(tanpaLead.map((p) => p.id))">Pilih lead untuk {{ tanpaLead.length === 1 ? tanpaLead[0].employee.name : 'mereka' }}</button>
+              <button type="button" class="u-btn !min-h-11 cursor-pointer" :disabled="busy" @click="pakaiAtasan">Pakai atasan langsung</button>
             </div>
+            <div v-if="pilih.length" class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border-2 border-[color:var(--ink)] bg-[#fffbe0] px-3 py-2">
+              <p class="text-sm font-extrabold">{{ pilih.length }} peserta dicentang</p>
+              <button type="button" class="u-btn u-btn-hitam !min-h-11 cursor-pointer" :disabled="busy" @click="bukaLead(pilih)">Atur lead sekaligus</button>
+              <button type="button" class="u-btn !min-h-11 cursor-pointer" @click="pilih = []">Batal centang</button>
+            </div>
+            <p v-if="pesanAtasan" class="text-sm font-bold" role="status">{{ pesanAtasan }}</p>
           </div>
 
           <div class="mt-4 overflow-x-auto rounded-xl border-2 border-[color:var(--ink)]">
@@ -128,9 +131,15 @@
                   <td><input v-model="pilih" type="checkbox" :value="p.id" class="u-check !w-5 !h-5" :aria-label="`Pilih ${p.employee.name}`" /></td>
                   <td><p class="font-bold leading-tight">{{ p.employee.name }}</p><p class="text-xs text-[color:var(--ink-soft)]">{{ p.employee.job }}</p></td>
                   <td v-if="form.lead_enabled">
-                    <div class="flex flex-wrap gap-1">
-                      <span v-for="r in p.ratings" :key="r.id" class="u-chip !text-[11px]" :class="r.state === 'submitted' ? 'u-chip-hijau' : ''">{{ r.name }}{{ r.state === 'submitted' ? ' ✓' : '' }}</span>
-                      <span v-if="!p.leads.length" class="u-chip u-chip-merah !text-[11px]">Belum ada lead</span>
+                    <div class="flex flex-wrap items-center gap-1">
+                      <span v-for="l in p.leads" :key="l.id" class="u-chip !text-[11px]" :class="sudahNilai(p, l) ? 'u-chip-hijau' : ''">
+                        <CheckIcon v-if="sudahNilai(p, l)" class="h-3.5 w-3.5" aria-hidden="true" />{{ l.name }}<span v-if="sudahNilai(p, l)" class="sr-only"> (sudah menilai)</span>
+                      </span>
+                      <span v-if="!p.leads.length && cycle.state === 'closed'" class="u-chip u-chip-merah !text-[11px]">Tanpa lead</span>
+                      <button v-if="cycle.state !== 'closed'" type="button" class="u-chip min-h-9 cursor-pointer !text-[11px] hover:bg-[#fffbe0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--ink)]"
+                              :class="p.leads.length ? 'border-dashed' : 'u-chip-merah'" :aria-label="`${p.leads.length ? 'Ubah lead' : 'Pilih lead untuk'} ${p.employee.name}`" @click="bukaLead([p.id])">
+                        <component :is="p.leads.length ? PencilSquareIcon : PlusIcon" class="h-3.5 w-3.5" aria-hidden="true" />{{ p.leads.length ? 'Ubah' : 'Pilih lead' }}
+                      </button>
                     </div>
                   </td>
                   <td v-if="cycle.cases.length" class="text-sm">
@@ -148,6 +157,7 @@
           </div>
         </section>
       </div>
+      <LeadDialog :open="!!leadIds.length" :targets="targetLead" :suggestions="leadDipakai" :search="(q) => competencyApi.employees(q)" :apply="terapkanLead" @close="leadIds = []" />
     </template>
   </div>
 </template>
@@ -159,10 +169,11 @@ import '../../styles/asesmen.css'
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  ChartBarIcon, ChevronRightIcon, LinkIcon, LockClosedIcon, PlayIcon, TrashIcon, UserPlusIcon,
+  ChartBarIcon, CheckIcon, ChevronRightIcon, LinkIcon, LockClosedIcon, PencilSquareIcon, PlayIcon, PlusIcon, TrashIcon, UserPlusIcon,
 } from '@heroicons/vue/24/outline'
 import AsesmenNav from '../../components/asesmen/AsesmenNav.vue'
 import CaseModePicker from '../../components/asesmen/CaseModePicker.vue'
+import LeadDialog from '../../components/asesmen/LeadDialog.vue'
 import PeoplePicker from '../../components/asesmen/PeoplePicker.vue'
 import { competencyApi } from '../../services/competencyApi'
 import { useTour } from '../../composables/useTour'
@@ -185,7 +196,8 @@ const participants = ref([])
 const cases = ref([])
 const tambah = ref([])
 const pilih = ref([])
-const leadBaru = ref([])
+const leadIds = ref([]) // peserta yang sedang diatur lead-nya di dialog
+const pesanAtasan = ref('')
 const disalin = ref(false)
 const konfirmTutup = ref(false)
 const form = reactive({
@@ -254,13 +266,29 @@ async function hapus(p) {
   const ok = await run(() => competencyApi.removeParticipant(p.id))
   if (ok) terima(await competencyApi.terpaduCycle(cycleId))
 }
-async function aturLead(mode) {
-  const detail = await run(() => competencyApi.setLeads(pilih.value, leadBaru.value.map((p) => p.id), mode))
-  if (detail) { terima(detail); leadBaru.value = [] }
+const tanpaLead = computed(() => participants.value.filter((p) => !p.leads.length))
+const targetLead = computed(() => participants.value.filter((p) => leadIds.value.includes(p.id)))
+// Lead yang sudah dipakai di periode ini, yang paling sering dulu: pilihan cepat di dialog.
+const leadDipakai = computed(() => {
+  const peta = new Map()
+  participants.value.forEach((p) => p.leads.forEach((l) => peta.set(l.id, { id: l.id, name: l.name, n: (peta.get(l.id)?.n || 0) + 1 })))
+  return [...peta.values()].sort((a, b) => b.n - a.n).slice(0, 6)
+})
+const sudahNilai = (p, lead) => p.ratings.some((r) => r.name === lead.name && r.state === 'submitted')
+function bukaLead(ids) { pesanAtasan.value = ''; leadIds.value = [...ids] }
+// Dipanggil dialog tiap klik; galat ditampilkan di dialog, bukan di kepala halaman.
+async function terapkanLead(lead, mode) {
+  terima(await competencyApi.setLeads(leadIds.value, [lead.id], mode))
 }
 async function pakaiAtasan() {
+  const sebelum = tanpaLead.value.length
   const detail = await run(() => competencyApi.useManagersAsLeads(cycleId))
-  if (detail) terima(detail)
+  if (!detail) return
+  terima(detail)
+  const sisa = tanpaLead.value.length
+  pesanAtasan.value = sisa === sebelum
+    ? 'Tidak ada yang terisi: peserta ini belum punya atasan langsung di data karyawan. Pilih lead-nya secara manual.'
+    : sisa ? `${sebelum - sisa} peserta terisi. ${sisa} lainnya belum punya atasan langsung, pilih lead-nya secara manual.` : `Lead ${sebelum} peserta terisi dari atasan langsung.`
 }
 function pilihSemua(on) { pilih.value = on ? participants.value.map((p) => p.id) : [] }
 async function salinLink() {
@@ -273,8 +301,8 @@ async function salinLink() {
 
 const tour = useTour('asesmen-periode', () => [
   { element: '[data-tour="asm-atur"]', title: 'Pilih komponen', text: 'Nyalakan ujian lisan, pilih studi kasus (acak satu per peserta atau semua), dan penilaian lead. Bobot bisa diubah.', side: 'right' },
-  { element: '[data-tour="asm-peserta"]', title: 'Tambah peserta', text: 'Cari karyawan lalu Tambah. Centang beberapa peserta untuk mengatur lead sekaligus.', side: 'left' },
-  { element: '[data-tour="asm-lead"]', title: 'Lead bisa lebih dari satu', text: 'Tambahkan, ganti, atau lepas lead untuk peserta terpilih. Hanya admin yang menunjuk lead.', side: 'top' },
+  { element: '[data-tour="asm-peserta"]', title: 'Tambah peserta', text: 'Cari karyawan lalu Tambah. Lead tiap peserta diatur dari kolom Lead di tabel.', side: 'left' },
+  { element: '[data-tour="asm-lead"]', title: 'Lead bisa lebih dari satu', text: 'Klik Pilih lead di baris peserta, lalu klik nama lead-nya. Centang beberapa peserta untuk mengatur lead sekaligus. Hanya admin yang menunjuk lead.', side: 'top' },
   { element: '[data-tour="asm-mulai"]', title: 'Mulai periode', text: 'Setelah dimulai, tugas muncul di Asesmen Saya untuk peserta dan lead. Bagikan link tes lewat WA.', side: 'bottom' },
   { element: '[data-tour="asm-status"]', title: 'Tutup periode', text: 'Setelah asesor mengesahkan di Rekap, tutup periode supaya jenjang tercatat di PitClock.', side: 'bottom' },
 ])
