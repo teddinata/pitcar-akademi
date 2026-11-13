@@ -5,6 +5,17 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.21.0',
+    date: '2026-11-13',
+    title: 'Menunjuk lead asesmen jadi sekali klik',
+    items: [
+      { type: 'ubah', text: 'Di periode asesmen, lead diatur langsung dari kolom Lead tiap peserta: klik "Pilih lead" atau "Ubah", lalu klik nama orangnya. Pilihan langsung tersimpan, tanpa tombol Tambahkan, Ganti semua lead, atau Lepas.' },
+      { type: 'baru', text: 'Lead yang sudah dipakai di periode itu muncul sebagai pilihan cepat. Untuk beberapa peserta sekaligus, centang pesertanya lalu "Atur lead sekaligus"; dialog menunjukkan tiap lead dipakai berapa peserta.' },
+      { type: 'baru', text: 'Peserta yang belum punya lead diberi tahu di atas tabel, dengan tombol untuk memilih lead mereka atau memakai atasan langsung. Bila atasan langsung belum diisi di data karyawan, halaman menyebutkannya.' },
+      { type: 'perbaikan', text: 'Kolom Lead kini menampilkan lead yang sudah dipilih selama periode masih Draf. Sebelumnya kolom itu kosong sampai periode dimulai, sehingga lead tampak tidak tersimpan.' },
+    ],
+  },
+  {
     version: '1.20.1',
     date: '2026-11-13',
     title: 'Judul tab mengikuti halaman',
