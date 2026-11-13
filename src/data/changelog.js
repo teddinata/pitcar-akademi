@@ -5,6 +5,15 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.20.0',
+    date: '2026-11-13',
+    title: 'Beberapa studi kasus acak per peserta',
+    items: [
+      { type: 'baru', text: 'Mode acak studi kasus kini bisa lebih dari satu: atur "Jumlah kasus per peserta" di Paket Asesmen atau di pengaturan periode. Misalnya 5 kasus dipilih dan jumlahnya 2, tiap peserta mengerjakan 2 kasus acak.' },
+      { type: 'ubah', text: 'Kasus dibagi merata dan peserta berurutan mendapat kasus berbeda. Kasus yang sudah dibagikan atau sudah dimulai peserta tidak ditukar saat pengaturan diubah.' },
+    ],
+  },
+  {
     version: '1.19.0',
     date: '2026-11-11',
     title: 'Peringkat peserta di Rekap asesmen',

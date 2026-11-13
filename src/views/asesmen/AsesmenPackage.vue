@@ -50,7 +50,7 @@
           <OralBankPanel :profile-id="profileId" :questions="pkg.questions" :rubric="rubric" :level-names="pkg.profile.level_names" @changed="segarkan" />
         </template>
         <template v-else-if="step === 'kasus'">
-          <PillarCoverage :pillars="pkg.pillars" :cases="pkg.cases.filter((c) => pkg.case_ids.includes(c.id))" :mode="pkg.case_mode" :lead-enabled="pkg.lead_enabled" />
+          <PillarCoverage :pillars="pkg.pillars" :cases="pkg.cases.filter((c) => pkg.case_ids.includes(c.id))" :mode="pkg.case_mode" :count="pkg.case_count || 1" :lead-enabled="pkg.lead_enabled" />
           <CasesPanel :key="`k-${profileId}`" :profile-id="profileId" :cases="pkg.cases" :pillars="pkg.pillars"
           :level-names="pkg.profile.level_names" :selected="pkg.case_ids" @update:selected="pilihKasus" @changed="segarkan" />
         </template>
@@ -68,11 +68,7 @@
             <div class="rounded-xl border-2 border-[color:var(--ink)] p-3">
               <p class="font-bold">Studi kasus</p>
               <p class="text-sm text-[color:var(--ink-soft)]">{{ pkg.case_ids.length }} kasus dipilih di langkah 2</p>
-              <div class="mt-2 grid grid-cols-2 gap-2">
-                <button v-for="m in MODES" :key="m.key" type="button" class="u-tab !min-h-0 !py-2 text-left !whitespace-normal" :class="bobot.case_mode === m.key ? 'is-active' : ''" @click="bobot.case_mode = m.key">
-                  <span class="block">{{ m.label }}</span><span class="block text-xs font-semibold opacity-80">{{ m.teks }}</span>
-                </button>
-              </div>
+              <CaseModePicker v-model:mode="bobot.case_mode" v-model:count="bobot.case_count" :total="pkg.case_ids.length" all-text="Setiap peserta mengerjakan semua kasus paket." class="mt-2" />
             </div>
             <label class="flex items-start gap-3 rounded-xl border-2 border-[color:var(--ink)] p-3"><input v-model="bobot.lead_enabled" type="checkbox" class="u-check" />
               <span><b>Penilaian lead</b><span class="block text-sm text-[color:var(--ink-soft)]">{{ pkg.pillars.length }} pilar di langkah 3</span></span></label>
@@ -126,6 +122,7 @@ import {
   CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon, ExclamationCircleIcon, MinusCircleIcon,
 } from '@heroicons/vue/24/outline'
 import AsesmenNav from '../../components/asesmen/AsesmenNav.vue'
+import CaseModePicker from '../../components/asesmen/CaseModePicker.vue'
 import OralBankPanel from '../../components/asesmen/OralBankPanel.vue'
 import PillarCoverage from '../../components/asesmen/PillarCoverage.vue'
 import CasesPanel from '../../components/asesmen/CasesPanel.vue'
@@ -135,13 +132,9 @@ import { useTour } from '../../composables/useTour'
 
 const STEPS = [
   { key: 'lisan', label: 'Ujian lisan', check: 'oral', teks: 'Soal L1–L4 dengan kunci jawaban. Peserta menjawab dengan suara, dinilai AI memakai rubrik 6 aspek.' },
-  { key: 'kasus', label: 'Studi kasus', check: 'case', teks: 'Pilih kasus yang masuk paket. Peserta mendapat semua kasus atau satu kasus acak.' },
+  { key: 'kasus', label: 'Studi kasus', check: 'case', teks: 'Pilih kasus yang masuk paket. Peserta mendapat semua kasus atau beberapa kasus acak (jumlahnya diatur di langkah Komponen & bobot).' },
   { key: 'lead', label: 'Rubrik lead', check: 'lead', teks: 'Deskripsi L1–L4 per pilar yang dipakai lead menilai peserta, plus nama jenjang.' },
   { key: 'bobot', label: 'Komponen & bobot', check: null, teks: 'Komponen yang dipakai dan bobotnya. Menjadi pengaturan awal setiap periode baru dari paket ini.' },
-]
-const MODES = [
-  { key: 'random', label: 'Acak 1 kasus', teks: 'Peserta berurutan dapat kasus berbeda (anti contek).' },
-  { key: 'all', label: 'Semua kasus', teks: 'Setiap peserta mengerjakan semua kasus paket.' },
 ]
 const BOBOT = [{ key: 'oral', label: 'Lisan' }, { key: 'case', label: 'Kasus' }, { key: 'lead', label: 'Lead' }]
 
@@ -156,7 +149,7 @@ const rubric = ref(null)
 const pkg = ref(null)
 const profileId = ref(null)
 const step = ref(STEPS.some((s) => s.key === route.query.bagian) ? route.query.bagian : 'lisan')
-const bobot = reactive({ oral_enabled: true, lead_enabled: true, case_mode: 'random', weights: {}, oral_weights: {} })
+const bobot = reactive({ oral_enabled: true, lead_enabled: true, case_mode: 'random', case_count: 1, weights: {}, oral_weights: {} })
 
 const siap = (readiness) => (readiness || []).every((r) => r.ok)
 const cek = (key) => pkg.value?.readiness.find((r) => r.key === STEPS.find((s) => s.key === key)?.check)
@@ -172,7 +165,7 @@ const totalLisan = computed(() => [1, 2, 3, 4].reduce((s, n) => s + (Number(bobo
 function terima(data) {
   pkg.value = data
   Object.assign(bobot, { oral_enabled: data.oral_enabled, lead_enabled: data.lead_enabled, case_mode: data.case_mode,
-    weights: { ...data.weights }, oral_weights: { ...data.oral_weights } })
+    case_count: data.case_count || 1, weights: { ...data.weights }, oral_weights: { ...data.oral_weights } })
   const row = packages.value.find((p) => p.profile.id === data.profile.id)
   if (row) row.readiness = data.readiness
 }
@@ -205,7 +198,7 @@ async function simpan(data) {
     const fresh = await competencyApi.savePackage(profileId.value, data)
     pkg.value.case_ids = fresh.case_ids
     Object.assign(pkg.value, { oral_enabled: fresh.oral_enabled, lead_enabled: fresh.lead_enabled, case_mode: fresh.case_mode,
-      weights: fresh.weights, oral_weights: fresh.oral_weights, readiness: fresh.readiness })
+      case_count: fresh.case_count || 1, weights: fresh.weights, oral_weights: fresh.oral_weights, readiness: fresh.readiness })
     const row = packages.value.find((p) => p.profile.id === profileId.value)
     if (row) row.readiness = fresh.readiness
     return true

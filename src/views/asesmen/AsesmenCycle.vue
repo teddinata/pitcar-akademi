@@ -66,11 +66,7 @@
                 <span><b>{{ c.name }}</b> <span class="text-[color:var(--ink-soft)]">· {{ c.question_count }} soal · {{ c.time_limit_minutes }} mnt</span></span>
               </label>
             </div>
-            <div v-if="form.case_ids.length > 1" class="mt-3 grid grid-cols-2 gap-2">
-              <button v-for="m in MODES" :key="m.key" type="button" class="u-tab !min-h-0 !py-2 text-left !whitespace-normal" :class="form.case_mode === m.key ? 'is-active' : ''" @click="form.case_mode = m.key">
-                <span class="block">{{ m.label }}</span><span class="block text-xs font-semibold opacity-80">{{ m.teks }}</span>
-              </button>
-            </div>
+            <CaseModePicker v-if="form.case_ids.length > 1" v-model:mode="form.case_mode" v-model:count="form.case_count" :total="form.case_ids.length" class="mt-3" />
           </fieldset>
 
           <fieldset class="rounded-xl border-2 border-[color:var(--ink)] p-3">
@@ -166,6 +162,7 @@ import {
   ChartBarIcon, ChevronRightIcon, LinkIcon, LockClosedIcon, PlayIcon, TrashIcon, UserPlusIcon,
 } from '@heroicons/vue/24/outline'
 import AsesmenNav from '../../components/asesmen/AsesmenNav.vue'
+import CaseModePicker from '../../components/asesmen/CaseModePicker.vue'
 import PeoplePicker from '../../components/asesmen/PeoplePicker.vue'
 import { competencyApi } from '../../services/competencyApi'
 import { useTour } from '../../composables/useTour'
@@ -176,10 +173,6 @@ const STATE = {
   open: { label: 'Berjalan', chip: 'u-chip-kuning', teks: 'Peserta dan lead sedang mengisi. Bagikan link tes lewat WA. Hasil masuk ke Rekap begitu dinilai AI.' },
   closed: { label: 'Ditutup', chip: 'u-chip-hijau', teks: 'Periode selesai. Jenjang peserta yang sudah disahkan tercatat di data karyawan.' },
 }
-const MODES = [
-  { key: 'random', label: 'Acak 1 kasus', teks: 'Peserta berurutan dapat kasus berbeda (anti contek).' },
-  { key: 'all', label: 'Semua kasus', teks: 'Setiap peserta mengerjakan semua kasus terpilih.' },
-]
 const BOBOT = [{ key: 'oral', label: 'Lisan' }, { key: 'case', label: 'Kasus' }, { key: 'lead', label: 'Lead' }]
 
 const route = useRoute()
@@ -196,7 +189,7 @@ const leadBaru = ref([])
 const disalin = ref(false)
 const konfirmTutup = ref(false)
 const form = reactive({
-  name: '', date_start: '', date_end: '', oral_enabled: true, lead_enabled: true, case_ids: [], case_mode: 'random',
+  name: '', date_start: '', date_end: '', oral_enabled: true, lead_enabled: true, case_ids: [], case_mode: 'random', case_count: 1,
   oral_weights: { 1: 20, 2: 20, 3: 30, 4: 30 }, weights: { oral: 50, case: 30, lead: 20 }, validators: [],
 })
 
@@ -212,7 +205,7 @@ function terima(detail) {
   const c = detail.cycle
   Object.assign(form, {
     name: c.name, date_start: c.date_start || '', date_end: c.date_end || '', oral_enabled: c.oral_enabled,
-    lead_enabled: c.lead_enabled, case_ids: c.cases.map((x) => x.id), case_mode: c.case_mode,
+    lead_enabled: c.lead_enabled, case_ids: c.cases.map((x) => x.id), case_mode: c.case_mode, case_count: c.case_count || 1,
     oral_weights: { ...c.oral_weights }, weights: { ...c.weights }, validators: c.validators.map((v) => ({ ...v })),
   })
 }
@@ -240,7 +233,7 @@ async function load() {
 async function simpan() {
   const ok = await run(() => competencyApi.saveTerpaduCycle(cycleId, {
     name: form.name, profile_id: cycle.value.profile.id, date_start: form.date_start || null, date_end: form.date_end || null,
-    oral_enabled: form.oral_enabled, lead_enabled: form.lead_enabled, case_ids: form.case_ids, case_mode: form.case_mode,
+    oral_enabled: form.oral_enabled, lead_enabled: form.lead_enabled, case_ids: form.case_ids, case_mode: form.case_mode, case_count: form.case_count,
     oral_weights: form.oral_weights, weights: form.weights, validator_ids: form.validators.map((v) => v.id),
   }))
   if (ok) terima(await competencyApi.terpaduCycle(cycleId))
