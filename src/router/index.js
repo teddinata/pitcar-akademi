@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import MechanicDetail from '../views/MechanicDetail.vue'
+import { pasangJudulTab } from '../utils/pageTitle'
+import { JUDUL_RUTE } from './pageTitles'
 
 const routes = [
   {
@@ -458,5 +460,7 @@ router.beforeEach(async (to, from, next) => {
     next()
   }
 })
+
+pasangJudulTab(router, 'Akademi Pitcar', JUDUL_RUTE)
 
 export default router

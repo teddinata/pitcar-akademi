@@ -5,6 +5,14 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.20.1',
+    date: '2026-11-13',
+    title: 'Judul tab mengikuti halaman',
+    items: [
+      { type: 'ubah', text: 'Judul tab browser kini mengikuti halaman yang dibuka (misalnya "Asesmen · Akademi Pitcar"), jadi tab mudah dibedakan saat banyak yang terbuka.' },
+    ],
+  },
+  {
     version: '1.20.0',
     date: '2026-11-13',
     title: 'Beberapa studi kasus acak per peserta',
