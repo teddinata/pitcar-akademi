@@ -170,7 +170,7 @@
           <div v-if="rekaman.length" class="mt-4">
             <p class="text-sm font-semibold text-gray-800">Rekaman jawaban lisan</p>
             <div v-for="r in rekaman" :key="r.id" class="mt-2 rounded-xl bg-gray-50 p-3">
-              <p class="text-xs text-gray-500">Bagian {{ r.sequence }} · {{ mmss(r.duration) }}<template v-if="r.purged"> · suara sudah dihapus (lebih dari 90 hari)</template></p>
+              <p class="text-xs text-gray-500">Bagian {{ r.sequence }} · {{ mmss(r.duration) }}<template v-if="r.purged"> · suara sudah dihapus (lebih dari 6 bulan)</template></p>
               <audio v-if="!r.purged" :ref="(el) => setAudio(r.id, el)" :src="competencyApi.audioUrl(r.id)" controls preload="none" class="mt-1.5 w-full h-9"></audio>
               <details v-if="r.segments.length" class="mt-2">
                 <summary class="cursor-pointer text-xs font-semibold text-gray-700">Transkrip ({{ r.segments.length }} baris)</summary>

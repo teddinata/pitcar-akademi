@@ -16,7 +16,7 @@
         </span>
       </div>
       <p v-if="editable && r.transcript_state === 'failed' && r.transcript_error" class="mb-2 text-xs font-bold text-[color:var(--merah-tua)] break-words">{{ r.transcript_error }}</p>
-      <p v-if="r.purged" class="text-sm font-bold">Rekaman sudah dihapus otomatis (lebih dari 90 hari). Transkrip tetap tersimpan.</p>
+      <p v-if="r.purged" class="text-sm font-bold">Rekaman sudah dihapus otomatis (lebih dari 6 bulan). Transkrip tetap tersimpan.</p>
       <audio v-else :ref="(el) => setAudio(r.id, el)" :src="competencyApi.audioUrl(r.id)" controls preload="metadata" class="u-audio" @timeupdate="(e) => { now[r.id] = e.target.currentTime }"></audio>
       <div v-if="r.segments?.length" class="u-transkrip mt-2">
         <button v-for="(s, i) in r.segments" :key="i" type="button" :class="aktif(r, s, i) ? 'is-now' : ''" @click="lompat(r.id, s.start)">

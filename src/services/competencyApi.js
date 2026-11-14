@@ -102,6 +102,7 @@ export const competencyApi = {
   },
   validate: (id, note, undo = false) => op('terpadu_validate', { id, note, undo }),
   oral: (oralId) => op('oral_get', { oral_id: oralId }),
+  oralOpen: (lineId, consent) => op('oral_open', { line_id: lineId, consent }),
   oralStart: (lineId, consent, mimetype) => op('oral_start', { line_id: lineId, consent, mimetype }),
   oralFinish: (lineId) => op('oral_finish', { line_id: lineId }),
   oralFollowupStart: (lineId, mimetype) => op('oral_followup_start', { line_id: lineId, mimetype }),

@@ -1,7 +1,8 @@
 <!-- Ujian lisan dipandu asesor (rubrik 6 aspek). Asesor/admin membacakan soal L1-L4
-     dan merekam jawaban peserta dari perangkatnya. Soal baru terlihat saat rekaman
-     mulai; waktu per soal dijaga server. Jawaban dangkal mendapat maksimal satu
-     pertanyaan lanjutan dari AI yang dibacakan asesor. -->
+     dan merekam jawaban peserta dari perangkatnya. Soal dibuka dulu untuk dibaca;
+     waktu per soal (dijaga server) baru berjalan saat rekam ditekan. Jawaban dangkal
+     mendapat maksimal satu pertanyaan lanjutan dari AI, alurnya sama: baca dulu,
+     rekam, dan pertanyaannya tetap terlihat selama merekam. -->
 <template>
   <div class="ujian min-h-screen pb-28">
     <header class="sticky top-0 z-20 bg-[color:var(--paper)] border-b-[2.5px] border-[color:var(--ink)]">
@@ -53,7 +54,7 @@
             </ol>
             <label class="mt-5 flex gap-3 items-start rounded-xl border-2 border-[color:var(--ink)] p-3 bg-[#fffbe0]">
               <input v-model="consent" type="checkbox" class="u-check" />
-              <span class="text-[15px] font-semibold">Peserta sudah diberi tahu dan setuju jawaban lisannya direkam, ditranskripsi, dan dinilai AI serta asesor. Rekaman disimpan 90 hari.</span>
+              <span class="text-[15px] font-semibold">Peserta sudah diberi tahu dan setuju jawaban lisannya direkam, ditranskripsi, dan dinilai AI serta asesor. Rekaman disimpan 6 bulan.</span>
             </label>
           </section>
 
@@ -68,14 +69,14 @@
             </div>
 
             <!-- Belum dibuka -->
-            <div v-if="current.state === 'pending' || (current.state === 'answering' && !current.recorded && stage === 'idle')" class="mt-5">
+            <div v-if="!current.question" class="mt-5">
               <div class="rounded-xl border-2 border-dashed border-[color:var(--ink)] p-6 text-center bg-[color:var(--grid-bg)]">
                 <LockClosedIcon class="w-8 h-8 mx-auto" />
-                <p class="mt-2 font-bold">Soal terbuka saat rekaman mulai</p>
-                <p class="text-sm text-[color:var(--ink-soft)]">Pastikan ruangan tenang dan HP dekat peserta. Setelah tombol ditekan, bacakan soalnya; waktu langsung berjalan.</p>
+                <p class="mt-2 font-bold">{{ membuka ? 'Membuka soal…' : 'Soal belum dibuka' }}</p>
+                <p class="text-sm text-[color:var(--ink-soft)]">Buka soalnya dan baca dulu. Waktu baru berjalan setelah Anda menekan rekam.</p>
               </div>
-              <button class="u-btn u-btn-merah u-btn-besar w-full mt-4" :disabled="(!data.consent && !consent) || stage !== 'idle'" data-tour="lisan-mulai" @click="mulai('main')">
-                <MicrophoneIcon class="w-6 h-6" />{{ current.state === 'answering' ? 'Rekam ulang jawaban (mikrofon tadi gagal)' : 'Buka soal & mulai rekam' }}
+              <button class="u-btn u-btn-hitam u-btn-besar w-full mt-4" :disabled="(!data.consent && !consent) || membuka" data-tour="lisan-mulai" @click="bukaSoal">
+                <LockOpenIcon class="w-6 h-6" />Buka soal L{{ current.level }}
               </button>
             </div>
 
@@ -83,8 +84,14 @@
             <template v-else>
               <p class="u-display mt-5 text-[1.35rem] sm:text-[1.55rem] font-bold leading-snug">{{ current.question }}</p>
 
+              <!-- Pertanyaan lanjutan tetap terlihat selama jawabannya direkam -->
+              <div v-if="rec.active.value && stage === 'followup-rec' && current.followup_question" class="mt-6 rounded-xl border-[2.5px] border-[color:var(--ink)] p-4 sm:p-5 bg-[#fffbe0]">
+                <p class="u-chip u-chip-kuning">Pertanyaan lanjutan dari AI</p>
+                <p class="u-display mt-3 text-xl font-bold leading-snug">{{ current.followup_question }}</p>
+              </div>
+
               <!-- Sedang merekam jawaban utama / lanjutan -->
-              <div v-if="rec.active.value" class="mt-6 rounded-xl border-[2.5px] border-[color:var(--ink)] p-4 bg-[#fff2f2]" aria-live="polite">
+              <div v-if="rec.active.value" class="rounded-xl border-[2.5px] border-[color:var(--ink)] p-4 bg-[#fff2f2]" :class="stage === 'followup-rec' ? 'mt-3' : 'mt-6'" aria-live="polite">
                 <p v-if="stage === 'followup-rec'" class="text-sm font-extrabold text-[color:var(--merah-tua)]">Menjawab pertanyaan lanjutan</p>
                 <div class="flex items-center gap-3">
                   <span class="u-rec-dot w-3.5 h-3.5 rounded-full bg-[color:var(--merah)]"></span>
@@ -107,11 +114,19 @@
                 <p class="text-sm text-[color:var(--ink-soft)]">Biasanya 10–20 detik. Jangan tutup halaman ini.</p>
               </div>
 
+              <!-- Soal sudah dibaca, belum direkam (atau mikrofon tadi gagal) -->
+              <div v-else-if="current.state === 'pending' || (current.state === 'answering' && !current.recorded)" class="mt-6">
+                <p class="text-sm text-[color:var(--ink-soft)]">Bacakan soalnya ke peserta. Tekan rekam saat peserta siap menjawab; waktu {{ Math.round((current.answer_seconds || 180) / 60) }} menit berjalan sejak tombol ditekan dan tidak bisa diulang.</p>
+                <button class="u-btn u-btn-merah u-btn-besar w-full mt-4" :disabled="stage !== 'idle'" data-tour="lisan-rekam" @click="mulai('main')">
+                  <MicrophoneIcon class="w-6 h-6" />{{ current.state === 'answering' ? 'Rekam ulang jawaban (mikrofon tadi gagal)' : 'Mulai rekam jawaban' }}
+                </button>
+              </div>
+
               <!-- Pertanyaan lanjutan -->
               <div v-else-if="current.state === 'followup'" class="mt-6 rounded-xl border-[2.5px] border-[color:var(--ink)] p-4 sm:p-5 bg-[#fffbe0]" data-tour="lisan-lanjutan">
                 <p class="u-chip u-chip-kuning">Pertanyaan lanjutan dari AI · bacakan ke peserta</p>
                 <p class="u-display mt-3 text-xl font-bold leading-snug">{{ current.followup_question }}</p>
-                <p class="mt-2 text-sm text-[color:var(--ink-soft)]">Tekan rekam, bacakan pertanyaannya, lalu biarkan peserta menjawab (maksimal 2 menit). Lewati bila peserta tidak tahu.</p>
+                <p class="mt-2 text-sm text-[color:var(--ink-soft)]">Bacakan pertanyaannya dulu, lalu tekan rekam saat peserta siap menjawab. Waktu 2 menit berjalan sejak rekam ditekan. Lewati bila peserta tidak tahu.</p>
                 <div class="mt-4 grid sm:grid-cols-2 gap-2">
                   <button class="u-btn u-btn-merah u-btn-besar" :disabled="stage !== 'idle'" @click="mulai('followup')"><MicrophoneIcon class="w-6 h-6" />Rekam jawaban lanjutan</button>
                   <button class="u-btn u-btn-besar" :disabled="stage !== 'idle'" @click="lewatiLanjutan">Lewati, lanjut soal berikutnya</button>
@@ -141,10 +156,11 @@
 import '@fontsource-variable/bricolage-grotesque'
 import '../../styles/exam.css'
 import '../../styles/asesmen.css'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  ArrowPathIcon, CheckIcon, ChevronLeftIcon, ClockIcon, ExclamationTriangleIcon, LockClosedIcon, MicrophoneIcon,
+  ArrowPathIcon, CheckIcon, ChevronLeftIcon, ClockIcon, ExclamationTriangleIcon, LockClosedIcon, LockOpenIcon,
+  MicrophoneIcon,
   QuestionMarkCircleIcon, StopIcon,
 } from '@heroicons/vue/24/outline'
 import { competencyApi } from '../../services/competencyApi'
@@ -154,9 +170,9 @@ import { mmss } from '../../utils/competency'
 
 const ATURAN = [
   'Ada 4 soal berjenjang, L1 sampai L4, dikerjakan berurutan. Soal L3 dan L4 bobotnya lebih besar.',
-  'Soal baru terlihat setelah Anda menekan "Buka soal & mulai rekam". Bacakan soalnya ke peserta; waktu langsung berjalan dan tidak bisa diulang.',
+  'Buka soalnya dan baca dulu, lalu bacakan ke peserta. Waktu baru berjalan setelah Anda menekan "Mulai rekam jawaban" dan tidak bisa diulang.',
   'Minta peserta menjelaskan langkahnya urut beserta alasan teknisnya. Hindari memberi petunjuk jawaban.',
-  'Bila jawaban kurang dalam, AI memberi satu pertanyaan lanjutan untuk Anda bacakan.',
+  'Bila jawaban kurang dalam, AI memberi satu pertanyaan lanjutan. Alurnya sama: bacakan dulu, lalu tekan rekam.',
   'Nilai dihitung AI dengan rubrik 6 aspek (suara Anda diabaikan), lalu Anda periksa dan sahkan di rincian peserta.',
 ]
 
@@ -169,6 +185,7 @@ const data = ref(null)
 const consent = ref(false)
 const stage = ref('idle') // idle | main-rec | followup-rec | processing
 const pesan = ref('')
+const membuka = ref(false)
 const offset = ref(0) // server_now - waktu perangkat (ms)
 const now = ref(Date.now())
 let clock = null
@@ -208,6 +225,25 @@ async function load() {
   }
   if (data.value && data.value.state !== 'submitted') nextTick(() => tour.autoStart())
 }
+
+// Soal dibuka untuk dibaca dulu; waktu belum berjalan sampai rekam ditekan.
+async function bukaSoal() {
+  const line = current.value
+  if (!line || line.question || membuka.value) return
+  pesan.value = ''
+  membuka.value = true
+  try {
+    terima(await competencyApi.oralOpen(line.id, consent.value || data.value?.consent))
+  } catch (e) {
+    pesan.value = e.message
+  } finally {
+    membuka.value = false
+  }
+}
+
+// Setelah persetujuan diberikan, soal berikutnya terbuka sendiri begitu soal sebelumnya selesai.
+watch(() => (data.value?.consent && data.value.state !== 'submitted' && current.value && !current.value.question ? current.value.id : null),
+  (id) => { if (id) bukaSoal() })
 
 async function mulai(kind) {
   pesan.value = ''
@@ -250,7 +286,7 @@ const tour = useTour('asesor-lisan', () => [
   { title: 'Ujian lisan bersama peserta', text: 'Anda membacakan 4 soal dan merekam jawaban peserta dari HP atau laptop ini. AI menilai rekamannya dengan rubrik 6 aspek.' },
   { element: '[data-tour="lisan-tangga"]', title: 'Tangga soal L1–L4', text: 'Soal dikerjakan berurutan dari L1. Kotak kuning = soal sekarang, hitam = selesai. Persentase = bobot soal.', side: 'bottom' },
   { element: '[data-tour="lisan-aturan"]', title: 'Persetujuan peserta', text: 'Pastikan peserta setuju direkam, lalu centang sekali di awal.', side: 'bottom' },
-  { element: '[data-tour="lisan-mulai"]', title: 'Soal terbuka saat rekaman mulai', text: 'Tekan bila peserta siap, lalu bacakan soalnya. Tekan "Peserta selesai menjawab" bila sudah cukup.', side: 'top' },
+  { element: '[data-tour="lisan-mulai"]', title: 'Buka soal, baca dulu', text: 'Soal terbuka tanpa memulai waktu. Bacakan ke peserta, tekan "Mulai rekam jawaban" saat peserta siap, lalu "Peserta selesai menjawab" bila sudah cukup.', side: 'top' },
   { element: '[data-tour="lisan-help"]', title: 'Lihat lagi kapan saja', text: 'Tombol ? memutar panduan ini lagi.', side: 'bottom', align: 'end' },
 ])
 
