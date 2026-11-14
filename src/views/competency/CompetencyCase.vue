@@ -178,7 +178,7 @@
               <template v-if="!recorder.active.value">
                 <label v-if="!data.consent" class="flex items-start gap-2.5 text-sm cursor-pointer">
                   <input v-model="consent" type="checkbox" class="u-check" />
-                  <span>Saya setuju jawaban lisan direkam, ditranskripsi, dan dinilai AI untuk asesmen ini. Rekaman dihapus otomatis setelah 90 hari.</span>
+                  <span>Saya setuju jawaban lisan direkam, ditranskripsi, dan dinilai AI untuk asesmen ini. Rekaman dihapus otomatis setelah 6 bulan.</span>
                 </label>
                 <button
                   class="u-btn u-btn-merah mt-3" :disabled="(!consent && !data.consent) || recorder.state.value === 'starting'"

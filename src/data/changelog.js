@@ -5,6 +5,23 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.22.0',
+    date: '2026-11-15',
+    title: 'Ujian lisan: baca soal dulu, baru rekam',
+    items: [
+      { type: 'ubah', text: 'Soal ujian lisan kini dibuka dulu untuk dibaca. Waktu menjawab baru berjalan setelah tombol "Mulai rekam jawaban" ditekan. Soal berikutnya terbuka sendiri setelah soal sebelumnya selesai.' },
+      { type: 'perbaikan', text: 'Pertanyaan lanjutan dari AI tetap terlihat selama jawabannya direkam, dan waktu 2 menitnya dihitung sejak rekam ditekan.' },
+    ],
+  },
+  {
+    version: '1.21.1',
+    date: '2026-11-14',
+    title: 'Rekaman asesmen disimpan 6 bulan',
+    items: [
+      { type: 'ubah', text: 'Rekaman suara ujian lisan dan studi kasus kini disimpan 6 bulan (sebelumnya 90 hari) sebelum dihapus otomatis. Transkrip dan nilai tetap tersimpan setelahnya.' },
+    ],
+  },
+  {
     version: '1.21.0',
     date: '2026-11-13',
     title: 'Menunjuk lead asesmen jadi sekali klik',
