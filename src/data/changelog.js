@@ -5,6 +5,15 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.23.0',
+    date: '2026-11-17',
+    title: 'QR kelas untuk link tes asesmen',
+    items: [
+      { type: 'baru', text: 'Di halaman periode asesmen ada tombol "QR kelas" di samping "Salin link tes". QR bisa ditampilkan besar di layar kelas; peserta memindai, login, lalu langsung masuk ke tesnya.' },
+      { type: 'ubah', text: 'Ringkasan rekap peserta kini menampilkan semua poin kekuatan dan area pengembangan dari AI, tidak hanya dua atau tiga poin pertama.' },
+    ],
+  },
+  {
     version: '1.22.1',
     date: '2026-11-16',
     title: 'Ringkasan rekap asesmen tampil utuh',

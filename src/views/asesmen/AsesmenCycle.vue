@@ -17,6 +17,7 @@
         <p class="text-sm flex-1 min-w-[14rem]">{{ STATE[cycle.state].teks }}</p>
         <template v-if="cycle.state !== 'draft'">
           <button class="u-btn !min-h-10" @click="salinLink"><LinkIcon class="w-5 h-5" />{{ disalin ? 'Link disalin' : 'Salin link tes' }}</button>
+          <button class="u-btn !min-h-10" @click="qrBuka = true"><QrCodeIcon class="w-5 h-5" />QR kelas</button>
         </template>
         <button v-if="cycle.state === 'draft'" class="u-btn u-btn-merah" :disabled="busy" data-tour="asm-mulai" @click="aksi('open')"><PlayIcon class="w-5 h-5" />Mulai periode</button>
         <template v-else-if="cycle.state === 'open'">
@@ -158,6 +159,7 @@
         </section>
       </div>
       <LeadDialog :open="!!leadIds.length" :targets="targetLead" :suggestions="leadDipakai" :search="(q) => competencyApi.employees(q)" :apply="terapkanLead" @close="leadIds = []" />
+      <LinkQrDialog :open="qrBuka" :url="linkTes" :title="cycle.name" @close="qrBuka = false" />
     </template>
   </div>
 </template>
@@ -169,11 +171,12 @@ import '../../styles/asesmen.css'
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  ChartBarIcon, CheckIcon, ChevronRightIcon, LinkIcon, LockClosedIcon, PencilSquareIcon, PlayIcon, PlusIcon, TrashIcon, UserPlusIcon,
+  ChartBarIcon, CheckIcon, ChevronRightIcon, LinkIcon, LockClosedIcon, PencilSquareIcon, PlayIcon, PlusIcon, QrCodeIcon, TrashIcon, UserPlusIcon,
 } from '@heroicons/vue/24/outline'
 import AsesmenNav from '../../components/asesmen/AsesmenNav.vue'
 import CaseModePicker from '../../components/asesmen/CaseModePicker.vue'
 import LeadDialog from '../../components/asesmen/LeadDialog.vue'
+import LinkQrDialog from '../../components/asesmen/LinkQrDialog.vue'
 import PeoplePicker from '../../components/asesmen/PeoplePicker.vue'
 import { competencyApi } from '../../services/competencyApi'
 import { useTour } from '../../composables/useTour'
@@ -199,6 +202,8 @@ const pilih = ref([])
 const leadIds = ref([]) // peserta yang sedang diatur lead-nya di dialog
 const pesanAtasan = ref('')
 const disalin = ref(false)
+const qrBuka = ref(false)
+const linkTes = computed(() => (cycle.value?.access_token ? `${window.location.origin}/dashboard/lms/competency/join/${cycle.value.access_token}` : ''))
 const konfirmTutup = ref(false)
 const form = reactive({
   name: '', date_start: '', date_end: '', oral_enabled: true, lead_enabled: true, case_ids: [], case_mode: 'random', case_count: 1,
@@ -293,7 +298,7 @@ async function pakaiAtasan() {
 function pilihSemua(on) { pilih.value = on ? participants.value.map((p) => p.id) : [] }
 async function salinLink() {
   try {
-    await navigator.clipboard.writeText(`${window.location.origin}/dashboard/lms/competency/join/${cycle.value.access_token}`)
+    await navigator.clipboard.writeText(linkTes.value)
     disalin.value = true
     setTimeout(() => { disalin.value = false }, 2500)
   } catch { error.value = 'Browser menolak menyalin; salin manual dari alamat ini.' }

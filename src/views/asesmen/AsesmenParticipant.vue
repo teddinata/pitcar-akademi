@@ -77,8 +77,8 @@
                     <span class="u-level !min-w-0 !h-6 !px-1.5 !text-xs" :class="levelClass(c.avg)">{{ c.avg ? num(c.avg, 1) : '–' }}</span>Kasus {{ i + 1 }} · {{ c.attempt.case.name }}
                   </button>
                   <template v-if="c.attempt.ai_result">
-                    <p v-for="(t, j) in (c.attempt.ai_result.kekuatan || []).slice(0, 2)" :key="`k${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--hijau)]">+</span><span>{{ t }}</span></p>
-                    <p v-for="(t, j) in (c.attempt.ai_result.area_pengembangan || []).slice(0, 2)" :key="`a${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--merah-tua)]">−</span><span>{{ t }}</span></p>
+                    <p v-for="(t, j) in (c.attempt.ai_result.kekuatan || [])" :key="`k${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--hijau)]">+</span><span>{{ t }}</span></p>
+                    <p v-for="(t, j) in (c.attempt.ai_result.area_pengembangan || [])" :key="`a${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--merah-tua)]">−</span><span>{{ t }}</span></p>
                   </template>
                   <p v-else class="mt-1 text-[color:var(--ink-soft)]">{{ CASE_STATE({ state: c.attempt.state, ai_state: c.attempt.ai_state, started: !!c.attempt.started_at }) }}</p>
                 </div>
@@ -449,7 +449,7 @@ const kesimpulan = computed(() => {
       out.push(`Perlu latihan di soal <b>L${oral.practice.level}</b>${oral.practice.aspects.length ? `: ${esc(oral.practice.aspects.join(', '))}` : ''}.`)
     }
     if (oral.ai_summary?.ringkasan) out.push(esc(oral.ai_summary.ringkasan))
-    ;(oral.ai_summary?.area_pengembangan || []).slice(0, 3).forEach((t) => out.push(`Kembangkan: ${esc(t)}`))
+    ;(oral.ai_summary?.area_pengembangan || []).forEach((t) => out.push(`Kembangkan: ${esc(t)}`))
   }
   const kc = s.value.components?.case
   if (kc?.status === 'done') out.push(`Studi kasus rata-rata level <b>${num(kc.level, 1)}</b> dari ${kc.done} kasus.`)
