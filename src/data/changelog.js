@@ -5,6 +5,14 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.22.1',
+    date: '2026-11-16',
+    title: 'Ringkasan rekap asesmen tampil utuh',
+    items: [
+      { type: 'perbaikan', text: 'Di Ringkasan rekap peserta, poin studi kasus dan catatan penilaian lead kini tampil lengkap, tidak lagi terpotong dengan tanda "...".' },
+    ],
+  },
+  {
     version: '1.22.0',
     date: '2026-11-15',
     title: 'Ujian lisan: baca soal dulu, baru rekam',

@@ -77,8 +77,8 @@
                     <span class="u-level !min-w-0 !h-6 !px-1.5 !text-xs" :class="levelClass(c.avg)">{{ c.avg ? num(c.avg, 1) : '–' }}</span>Kasus {{ i + 1 }} · {{ c.attempt.case.name }}
                   </button>
                   <template v-if="c.attempt.ai_result">
-                    <p v-for="(t, j) in (c.attempt.ai_result.kekuatan || []).slice(0, 2)" :key="`k${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--hijau)]">+</span><span class="line-clamp-2" :title="t">{{ t }}</span></p>
-                    <p v-for="(t, j) in (c.attempt.ai_result.area_pengembangan || []).slice(0, 2)" :key="`a${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--merah-tua)]">−</span><span class="line-clamp-2" :title="t">{{ t }}</span></p>
+                    <p v-for="(t, j) in (c.attempt.ai_result.kekuatan || []).slice(0, 2)" :key="`k${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--hijau)]">+</span><span>{{ t }}</span></p>
+                    <p v-for="(t, j) in (c.attempt.ai_result.area_pengembangan || []).slice(0, 2)" :key="`a${j}`" class="mt-1 flex gap-1.5"><span class="font-extrabold text-[color:var(--merah-tua)]">−</span><span>{{ t }}</span></p>
                   </template>
                   <p v-else class="mt-1 text-[color:var(--ink-soft)]">{{ CASE_STATE({ state: c.attempt.state, ai_state: c.attempt.ai_state, started: !!c.attempt.started_at }) }}</p>
                 </div>
@@ -89,7 +89,7 @@
                 <ul v-if="leadRingkas.length" class="mt-1.5 space-y-1.5 text-sm">
                   <li v-for="l in leadRingkas" :key="`${l.rater}-${l.pillar_id}`" class="flex gap-2">
                     <span class="u-level !min-w-0 !h-6 !px-1.5 !text-xs shrink-0" :class="levelClass(l.level)">L{{ l.level }}</span>
-                    <span class="min-w-0"><b>{{ pilarNama(l.pillar_id) }}</b><span v-if="l.note && !catatanLeadSama" class="block text-[color:var(--ink-soft)] line-clamp-2" :title="l.note">{{ l.note }}</span></span>
+                    <span class="min-w-0"><b>{{ pilarNama(l.pillar_id) }}</b><span v-if="l.note && !catatanLeadSama" class="block text-[color:var(--ink-soft)]">{{ l.note }}</span></span>
                   </li>
                 </ul>
                 <p v-else class="mt-1.5 text-sm text-[color:var(--ink-soft)]">{{ leadsAll.length ? 'Lead belum menilai.' : 'Tidak ada penilaian lead.' }}</p>
