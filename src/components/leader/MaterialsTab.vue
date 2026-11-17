@@ -33,6 +33,7 @@
               <span v-else class="u-chip !text-[11px]">Tanpa quiz</span>
             </div>
           </div>
+          <p v-if="t.duplicate_count" class="u-notice mt-2">{{ t.duplicate_count }} soal ganda (terimpor dua kali). Buka materi untuk menghapusnya.</p>
           <p v-if="t.missing_key" class="u-notice mt-2">Beberapa soal belum punya kunci jawaban.</p>
           <div class="mt-2 flex flex-wrap items-center gap-2">
             <button v-for="m in t.materials || []" :key="m.id" type="button"
@@ -66,16 +67,17 @@
             <router-link :to="topicPath(t)" class="u-display mt-0.5 block text-lg font-extrabold leading-snug hover:underline underline-offset-4">{{ t.name }}</router-link>
             <p v-if="t.description" class="mt-1 line-clamp-2 text-sm text-[color:var(--ink-soft)]">{{ t.description }}</p>
           </div>
-          <LChip :tone="t.question_count && !t.missing_key ? 'green' : t.question_count ? 'amber' : 'gray'">
-            {{ !t.question_count ? (academy ? 'Tanpa quiz' : 'Belum ada soal') : t.missing_key ? 'Ada soal tanpa kunci' : (academy ? 'Quiz siap' : 'Siap') }}
+          <LChip :tone="t.question_count && !t.missing_key && !t.duplicate_count ? 'green' : t.question_count ? 'amber' : 'gray'">
+            {{ !t.question_count ? (academy ? 'Tanpa quiz' : 'Belum ada soal') : t.duplicate_count ? 'Ada soal ganda' : t.missing_key ? 'Ada soal tanpa kunci' : (academy ? 'Quiz siap' : 'Siap') }}
           </LChip>
         </div>
         <div class="mt-3 grid grid-cols-4 gap-2 text-center">
-          <div class="rounded-lg border-2 border-[color:var(--ink)] py-2"><p class="u-display text-lg font-extrabold">{{ t.question_count }}</p><p class="text-[11px] font-bold">soal</p></div>
+          <div class="rounded-lg border-2 border-[color:var(--ink)] py-2"><p class="u-display text-lg font-extrabold">{{ t.question_count }}</p><p class="text-[11px] font-bold">soal<template v-if="t.duplicate_count"> · {{ t.duplicate_count }} ganda</template></p></div>
           <div class="rounded-lg border-2 border-[color:var(--ink)] py-2"><p class="u-display text-lg font-extrabold">{{ t.total_points }}</p><p class="text-[11px] font-bold">poin</p></div>
           <div class="rounded-lg border-2 border-[color:var(--ink)] py-2"><p class="u-display text-lg font-extrabold">{{ t.time_limit_minutes }}</p><p class="text-[11px] font-bold">menit</p></div>
           <div class="rounded-lg border-2 border-[color:var(--ink)] py-2"><p class="u-display text-lg font-extrabold">{{ t.material_count }}</p><p class="text-[11px] font-bold">bahan</p></div>
         </div>
+        <p v-if="t.duplicate_count" class="u-notice mt-3">{{ t.duplicate_count }} soal sama persis dengan soal lain (biasanya karena impor dua kali), jadi total soal & poin terhitung dobel. Buka materi untuk menghapus yang ganda.</p>
         <p v-if="t.missing_key" class="u-notice mt-3">Beberapa soal belum punya kunci jawaban. Nilai peserta belum akurat sampai kunci diisi.</p>
         <div v-if="academy" class="mt-3">
           <p class="text-xs font-extrabold uppercase tracking-[.06em] text-[color:var(--ink-soft)]">Bahan materi</p>

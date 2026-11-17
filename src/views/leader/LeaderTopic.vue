@@ -61,6 +61,22 @@
           <div><label for="q-cat" class="sr-only">Kategori</label><select id="q-cat" v-model="catFilter" class="u-input"><option value="">Semua kategori</option><option v-for="c in categories" :key="c" :value="c">{{ c }}</option></select></div>
         </div>
 
+        <div v-if="topic.duplicate_count" class="u-notice mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p class="min-w-0 flex-1"><b>{{ topic.duplicate_count }} soal ganda</b>: teksnya sama persis dengan soal lain di atasnya (biasanya karena impor dua kali). Yang paling atas dipertahankan.</p>
+          <button type="button" class="u-btn" :disabled="busyBulk" @click="dedupeAsk = true"><TrashIcon class="h-5 w-5" aria-hidden="true" />Hapus soal ganda</button>
+        </div>
+        <div v-if="shown.length && !editing" class="mt-3 flex min-h-[44px] flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <label class="flex min-h-[44px] cursor-pointer items-center gap-2 font-bold">
+            <input type="checkbox" class="h-5 w-5 accent-[color:var(--merah)]" :checked="allShownPicked" :indeterminate.prop="somePicked && !allShownPicked" @change="pickAllShown($event.target.checked)" />
+            Pilih semua{{ search || catFilter ? ' yang tampil' : '' }} ({{ shown.length }})
+          </label>
+          <template v-if="picked.length">
+            <span class="font-extrabold">{{ picked.length }} dipilih</span>
+            <button type="button" class="u-btn u-btn-bahaya" :disabled="busyBulk" @click="bulkAsk = true"><TrashIcon class="h-5 w-5" aria-hidden="true" />Hapus {{ picked.length }} soal</button>
+            <button type="button" class="u-btn u-btn-ghost" @click="picked = []">Batal pilih</button>
+          </template>
+        </div>
+
         <div v-if="editing && !editing.id" class="mt-4"><QuestionForm :model="editing" :categories="categories" :saving="savingQ" @save="saveQuestion" @cancel="editing = null" /></div>
 
         <div v-if="!daftar.length && !editing" class="u-card mt-4 p-8 text-center text-sm text-[color:var(--ink-soft)]">{{ isAcademy ? `Belum ada soal ${labelSet}. Tambah satu per satu, impor dari file Excel, atau salin dari set lain di tab Quiz.` : 'Belum ada soal. Tambah satu per satu atau impor dari file Excel.' }}</div>
@@ -70,11 +86,18 @@
             <QuestionForm v-if="editing?.id === q.id" :model="editing" :categories="categories" :saving="savingQ" @save="saveQuestion" @cancel="editing = null" />
             <article v-else class="u-card p-4">
               <div class="flex items-start justify-between gap-2">
-                <div class="min-w-0">
+                <label class="-m-2 flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-start justify-center p-2.5">
+                  <input v-model="picked" type="checkbox" :value="q.id" class="h-5 w-5 accent-[color:var(--merah)]" />
+                  <span class="sr-only">Pilih soal nomor {{ numberOf(q) }}</span>
+                </label>
+                <div class="min-w-0 flex-1">
                   <p class="text-xs text-[color:var(--ink-soft)]">No. {{ numberOf(q) }}<template v-if="q.category"> · {{ q.category }}</template> · {{ q.points }} poin</p>
                   <p class="mt-1 whitespace-pre-line text-sm ">{{ q.text }}</p>
                 </div>
-                <LChip v-if="!q.answer_key" tone="amber">Tanpa kunci</LChip>
+                <span class="flex shrink-0 flex-wrap justify-end gap-1">
+                  <LChip v-if="q.duplicate" tone="amber">Ganda</LChip>
+                  <LChip v-if="!q.answer_key" tone="amber">Tanpa kunci</LChip>
+                </span>
               </div>
               <ul class="mt-3 space-y-1 text-sm">
                 <li v-for="o in q.options" :key="o.key" class="rounded-lg px-2 py-1" :class="o.key === q.answer_key ? 'bg-[#d9f2e3] font-bold' : 'text-[color:var(--ink-soft)]'"><b>{{ o.key }}.</b> {{ o.text }}</li>
@@ -126,17 +149,28 @@
           <p class="text-sm "><b>{{ preview.questions.length }}</b> soal terbaca.</p>
           <ul v-if="preview.warnings.length" class="space-y-1 u-notice"><li v-for="(w, i) in preview.warnings" :key="i">{{ w }}</li></ul>
           <ol class="max-h-64 space-y-2 overflow-y-auto rounded-xl border-2 border-[color:var(--ink)] p-3 text-sm">
-            <li v-for="(q, i) in preview.questions" :key="i"><span class="text-xs text-[color:var(--ink-soft)]">{{ i + 1 }}<template v-if="q.category"> · {{ q.category }}</template> · kunci {{ q.answer_key || '-' }}</span><br />{{ q.text }}</li>
+            <li v-for="(q, i) in preview.questions" :key="i"><span class="text-xs text-[color:var(--ink-soft)]">{{ i + 1 }}<template v-if="q.category"> · {{ q.category }}</template> · kunci {{ q.answer_key || '-' }}</span><template v-if="dupRows.has(i)"> <LChip tone="amber">Sudah ada</LChip></template><br />{{ q.text }}</li>
           </ol>
+          <fieldset v-if="preview.existing">
+            <legend class="u-label">{{ isAcademy ? `${labelSet} materi ini` : 'Materi ini' }} sudah punya {{ preview.existing }} soal. Simpan dengan cara:</legend>
+            <p v-if="preview.duplicates" class="mb-2 text-sm font-bold text-[color:var(--merah-tua)]">{{ preview.duplicates }} dari {{ preview.questions.length }} soal di file sudah ada.</p>
+            <div class="space-y-2">
+              <label v-for="m in IMPORT_MODES" :key="m.v" class="flex min-h-[44px] cursor-pointer items-start gap-3 rounded-xl border-2 p-3 text-sm" :class="importMode === m.v ? 'border-[color:var(--ink)] bg-[#fffbe0]' : 'border-[color:var(--ink-soft)]/40'">
+                <input v-model="importMode" type="radio" name="import-mode" :value="m.v" class="mt-0.5 h-5 w-5 accent-[color:var(--merah)]" />
+                <span><b>{{ m.label }}</b><br /><span class="text-[color:var(--ink-soft)]">{{ m.help(preview) }}</span></span>
+              </label>
+            </div>
+          </fieldset>
         </template>
       </div>
       <template #footer>
         <button type="button" class="u-btn" @click="closeImport">Batal</button>
-        <button type="button" class="u-btn" :disabled="!preview?.questions.length || importing || !daftar.length" @click="replaceAsk = true">{{ isAcademy ? `Ganti semua soal ${labelSet}` : 'Ganti semua soal' }}</button>
-        <button type="button" class="u-btn u-btn-merah" :disabled="!preview?.questions.length || importing" @click="runImport('append')">{{ importing ? 'Menyimpan...' : 'Tambahkan' }}</button>
+        <button type="button" class="u-btn u-btn-merah" :disabled="!preview?.questions.length || importing" @click="submitImport">{{ importing ? 'Menyimpan...' : importLabel }}</button>
       </template>
     </LDialog>
     <ConfirmDialog :open="replaceAsk" title="Ganti semua soal?" :message="`Semua ${daftar.length} soal ${isAcademy ? labelSet + ' ' : ''}sekarang akan diganti dengan isi file. Soal yang sudah dijawab peserta tetap tersimpan di riwayat mereka.`" confirm-label="Ganti semua" :busy="importing" @cancel="replaceAsk = false" @confirm="runImport('replace')" />
+    <ConfirmDialog :open="bulkAsk" title="Hapus soal terpilih?" :message="`${picked.length} soal akan dihapus dari bank soal. Soal yang sudah dijawab peserta tetap tersimpan di riwayat mereka.`" :confirm-label="`Hapus ${picked.length} soal`" :busy="busyBulk" @cancel="bulkAsk = false" @confirm="doBulkDelete" />
+    <ConfirmDialog :open="dedupeAsk" title="Hapus soal ganda?" :message="`${topic?.duplicate_count} soal ganda akan dihapus. Untuk tiap soal yang sama, yang paling atas dipertahankan.`" confirm-label="Hapus soal ganda" :busy="busyBulk" @cancel="dedupeAsk = false" @confirm="doDedupe" />
     <ConfirmDialog :open="!!qDelete" title="Hapus soal?" message="Soal ini akan dihapus dari bank soal." confirm-label="Hapus" :busy="savingQ" @cancel="qDelete = null" @confirm="doDeleteQuestion" />
     <AssignDialog v-if="program" :open="assignOpen" :program="program" :participants="participants" :preset-topic-id="topic?.id" @close="assignOpen = false" />
   </div>
@@ -183,6 +217,19 @@ const preview = ref(null)
 const previewing = ref(false)
 const importing = ref(false)
 const replaceAsk = ref(false)
+const importMode = ref('append')
+const picked = ref([])
+const bulkAsk = ref(false)
+const dedupeAsk = ref(false)
+const busyBulk = ref(false)
+
+const IMPORT_MODES = [
+  { v: 'skip_dup', label: 'Tambahkan, lewati yang sudah ada', help: (p) => `${p.questions.length - p.duplicates} soal baru masuk, ${p.duplicates} yang teksnya sama dilewati.` },
+  { v: 'append', label: 'Tambahkan semua', help: (p) => `${p.questions.length} soal masuk di bawah soal lama${p.duplicates ? `; ${p.duplicates} akan jadi ganda` : ''}.` },
+  { v: 'replace', label: 'Ganti semua soal lama', help: (p) => `${p.existing} soal lama dihapus, diganti ${p.questions.length} soal dari file.` },
+]
+const dupRows = computed(() => new Set(preview.value?.duplicate_rows || []))
+const importLabel = computed(() => (!preview.value?.existing ? 'Simpan soal' : importMode.value === 'replace' ? 'Ganti semua soal' : 'Tambahkan'))
 
 const program = computed(() => config.value?.programs.find((p) => p.id === topic.value?.program_id) || null)
 const categories = computed(() => [...new Set((topic.value?.questions || []).map((q) => q.category).filter(Boolean))])
@@ -191,13 +238,47 @@ const SETS = [{ v: 'pre', label: 'Pre-test' }, { v: 'post', label: 'Post-test' }
 const isAcademy = computed(() => !!route.meta.academy)
 const setAktif = ref(route.query.set === 'post' ? 'post' : 'pre')
 const labelSet = computed(() => (setAktif.value === 'pre' ? 'pre-test' : 'post-test'))
-const pilihSet = (v) => { setAktif.value = v; editing.value = null }
+const pilihSet = (v) => { setAktif.value = v; editing.value = null; picked.value = [] }
 const daftar = computed(() => (isAcademy.value ? (topic.value?.questions || []).filter((q) => q.quiz_set === setAktif.value) : topic.value?.questions || []))
 const shown = computed(() => {
   const s = search.value.trim().toLowerCase()
   return daftar.value.filter((q) => (!catFilter.value || q.category === catFilter.value) && (!s || q.text.toLowerCase().includes(s)))
 })
 const numberOf = (q) => daftar.value.findIndex((x) => x.id === q.id) + 1
+const allShownPicked = computed(() => shown.value.length > 0 && shown.value.every((q) => picked.value.includes(q.id)))
+const somePicked = computed(() => shown.value.some((q) => picked.value.includes(q.id)))
+const pickAllShown = (on) => {
+  const ids = shown.value.map((q) => q.id)
+  picked.value = on ? [...new Set([...picked.value, ...ids])] : picked.value.filter((id) => !ids.includes(id))
+}
+const doBulkDelete = async () => {
+  busyBulk.value = true
+  try {
+    const res = await leaderApi.questionsDelete(picked.value)
+    notify.success(`${res.deleted} soal dihapus`)
+    bulkAsk.value = false
+    picked.value = []
+    await load(true)
+  } catch (e) {
+    notify.error(e.message)
+  } finally {
+    busyBulk.value = false
+  }
+}
+const doDedupe = async () => {
+  busyBulk.value = true
+  try {
+    const res = await leaderApi.questionsDedupe(topic.value.id)
+    notify.success(`${res.deleted} soal ganda dihapus`)
+    dedupeAsk.value = false
+    picked.value = []
+    await load(true)
+  } catch (e) {
+    notify.error(e.message)
+  } finally {
+    busyBulk.value = false
+  }
+}
 
 const INFO_FIELDS = ['name', 'schedule_label', 'description', 'instructions', 'time_limit_minutes', 'pass_score', 'result_visibility']
 
@@ -207,6 +288,7 @@ const load = async (silent = false) => {
   try {
     const [t, c] = await Promise.all([leaderApi.topicGet(topicId.value), config.value ? Promise.resolve(config.value) : leaderApi.config()])
     topic.value = t
+    picked.value = picked.value.filter((id) => t.questions.some((q) => q.id === id))
     config.value = c
     INFO_FIELDS.forEach((k) => { info[k] = t[k] ?? '' })
     participants.value = await leaderApi.participants(t.program_id)
@@ -312,7 +394,8 @@ const pickImport = async (ev) => {
   previewing.value = true
   try {
     importFile.value = { filename: file.name, content: await fileToBase64(file) }
-    preview.value = await leaderApi.questionsImport({ topic_id: topic.value.id, ...importFile.value, preview: true, mode: 'append', ...(isAcademy.value ? { quiz_set: setAktif.value } : {}) })
+    preview.value = await leaderApi.questionsImport({ topic_id: topic.value.id, ...importFile.value, preview: true, ...(isAcademy.value ? { quiz_set: setAktif.value } : {}) })
+    importMode.value = preview.value.duplicates ? 'skip_dup' : 'append'
   } catch (e) {
     importFile.value = null
     notify.error(e.message)
@@ -324,7 +407,7 @@ const runImport = async (mode) => {
   importing.value = true
   try {
     const res = await leaderApi.questionsImport({ topic_id: topic.value.id, ...importFile.value, preview: false, mode, ...(isAcademy.value ? { quiz_set: setAktif.value } : {}) })
-    notify.success(`${res.imported} soal masuk${isAcademy.value ? ` ke ${labelSet.value}` : ''}`)
+    notify.success(`${res.imported} soal masuk${isAcademy.value ? ` ke ${labelSet.value}` : ''}${res.skipped ? `, ${res.skipped} dilewati karena sudah ada` : ''}${res.replaced ? `, ${res.replaced} soal lama diganti` : ''}`)
     replaceAsk.value = false
     closeImport()
     await load(true)
@@ -333,6 +416,10 @@ const runImport = async (mode) => {
   } finally {
     importing.value = false
   }
+}
+const submitImport = () => {
+  if (preview.value?.existing && importMode.value === 'replace') replaceAsk.value = true
+  else runImport(preview.value?.existing ? importMode.value : 'append')
 }
 const closeImport = () => { importOpen.value = false; preview.value = null; importFile.value = null }
 
