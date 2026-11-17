@@ -5,6 +5,16 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.24.0',
+    date: '2026-11-17',
+    title: 'Soal materi: hapus sekaligus & impor tanpa dobel',
+    items: [
+      { type: 'baru', text: 'Di halaman materi Calon Kabeng dan Kelas Offline, centang soal (atau "Pilih semua") lalu tekan "Hapus N soal".' },
+      { type: 'ubah', text: 'Saat impor ke materi yang sudah punya soal, pilih caranya: tambahkan dan lewati yang sudah ada, tambahkan semua, atau ganti semua soal lama. Pratinjau menandai soal yang sudah ada.' },
+      { type: 'perbaikan', text: 'Materi yang soalnya terimpor dua kali kini ditandai "Ada soal ganda" beserta jumlahnya, dan bisa dibersihkan dengan tombol "Hapus soal ganda". Pre-test dan post-test boleh berisi soal yang sama.' },
+    ],
+  },
+  {
     version: '1.23.0',
     date: '2026-11-17',
     title: 'QR kelas untuk link tes asesmen',
