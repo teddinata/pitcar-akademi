@@ -5,6 +5,14 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.25.0',
+    date: '2026-11-18',
+    title: 'Masuk Akademi langsung dari Sokasistem',
+    items: [
+      { type: 'baru', text: 'Klik ubin Akademi di beranda Sokasistem untuk membuka Akademi tanpa mengetik password lagi. Akun Akademi harus memakai email login yang sama dengan Sokasistem.' },
+    ],
+  },
+  {
     version: '1.24.0',
     date: '2026-11-17',
     title: 'Soal materi: hapus sekaligus & impor tanpa dobel',

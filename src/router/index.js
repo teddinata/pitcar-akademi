@@ -11,6 +11,13 @@ const routes = [
     component: () => import('../views/Login.vue')
   },
   {
+    // Masuk otomatis dari ubin Akademi di Sokasistem (token sekali pakai di fragmen URL)
+    path: '/sso',
+    name: 'SsoLogin',
+    component: () => import('../views/SsoLogin.vue'),
+    meta: { bare: true }
+  },
+  {
     // Ujian Calon Kepala Bengkel: tautan pribadi bertoken, tanpa login (?db= database Akademi)
     path: '/ujian-kabeng/:token',
     name: 'LeaderTake',
