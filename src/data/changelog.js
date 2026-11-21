@@ -5,6 +5,19 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.26.0',
+    date: '2026-11-21',
+    title: 'Rekap asesmen dengan analisis AI & menu Asesmen lebih ringkas',
+    items: [
+      { type: 'baru', text: 'Rekap & Validasi: tombol "Proses semua nilai sekarang" meminta AI menulis rekomendasi tiap peserta (fokus perbaikan, kekuatan, rencana 1 bulan) dan ringkasan periode (pola, aspek terlemah, prioritas pembinaan, pelatihan bersama). Prosesnya berjalan di server; halaman boleh ditinggal.' },
+      { type: 'baru', text: 'Rekap punya filter dan kolom Departemen, urutan per departemen atau nilai lisan, skor lisan L1-L4 per peserta, serta peta rata-rata Departemen × Level dan rata-rata tiap aspek.' },
+      { type: 'baru', text: 'Halaman rincian peserta menampilkan rekomendasi AI di bawah kesimpulan.' },
+      { type: 'ubah', text: 'Menu Asesmen kini 4 baris: Asesmen Saya, Asesmen Mekanik (tab Periode, Paket, Rekap), Calon Kabeng, dan Peta Kompetensi 360°.' },
+      { type: 'ubah', text: 'Calon Kabeng: materi tampil sebagai tabel per minggu (bisa diganti ke kartu), aturan program dilipat ke tombol "Aturan program", tab menampilkan jumlah materi dan peserta.' },
+      { type: 'baru', text: 'Unduh CSV rekap ikut memuat departemen, skor L1-L4, dan rekomendasi AI.' },
+    ],
+  },
+  {
     version: '1.25.0',
     date: '2026-11-18',
     title: 'Masuk Akademi langsung dari Sokasistem',

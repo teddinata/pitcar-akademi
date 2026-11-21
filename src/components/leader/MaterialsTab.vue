@@ -4,6 +4,9 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h3 class="u-display text-xl font-extrabold">{{ academy ? 'Kurikulum' : 'Materi' }} ({{ program.topics.length }})</h3>
       <div class="flex flex-wrap gap-2">
+        <div v-if="!academy && program.topics.length" class="flex overflow-hidden rounded-xl border-[2.5px] border-[color:var(--ink)]" role="group" aria-label="Tampilan materi">
+          <button v-for="v in VIEWS" :key="v.key" type="button" class="min-h-11 px-4 text-sm font-extrabold" :class="view === v.key ? 'bg-[color:var(--ink)] text-white' : 'bg-white hover:bg-[#fffbe0]'" :aria-pressed="view === v.key" @click="view = v.key">{{ v.label }}</button>
+        </div>
         <button v-if="academy" type="button" class="u-btn" @click="$emit('import')"><ArrowUpTrayIcon class="h-5 w-5" />Impor kurikulum</button>
         <button type="button" class="u-btn u-btn-merah" @click="openTopic(null)"><PlusIcon class="h-5 w-5" />Tambah materi</button>
       </div>
@@ -57,6 +60,33 @@
       </div>
       <FilePreview :open="!!pratinjau" :name="pratinjau?.name || ''" :load="() => fetchMaterialBlob(pratinjau)" removable
         @close="pratinjau = null" @remove="hapusDariPratinjau" />
+    </div>
+
+    <!-- Calon Kabeng: tabel (bawaan) dikelompokkan per minggu dari jadwal -->
+    <div v-else-if="view === 'tabel'" class="mt-4 overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] bg-white shadow-[4px_4px_0_var(--ink)]">
+      <table class="u-table min-w-[52rem]">
+        <thead><tr><th class="w-12">#</th><th>Materi</th><th>Jadwal</th><th class="text-right">Soal</th><th class="text-right">Poin</th><th class="text-right">Waktu</th><th class="text-right">Bahan</th><th>Status</th><th><span class="sr-only">Tindakan</span></th></tr></thead>
+        <tbody>
+          <template v-for="g in kelompok" :key="g.week">
+            <tr v-if="kelompok.length > 1"><td colspan="9" class="!bg-[#f5f1e8] !py-2 text-xs font-extrabold uppercase tracking-wide">{{ g.week ? `Minggu ${g.week}` : 'Tanpa minggu' }} · {{ g.topics.length }} materi</td></tr>
+            <tr v-for="t in g.topics" :key="t.id" class="is-click" @click="router.push(topicPath(t))">
+              <td class="u-display text-lg font-extrabold tabular-nums">{{ program.topics.indexOf(t) + 1 }}</td>
+              <td class="min-w-[12rem]"><router-link :to="topicPath(t)" class="font-bold leading-tight hover:underline underline-offset-4" @click.stop>{{ t.name }}</router-link><p v-if="t.description" class="max-w-[18rem] truncate text-xs text-[color:var(--ink-soft)]">{{ t.description }}</p></td>
+              <td class="whitespace-nowrap text-sm font-semibold">{{ jadwalPendek(t) || '-' }}</td>
+              <td class="text-right font-extrabold tabular-nums">{{ t.question_count }}<span v-if="t.duplicate_count" class="u-chip u-chip-kuning ml-1 !text-[10px]">{{ t.duplicate_count }} ganda</span></td>
+              <td class="text-right tabular-nums">{{ t.total_points }}</td>
+              <td class="text-right tabular-nums">{{ t.time_limit_minutes }} mnt</td>
+              <td class="text-right tabular-nums">{{ t.material_count }}</td>
+              <td><LChip :tone="t.question_count && !t.missing_key && !t.duplicate_count ? 'green' : t.question_count ? 'amber' : 'gray'">{{ !t.question_count ? 'Belum ada soal' : t.duplicate_count ? 'Ada soal ganda' : t.missing_key ? 'Ada soal tanpa kunci' : 'Siap' }}</LChip></td>
+              <td class="whitespace-nowrap text-right" @click.stop>
+                <router-link :to="topicPath(t)" class="u-btn u-btn-kecil">Buka</router-link>
+                <button type="button" class="u-btn u-btn-kecil ml-1 !px-2.5" :aria-label="`Ubah ${t.name}`" @click="openTopic(t)"><PencilSquareIcon class="h-4 w-4" /></button>
+                <button type="button" class="u-btn u-btn-kecil u-btn-ghost u-btn-bahaya ml-1 !px-2.5" :aria-label="`Hapus ${t.name}`" @click="toDelete = t"><TrashIcon class="h-4 w-4" /></button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
     </div>
 
     <ul v-else class="mt-4 grid gap-4 lg:grid-cols-2">
@@ -148,6 +178,7 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ArrowDownTrayIcon, ArrowUpTrayIcon, EyeIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { downloadMaterial, fetchMaterialBlob, fileToBase64, leaderApi } from '../../services/leaderApi'
 import WeekNav from '../academy/WeekNav.vue'
@@ -160,6 +191,24 @@ import { notify } from './notice'
 
 const props = defineProps({ program: Object, config: Object, academy: Boolean })
 const emit = defineEmits(['changed', 'import', 'open-quiz'])
+const router = useRouter()
+
+// Calon Kabeng: tampilan tabel (bawaan) atau kartu, diingat per perangkat.
+const VIEWS = [{ key: 'tabel', label: 'Tabel' }, { key: 'kartu', label: 'Kartu' }]
+const view = ref((() => { try { return localStorage.getItem('leaderMateriView') === 'kartu' ? 'kartu' : 'tabel' } catch { return 'tabel' } })())
+watch(view, (v) => { try { localStorage.setItem('leaderMateriView', v) } catch { /* abaikan */ } })
+const mingguDari = (t) => Number((t.schedule_label || '').match(/minggu\s*(\d+)/i)?.[1] || 0)
+// "Minggu 1 · Selasa · 17.00-19.00 WIB" -> "Selasa · 17.00-19.00 WIB" bila sudah dikelompokkan per minggu.
+const jadwalPendek = (t) => (kelompok.value.length > 1 ? (t.schedule_label || '').replace(/minggu\s*\d+\s*·?\s*/i, '') : t.schedule_label) || ''
+const kelompok = computed(() => {
+  const map = new Map()
+  for (const t of props.program.topics) {
+    const w = mingguDari(t)
+    if (!map.has(w)) map.set(w, { week: w, topics: [] })
+    map.get(w).topics.push(t)
+  }
+  return [...map.values()].sort((a, b) => (a.week || 99) - (b.week || 99))
+})
 
 // Kelas Offline: materi dikelompokkan per minggu.
 const mingguList = computed(() => {

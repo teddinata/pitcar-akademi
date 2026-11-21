@@ -31,22 +31,27 @@
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
             <h2 class="u-display text-xl font-extrabold">{{ program.name }}</h2>
-            <p v-if="program.description" class="mt-1 max-w-prose whitespace-pre-line text-sm text-[color:var(--ink-soft)]">{{ program.description }}</p>
+            <p class="mt-1 text-sm font-semibold tabular-nums">{{ program.topics.length }} materi · {{ program.participant_count }} peserta · lulus bila tiap materi dan rata-rata minimal {{ program.pass_score }} · remedial {{ config.remedial_from }}-{{ program.pass_score - 1 }}</p>
           </div>
           <div class="flex flex-wrap gap-2">
+            <button type="button" class="u-btn" :aria-expanded="rulesOpen" aria-controls="lp-rules" @click="rulesOpen = !rulesOpen">Aturan program<ChevronDownIcon class="h-5 w-5 transition-transform" :class="rulesOpen ? 'rotate-180' : ''" /></button>
             <button type="button" class="u-btn" @click="openProgram(program)"><PencilSquareIcon class="h-5 w-5" />Ubah</button>
             <button type="button" class="u-btn u-btn-ghost u-btn-bahaya" @click="deleteOpen = true"><TrashIcon class="h-5 w-5" />Hapus</button>
           </div>
         </div>
-        <div class="mt-4 grid gap-3 sm:grid-cols-3">
-          <div class="rounded-xl border-2 border-[color:var(--ink)] p-3"><p class="text-xs font-extrabold uppercase tracking-[.06em] text-[color:var(--ink-soft)]">Aturan lulus</p><p class="mt-1 text-sm">Nilai tiap materi minimal {{ program.pass_score }} dan rata-rata minimal {{ program.pass_score }}.</p></div>
-          <div class="rounded-xl border-2 border-[color:var(--ink)] p-3"><p class="text-xs font-extrabold uppercase tracking-[.06em] text-[color:var(--ink-soft)]">Susulan</p><p class="mt-1 text-sm">Nilai {{ config.remedial_from }}-{{ program.pass_score - 1 }}: remedial. Di bawah {{ config.remedial_from }}: pembelajaran ulang.</p></div>
-          <div class="rounded-xl border-2 border-[color:var(--ink)] bg-[color:var(--stabilo)] p-3"><p class="text-xs font-extrabold uppercase tracking-[.06em]">Peserta</p><p class="mt-1"><span class="u-angka !text-[2rem]">{{ program.participant_count }}</span> <span class="text-sm font-bold">orang · {{ program.topics.length }} materi</span></p></div>
+        <div v-if="rulesOpen" id="lp-rules" class="mt-4 grid gap-3 border-t-2 border-[color:var(--ink)] pt-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+          <p v-if="program.description" class="max-w-prose whitespace-pre-line text-sm text-[color:var(--ink-soft)]">{{ program.description }}</p>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <div class="rounded-xl border-2 border-[color:var(--ink)] p-3"><p class="text-xs font-extrabold">Aturan lulus</p><p class="mt-1 text-sm">Nilai tiap materi minimal {{ program.pass_score }} dan rata-rata minimal {{ program.pass_score }}.</p></div>
+            <div class="rounded-xl border-2 border-[color:var(--ink)] p-3"><p class="text-xs font-extrabold">Susulan</p><p class="mt-1 text-sm">Nilai {{ config.remedial_from }}-{{ program.pass_score - 1 }}: remedial. Di bawah {{ config.remedial_from }}: pembelajaran ulang.</p></div>
+          </div>
         </div>
       </section>
 
       <nav class="u-tabs mt-6" role="tablist" aria-label="Bagian program">
-        <button v-for="t in TABS" :key="t.value" type="button" role="tab" :aria-selected="tab === t.value" class="u-tab" :class="tab === t.value ? 'is-active' : ''" @click="setTab(t.value)">{{ t.label }}</button>
+        <button v-for="t in tabs" :key="t.value" type="button" role="tab" :aria-selected="tab === t.value" class="u-tab inline-flex items-center gap-2" :class="tab === t.value ? 'is-active' : ''" @click="setTab(t.value)">
+          {{ t.label }}<span v-if="t.count != null" class="rounded-full border-2 border-current px-1.5 text-xs tabular-nums leading-tight">{{ t.count }}</span>
+        </button>
       </nav>
 
       <MaterialsTab v-if="tab === 'materi'" :program="program" :config="config" class="mt-5" @changed="load(true)" />
@@ -82,7 +87,7 @@ import '../../styles/asesmen.css'
 import '../../styles/leader.css'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { leaderApi } from '../../services/leaderApi'
 import LDialog from '../../components/leader/LDialog.vue'
 import ConfirmDialog from '../../components/leader/ConfirmDialog.vue'
@@ -93,11 +98,7 @@ import MaterialsTab from '../../components/leader/MaterialsTab.vue'
 import ParticipantsTab from '../../components/leader/ParticipantsTab.vue'
 import RecapTab from '../../components/leader/RecapTab.vue'
 
-const TABS = [
-  { value: 'materi', label: 'Materi' },
-  { value: 'peserta', label: 'Peserta & Penugasan' },
-  { value: 'rekap', label: 'Rekap Nilai' },
-]
+const TAB_KEYS = ['materi', 'peserta', 'rekap']
 
 const route = useRoute()
 const router = useRouter()
@@ -105,7 +106,8 @@ const config = ref(null)
 const loading = ref(true)
 const error = ref('')
 const programId = ref(Number(localStorage.getItem('leaderProgramId')) || null)
-const tab = ref(TABS.some((t) => t.value === route.query.tab) ? route.query.tab : 'materi')
+const tab = ref(TAB_KEYS.includes(route.query.tab) ? route.query.tab : 'materi')
+const rulesOpen = ref(false)
 const programDialog = ref(false)
 const deleteOpen = ref(false)
 const saving = ref(false)
@@ -116,6 +118,12 @@ const program = computed(() => {
   const p = list.find((x) => x.id === programId.value) || list[0]
   return p ? { ...p, topics: p.topics || [] } : null
 })
+
+const tabs = computed(() => [
+  { value: 'materi', label: 'Materi', count: program.value?.topics.length },
+  { value: 'peserta', label: 'Peserta & Penugasan', count: program.value?.participant_count },
+  { value: 'rekap', label: 'Rekap Nilai' },
+])
 
 async function load(silent = false) {
   if (!silent) loading.value = true

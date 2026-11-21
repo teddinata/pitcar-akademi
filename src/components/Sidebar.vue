@@ -452,11 +452,11 @@
           :key="item.path"
           @click="navigateAndClose(item.path, 'lms')"
           class="relative flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gray-50 border border-gray-100 text-center active:scale-95 transition-all"
-          :class="isRouteActive(item.path) ? 'border-red-200 bg-red-50' : ''"
+          :class="isItemActive(item) ? 'border-red-200 bg-red-50' : ''"
         >
           <span v-if="item.badge" class="u-new absolute -top-1.5 -right-1 !text-[8px]" :class="item.badgeTone === 'abu' ? 'is-abu' : item.badgeTone === 'hot' ? 'is-hot' : ''">{{ item.badge }}</span>
           <div class="w-9 h-9 rounded-full flex items-center justify-center mb-1.5 shadow-sm"
-            :class="isRouteActive(item.path) ? 'bg-[#B70000] text-white' : 'bg-red-50 text-[#B70000]'">
+            :class="isItemActive(item) ? 'bg-[#B70000] text-white' : 'bg-red-50 text-[#B70000]'">
             <component :is="item.icon" class="w-4 h-4" />
           </div>
           <span class="text-[9px] font-bold text-gray-700 leading-snug">{{ item.name }}</span>
@@ -590,9 +590,7 @@ import {
   DocumentTextIcon,
   Squares2X2Icon,
   UserGroupIcon,
-  CalendarDaysIcon,
   CheckBadgeIcon,
-  RectangleGroupIcon,
   BuildingLibraryIcon,
 } from '@heroicons/vue/24/outline'
 import NavItem from './NavItem.vue'
@@ -698,14 +696,13 @@ const belajarItems = [
   { name: 'Learning Path', icon: MapIcon, path: '/dashboard/lms/learning-paths', adminOnly: false },
   { name: 'Lencana', icon: TrophyIcon, path: '/dashboard/lms/badges', adminOnly: false },
 ]
-// Grup Asesmen (baru): Asesmen Terpadu + Peta Kompetensi lama (label 360°).
+// Grup Asesmen: satu baris per program; bagian tiap program (Periode/Paket/Rekap, Materi/Peserta/Rekap) jadi tab di halamannya.
+const KABENG = '/dashboard/asesmen/calon-kabeng'
 const asesmenItems = [
-  { name: 'Asesmen Saya', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/my-competency', adminOnly: false },
-  { name: 'Periode Asesmen', icon: CalendarDaysIcon, path: '/dashboard/asesmen', adminOnly: true, badge: 'NEW', exact: true },
-  { name: 'Paket Asesmen', icon: RectangleGroupIcon, path: '/dashboard/asesmen/paket', adminOnly: true, badge: 'NEW' },
-  { name: 'Rekap & Validasi', icon: CheckBadgeIcon, path: '/dashboard/asesmen/rekap', adminOnly: true, badge: 'NEW' },
-  { name: 'Assessment Calon Kabeng', icon: UserGroupIcon, path: '/dashboard/asesmen/calon-kabeng', adminOnly: true, badge: 'HOT!', badgeTone: 'hot' },
-  { name: 'Peta Kompetensi', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true, badge: '360°', badgeTone: 'abu' },
+  { name: 'Asesmen Saya', icon: ClipboardDocumentCheckIcon, path: '/dashboard/lms/my-competency', adminOnly: false, match: (p) => p.startsWith('/dashboard/lms/my-competency') },
+  { name: 'Asesmen Mekanik', icon: CheckBadgeIcon, path: '/dashboard/asesmen/rekap', adminOnly: true, match: (p) => p.startsWith('/dashboard/asesmen') && !p.startsWith(KABENG) },
+  { name: 'Calon Kabeng', icon: UserGroupIcon, path: KABENG, adminOnly: true, match: (p) => p.startsWith(KABENG) },
+  { name: 'Peta Kompetensi 360°', icon: Squares2X2Icon, path: '/dashboard/lms/competency-map', adminOnly: true, match: (p) => p.startsWith('/dashboard/lms/competency-map') },
 ]
 const filteredAsesmenItems = computed(() => asesmenItems.filter((i) => !i.adminOnly || _isAdmin()))
 const showAsesmen = ref(true)
@@ -781,6 +778,7 @@ const closeAllMobileSheets = () => {
 }
 
 const isRouteActive = (path) => route.path === path
+const isItemActive = (item) => (item.match ? item.match(route.path) : isRouteActive(item.path))
 
 const isLmsRoute = computed(() => route.path.startsWith('/dashboard/lms') || route.path.startsWith('/dashboard/asesmen') || route.path.startsWith('/dashboard/akademi-offline'))
 

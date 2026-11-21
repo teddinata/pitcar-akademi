@@ -81,6 +81,9 @@ export const competencyApi = {
   useManagersAsLeads: (id) => op('terpadu_use_managers', { id }),
   recap: (id) => op('terpadu_recap', { id }),
   recapParticipant: (id) => op('terpadu_participant', { id }),
+  /** Analisis AI rekap: antrekan semua peserta lengkap, lalu pantau statusnya. */
+  insightRun: (id) => op('terpadu_insight_run', { id }),
+  insightStatus: (id) => op('terpadu_insight_status', { id }),
   reviewOral: (lineId, scores, note) => op('oral_review', { line_id: lineId, scores, note }),
   requeueOral: (oralId) => op('oral_requeue', { oral_id: oralId }),
   oralStatus: (ids) => op('oral_status', { ids }),

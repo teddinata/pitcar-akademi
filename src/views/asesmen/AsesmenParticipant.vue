@@ -137,6 +137,8 @@
         </div>
       </section>
 
+      <AiRecoCard class="mt-5" :reco="d.ai_reco" />
+
       <!-- Ujian lisan -->
       <section v-if="d.oral" id="sec-lisan" class="mt-8 scroll-mt-20" data-tour="det-lisan">
         <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
@@ -391,6 +393,7 @@
 </style>
 
 <script setup>
+import AiRecoCard from '../../components/asesmen/AiRecoCard.vue'
 import '@fontsource-variable/bricolage-grotesque'
 import '../../styles/exam.css'
 import '../../styles/asesmen.css'
