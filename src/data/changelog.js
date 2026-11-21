@@ -5,6 +5,16 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.27.0',
+    date: '2026-11-21',
+    title: 'Rekap: skor tiap level & rincian aspek langsung di tabel',
+    items: [
+      { type: 'ubah', text: 'Tabel Rekap & Validasi menampilkan skor lisan L1, L2, L3, L4 di kolom masing-masing (dengan bobotnya), nilai lisan beserta grade (A-E), kasus, lead, jenjang, status, dan rekomendasi AI.' },
+      { type: 'baru', text: 'Tombol panah di kiri tiap peserta membuka rincian 6 aspek per level dan rekomendasi AI tanpa pindah halaman. Klik baris tetap membuka halaman peserta.' },
+      { type: 'baru', text: 'Baris rata-rata di bawah tabel untuk skor tiap level dan nilai lisan, mengikuti filter departemen, jabatan, dan status.' },
+    ],
+  },
+  {
     version: '1.26.0',
     date: '2026-11-21',
     title: 'Rekap asesmen dengan analisis AI & menu Asesmen lebih ringkas',

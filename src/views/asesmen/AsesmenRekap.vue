@@ -121,18 +121,19 @@
         </button>
       </section>
 
-      <!-- Tabel -->
+      <!-- Tabel: satu baris per peserta, panah membuka rincian aspek & rekomendasi AI di tempat -->
       <section class="overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] bg-white shadow-[4px_4px_0_var(--ink)]" data-tour="rekap-tabel">
-        <table class="u-table min-w-[78rem]">
+        <table class="u-table min-w-[86rem]">
           <thead><tr>
-            <th class="w-14 text-center">#</th>
+            <th class="w-12"><span class="sr-only">Rincian</span></th>
+            <th class="w-12 text-center">#</th>
             <th>Peserta</th>
             <th>Departemen</th>
-            <th v-if="data.cycle.oral_enabled">Lisan L1-L4</th>
+            <template v-if="data.cycle.oral_enabled"><th v-for="l in 4" :key="l" class="text-center">L{{ l }} <span class="opacity-70">{{ bobotLevel(l) }}%</span></th></template>
             <th v-if="data.cycle.oral_enabled" class="text-right">Lisan ({{ data.cycle.weights.oral }})</th>
-            <th v-if="data.cycle.cases.length">Kasus ({{ data.cycle.weights.case }})</th>
-            <th v-if="data.cycle.lead_enabled">Lead ({{ data.cycle.weights.lead }})</th>
-            <th>Jenjang akhir</th><th>Status</th><th>Rekomendasi AI</th>
+            <th v-if="data.cycle.cases.length" class="text-center">Kasus ({{ data.cycle.weights.case }})</th>
+            <th v-if="data.cycle.lead_enabled" class="text-center">Lead ({{ data.cycle.weights.lead }})</th>
+            <th>Jenjang</th><th>Status</th><th>Rekomendasi AI</th>
           </tr></thead>
           <tbody>
             <tr v-if="!baris.length"><td :colspan="kolom" class="py-6 text-center text-sm">Tidak ada peserta di filter ini.</td></tr>
@@ -144,44 +145,92 @@
                 <td :colspan="kolom" class="!py-2 text-xs font-extrabold uppercase tracking-wide bg-[#f5f1e8]">{{ deptOf(r) }}</td>
               </tr>
               <tr class="is-click" @click="buka(r)">
+                <td @click.stop>
+                  <button type="button" class="grid h-10 w-10 place-items-center rounded-lg border-2 border-[color:var(--ink)] bg-white hover:bg-[#fffbe0]" :aria-expanded="terbuka.has(r.id)" :aria-label="`${terbuka.has(r.id) ? 'Tutup' : 'Buka'} rincian ${r.employee.name}`" @click="toggle(r.id)">
+                    <ChevronDownIcon class="h-4 w-4 transition-transform motion-reduce:transition-none" :class="terbuka.has(r.id) ? 'rotate-180' : ''" />
+                  </button>
+                </td>
                 <td class="text-center">
                   <span v-if="peringkat.get(r.id)" class="u-display text-xl font-extrabold tabular-nums" :class="peringkat.get(r.id) <= 3 ? '' : 'text-[color:var(--ink-soft)]'">{{ peringkat.get(r.id) }}</span>
                   <span v-else class="text-sm">–</span>
                 </td>
                 <td class="min-w-[10rem]"><router-link :to="`/dashboard/asesmen/rekap/${r.id}`" class="font-bold leading-tight hover:underline underline-offset-4" @click.stop>{{ r.employee.name }}</router-link><p class="text-xs text-[color:var(--ink-soft)]">{{ r.employee.job }}</p></td>
                 <td class="font-semibold">{{ r.employee.department || '–' }}</td>
-                <td v-if="data.cycle.oral_enabled">
-                  <div v-if="r.oral_levels?.length" class="flex gap-1">
-                    <span v-for="lv in r.oral_levels" :key="lv.level" class="u-skor !h-8 !min-w-[2.6rem] !text-[.8rem]" :class="skorClass(lv.score)" :title="`Level ${lv.level}: ${lv.score == null ? 'belum dinilai' : num(lv.score)}`">{{ lv.score == null ? '–' : num(lv.score, 1) }}</span>
-                  </div>
-                  <span v-else class="text-sm">{{ r.oral ? ORAL_STATE(r.oral) : '–' }}</span>
-                </td>
-                <td v-if="data.cycle.oral_enabled" class="text-right">
+                <template v-if="data.cycle.oral_enabled">
+                  <td v-for="l in 4" :key="l" class="text-center">
+                    <span v-if="skorLevel(r, l) != null" class="u-skor" :class="skorClass(skorLevel(r, l))">{{ num(skorLevel(r, l)) }}</span>
+                    <span v-else-if="l === 1 && !r.oral_levels?.length" class="text-xs">{{ r.oral ? ORAL_STATE(r.oral) : '–' }}</span>
+                    <span v-else class="text-sm">–</span>
+                  </td>
+                </template>
+                <td v-if="data.cycle.oral_enabled" class="whitespace-nowrap text-right">
                   <template v-if="r.summary.components.oral?.status === 'done'">
                     <span class="font-extrabold tabular-nums">{{ pct(r.oral_percent) }}</span>
-                    <span class="mt-0.5 block"><span class="u-level !h-6 !min-w-0 !px-1.5 !text-xs" :class="levelClass(r.summary.components.oral.level)">{{ r.summary.components.oral.level ? `L${r.summary.components.oral.level}` : '<L1' }}</span>
-                      <span v-if="r.summary.open_flags" class="u-chip u-chip-kuning !text-[10px] ml-1">{{ r.summary.open_flags }} ditandai</span></span>
+                    <span v-if="grade(r.oral_percent)" class="block text-[11px] font-bold">{{ grade(r.oral_percent).g }} · {{ grade(r.oral_percent).label }}</span>
+                    <span v-if="r.summary.open_flags" class="u-chip u-chip-kuning !text-[10px] mt-0.5">{{ r.summary.open_flags }} ditandai</span>
                   </template>
                   <span v-else class="text-sm">–</span>
                 </td>
-                <td v-if="data.cycle.cases.length"><Komponen :c="r.summary.components.case" /></td>
-                <td v-if="data.cycle.lead_enabled"><Komponen :c="r.summary.components.lead" /></td>
-                <td class="min-w-[9rem]">
+                <td v-if="data.cycle.cases.length" class="text-center"><Komponen :c="r.summary.components.case" /></td>
+                <td v-if="data.cycle.lead_enabled" class="text-center"><Komponen :c="r.summary.components.lead" /></td>
+                <td class="whitespace-nowrap">
                   <template v-if="r.summary.final_level">
-                    <span class="u-level" :class="levelClass(r.summary.final_level)">L{{ r.summary.final_level }}</span>
-                    <span class="ml-1.5 text-sm font-bold">{{ r.summary.final_name }}</span>
-                    <span v-if="r.summary.inconsistent" class="block mt-1 text-[11px] font-extrabold text-[color:var(--merah-tua)]">Sumber berbeda {{ num(r.summary.spread, 1) }} level</span>
+                    <span class="u-level" :class="levelClass(r.summary.final_level)" :title="r.summary.final_name">L{{ r.summary.final_level }}</span>
+                    <span v-if="r.summary.inconsistent" class="block mt-1 text-[11px] font-extrabold text-[color:var(--merah-tua)]">Beda {{ num(r.summary.spread, 1) }} level</span>
                   </template>
                   <span v-else class="text-sm">–</span>
                 </td>
-                <td><span class="u-chip !text-[11px]" :class="STATUS[r.summary.status].chip">{{ STATUS[r.summary.status].label }}</span></td>
+                <td><span class="u-chip whitespace-nowrap !text-[11px]" :class="STATUS[r.summary.status].chip">{{ STATUS[r.summary.status].label }}</span></td>
                 <td class="min-w-[14rem] max-w-[20rem] text-xs">
                   <span v-if="r.ai_reco" class="font-semibold">{{ r.ai_reco.ringkas }}</span>
                   <span v-else-if="aiSibuk && r.summary.complete" class="text-[color:var(--ink-soft)]">Menunggu AI...</span>
                   <span v-else class="text-[color:var(--ink-soft)]">{{ r.summary.complete ? 'Belum dianalisis' : 'Nilai belum lengkap' }}</span>
                 </td>
               </tr>
+              <!-- Rincian di tempat: aspek x level (seperti sheet Detail Nilai) + rekomendasi AI -->
+              <tr v-if="terbuka.has(r.id)" class="!cursor-default">
+                <td :colspan="kolom" class="!bg-[#fffdf0]">
+                  <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+                    <div class="min-w-0 overflow-x-auto">
+                      <table v-if="r.oral_levels?.length" class="w-full min-w-[44rem] text-sm">
+                        <thead><tr class="text-left text-xs font-extrabold">
+                          <th class="py-1 pr-2">Level</th><th class="py-1 pr-2">Bobot</th>
+                          <th v-for="a in data.aspects" :key="a.code" class="py-1 pr-2 text-center">{{ a.label }}</th>
+                          <th class="py-1 text-center">Skor level</th>
+                        </tr></thead>
+                        <tbody>
+                          <tr v-for="lv in r.oral_levels" :key="lv.level">
+                            <td class="whitespace-nowrap py-1 pr-2 font-extrabold">Level {{ lv.level }}</td>
+                            <td class="py-1 pr-2 tabular-nums">{{ bobotLevel(lv.level) }}%</td>
+                            <td v-for="a in data.aspects" :key="a.code" class="py-1 pr-2 text-center"><span class="u-skor" :class="skorClass(lv.aspects?.[a.code])">{{ lv.aspects?.[a.code] ?? '–' }}</span></td>
+                            <td class="py-1 text-center"><span class="u-skor !min-w-[3.2rem]" :class="skorClass(lv.score)">{{ lv.score == null ? '–' : num(lv.score) }}</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <p v-else class="text-sm">Ujian lisan belum dinilai, jadi rincian aspek belum ada.</p>
+                    </div>
+                    <div class="rounded-xl border-2 border-[color:var(--ink)] bg-white p-3 text-sm">
+                      <p class="flex items-center gap-1.5 font-extrabold"><SparklesIcon class="h-4 w-4" />Rekomendasi AI</p>
+                      <template v-if="r.ai_reco">
+                        <p class="mt-1.5 font-semibold">{{ r.ai_reco.ringkas }}</p>
+                        <template v-if="r.ai_reco.fokus?.length"><p class="mt-2 text-xs font-extrabold">Fokus perbaikan</p><ul class="list-disc pl-5"><li v-for="f in r.ai_reco.fokus" :key="f">{{ f }}</li></ul></template>
+                        <template v-if="r.ai_reco.kekuatan?.length"><p class="mt-2 text-xs font-extrabold">Kekuatan</p><ul class="list-disc pl-5"><li v-for="k in r.ai_reco.kekuatan" :key="k">{{ k }}</li></ul></template>
+                        <template v-if="r.ai_reco.rencana"><p class="mt-2 text-xs font-extrabold">Rencana 1 bulan</p><p>{{ r.ai_reco.rencana }}</p></template>
+                      </template>
+                      <p v-else class="mt-1 text-[color:var(--ink-soft)]">{{ r.summary.complete ? 'Belum dianalisis. Tekan "Proses semua nilai sekarang" di atas.' : 'Muncul setelah nilai peserta lengkap.' }}</p>
+                      <router-link :to="`/dashboard/asesmen/rekap/${r.id}`" class="u-btn u-btn-kecil mt-3">Buka halaman peserta</router-link>
+                    </div>
+                  </div>
+                </td>
+              </tr>
             </template>
+            <tr v-if="baris.length && data.cycle.oral_enabled" class="!cursor-default">
+              <td class="!bg-[#ececec]"></td><td class="!bg-[#ececec]"></td>
+              <td class="!bg-[#ececec] font-extrabold">Rata-rata</td><td class="!bg-[#ececec]"></td>
+              <td v-for="l in 4" :key="l" class="!bg-[#ececec] text-center font-extrabold tabular-nums">{{ rataLevel(l) == null ? '–' : num(rataLevel(l)) }}</td>
+              <td class="!bg-[#ececec] text-right font-extrabold tabular-nums">{{ rataPct == null ? '–' : `${num(rataPct, 1)}%` }}</td>
+              <td :colspan="kolom - 9" class="!bg-[#ececec]"></td>
+            </tr>
           </tbody>
         </table>
       </section>
@@ -197,7 +246,7 @@ import '../../styles/exam.css'
 import '../../styles/asesmen.css'
 import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowDownTrayIcon, ArrowPathIcon, SparklesIcon } from '@heroicons/vue/24/outline'
+import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, SparklesIcon } from '@heroicons/vue/24/outline'
 import AsesmenNav from '../../components/asesmen/AsesmenNav.vue'
 import { competencyApi } from '../../services/competencyApi'
 import { useTour } from '../../composables/useTour'
@@ -255,8 +304,20 @@ const daftarDepartemen = computed(() => unik((data.value?.rows || []).map((r) =>
 const barisById = computed(() => new Map((data.value?.rows || []).map((r) => [r.id, r])))
 const lengkapSemua = computed(() => (data.value?.rows || []).some((r) => r.summary.complete))
 const aiSibuk = computed(() => ['queued', 'running'].includes(insight.value.state))
-// Kolom tabel yang tampil, untuk colspan baris pemisah.
-const kolom = computed(() => 6 + (data.value?.cycle.oral_enabled ? 2 : 0) + (data.value?.cycle.cases.length ? 1 : 0) + (data.value?.cycle.lead_enabled ? 1 : 0))
+// Kolom tabel yang tampil, untuk colspan baris pemisah & rincian.
+const kolom = computed(() => 7 + (data.value?.cycle.oral_enabled ? 5 : 0) + (data.value?.cycle.cases.length ? 1 : 0) + (data.value?.cycle.lead_enabled ? 1 : 0))
+const bobotLevel = (l) => data.value?.cycle.oral_weights?.[String(l)] ?? ''
+// Grade lisan seperti sheet asesor: B >= 80, C 70-79, D 60-69, E di bawah 60 (di bawah 50: pelatihan ulang).
+const grade = (v) => {
+  if (v == null) return null
+  if (v >= 90) return { g: 'A', label: 'Istimewa' }
+  if (v >= 80) return { g: 'B', label: 'Sangat baik' }
+  if (v >= 70) return { g: 'C', label: 'Baik' }
+  if (v >= 60) return { g: 'D', label: 'Cukup' }
+  return { g: 'E', label: v >= 50 ? 'Perlu pembinaan' : 'Perlu pelatihan ulang' }
+}
+const terbuka = ref(new Set())
+const toggle = (id) => { const s = new Set(terbuka.value); if (s.has(id)) s.delete(id); else s.add(id); terbuka.value = s }
 
 const barisJabatan = computed(() => (data.value?.rows || []).filter((r) => !jabatan.value || r.employee.job === jabatan.value))
 // Baris di departemen & jabatan terpilih; kartu angka dan peringkat ikut filter ini.
@@ -289,6 +350,8 @@ const hitung = (key) => barisFilter.value.filter((r) => key === 'all' || r.summa
 
 const rata = (vals) => { const v = vals.filter((x) => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null }
 const skorLevel = (r, l) => r.oral_levels?.find((x) => x.level === l)?.score ?? null
+const rataLevel = (l) => rata(baris.value.map((r) => skorLevel(r, l)))
+const rataPct = computed(() => rata(baris.value.map((r) => r.oral_percent)))
 const petaDepartemen = computed(() => unik(barisJabatan.value.map(deptOf)).map((d) => {
   const rows = barisJabatan.value.filter((r) => deptOf(r) === d)
   return { d, n: rows.length, lv: [1, 2, 3, 4].map((l) => rata(rows.map((r) => skorLevel(r, l)))), pct: rata(rows.map((r) => r.oral_percent)) }
@@ -367,7 +430,7 @@ const tour = useTour('asesmen-rekap', () => [
   { element: '[data-tour="rekap-ai"]', title: 'Analisis AI', text: 'Tekan sekali setelah nilai lengkap. AI menulis rekomendasi tiap peserta dan ringkasan periode; prosesnya berjalan di server, halaman boleh ditinggal.', side: 'bottom' },
   { element: '[data-tour="rekap-departemen-peta"]', title: 'Bandingkan departemen', text: 'Rata-rata skor lisan per level di tiap departemen. Klik nama departemen untuk menyaring tabel.', side: 'left' },
   { element: '[data-tour="rekap-angka"]', title: 'Mulai dari "Perlu dicek"', text: 'Klik kotak untuk menyaring. Kuning = ada jawaban lisan yang ditandai (mepet batas, yakin tapi salah, terlalu pendek, AI ragu).', side: 'bottom' },
-  { element: '[data-tour="rekap-tabel"]', title: 'Satu baris satu peserta', text: 'Skor lisan per level, komponen lain, jenjang akhir, dan rekomendasi AI. Klik baris untuk mendengar rekaman, memeriksa, lalu mengesahkan.', side: 'top' },
+  { element: '[data-tour="rekap-tabel"]', title: 'Satu baris satu peserta', text: 'Skor lisan L1-L4, komponen lain, jenjang, dan rekomendasi AI. Panah di kiri membuka rincian 6 aspek per level di tabel; klik baris untuk mendengar rekaman, memeriksa, lalu mengesahkan.', side: 'top' },
 ])
 
 onMounted(async () => {
