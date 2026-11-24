@@ -121,7 +121,15 @@
         </button>
       </section>
 
+      <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div class="u-tabs !pb-0" data-tour="rekap-tampilan">
+          <button v-for="t in TAMPILAN" :key="t.key" type="button" class="u-tab !min-h-11" :class="tampil === t.key ? 'is-active' : ''" :aria-pressed="tampil === t.key" @click="tampil = t.key">{{ t.label }}</button>
+        </div>
+        <p class="text-sm font-semibold text-[color:var(--ink-soft)]">{{ tampil === 'kompetensi' ? 'Nilai tiap kompetensi dari studi kasus dan lead. Klik kompetensi untuk meranking peserta di kompetensi itu.' : 'Lisan per level, komponen, skor akhir, dan jenjang tiap peserta.' }}</p>
+      </div>
+
       <!-- Tabel: satu baris per peserta, panah membuka rincian aspek & rekomendasi AI di tempat -->
+      <template v-if="tampil === 'peserta'">
       <section class="overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] bg-white shadow-[4px_4px_0_var(--ink)]" data-tour="rekap-tabel">
         <table class="u-table min-w-[91rem]">
           <thead><tr>
@@ -175,7 +183,7 @@
                 <td v-if="data.cycle.cases.length" class="text-center"><Komponen :c="r.summary.components.case" /></td>
                 <td v-if="data.cycle.lead_enabled" class="text-center"><Komponen :c="r.summary.components.lead" /></td>
                 <td class="text-center">
-                  <span v-if="r.summary.final_level && r.summary.combined != null" class="u-skor !min-w-[3.2rem] font-extrabold" :class="skorClass(r.summary.combined)" :title="`Rata-rata berbobot komponen: ${num(r.summary.combined)} dari 4`">{{ num(r.summary.combined) }}</span>
+                  <span v-if="r.summary.final_level && r.summary.combined != null" class="u-level" :class="levelClass(r.summary.combined)" :title="`Rata-rata berbobot komponen: ${num(r.summary.combined)} dari 4`">{{ num(r.summary.combined) }}</span>
                   <span v-else class="text-sm">–</span>
                 </td>
                 <td class="whitespace-nowrap">
@@ -243,6 +251,77 @@
       </section>
       <p class="mt-3 text-sm text-[color:var(--ink-soft)]">Skor akhir = rata-rata berbobot komponen yang dipakai (angka di kepala kolom). Jenjang mengikuti skor akhir, paling tinggi satu level di atas komponen terendah. "Sumber berbeda" muncul bila selisih komponen ≥ 1,5 level: dengarkan rekamannya sebelum mengesahkan.</p>
       <p class="mt-1 text-sm text-[color:var(--ink-soft)]">Peringkat dihitung di dalam departemen dan jabatan terpilih: jenjang akhir dulu, lalu nilai gabungan, lalu nilai lisan. Nilai sama mendapat nomor sama.</p>
+      </template>
+
+      <!-- Per kompetensi: heatmap peserta x pilar, kunci kompetensi di atas sekaligus tombol ranking -->
+      <template v-else>
+        <section v-if="!pilar.length" class="u-card p-5 text-sm">
+          <p class="font-extrabold">Belum ada nilai per kompetensi di periode ini.</p>
+          <p class="mt-1">Nilai kompetensi berasal dari studi kasus (dinilai AI) dan penilaian lead. Kolom muncul begitu salah satunya selesai untuk seorang peserta.</p>
+        </section>
+        <template v-else>
+          <ul class="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7" data-tour="rekap-kompetensi">
+            <li v-for="pl in pilar" :key="pl.code">
+              <button type="button" class="flex h-full min-h-11 w-full flex-col items-start gap-1 rounded-xl border-2 border-[color:var(--ink)] p-3 text-left transition-colors motion-reduce:transition-none" :class="urutPilar === pl.code ? 'bg-[color:var(--stabilo)]' : 'bg-white hover:bg-[#fffbe0]'" :aria-pressed="urutPilar === pl.code" @click="pilihPilar(pl.code)">
+                <span class="flex w-full items-center justify-between gap-2">
+                  <span class="u-display text-xl font-extrabold leading-none">{{ pl.short }}</span>
+                  <span class="u-level !h-7 !min-w-[2.5rem] !text-sm" :class="levelClass(pl.rata)" :title="`Rata-rata ${pl.name}`">{{ pl.rata == null ? '–' : num(pl.rata, 1) }}</span>
+                </span>
+                <span class="text-xs font-semibold leading-snug">{{ pl.name }}</span>
+                <span v-if="pl.code === ujung.lemah" class="u-chip u-chip-merah !text-[10px]">Paling lemah</span>
+                <span v-else-if="pl.code === ujung.kuat" class="u-chip u-chip-hijau !text-[10px]">Paling kuat</span>
+              </button>
+            </li>
+          </ul>
+          <section class="overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] bg-white shadow-[4px_4px_0_var(--ink)]">
+            <table class="u-table min-w-[64rem]">
+              <thead><tr>
+                <th class="w-12 text-center">#</th>
+                <th>Peserta</th>
+                <th>Departemen</th>
+                <th v-if="data.cycle.oral_enabled" class="text-right">Lisan</th>
+                <th v-for="pl in pilar" :key="pl.code" class="!px-1 text-center" :aria-sort="urutPilar === pl.code ? 'descending' : 'none'">
+                  <button type="button" class="min-h-10 min-w-[3rem] rounded-md px-2 font-extrabold uppercase" :class="urutPilar === pl.code ? 'bg-[color:var(--stabilo)] text-[color:var(--ink)]' : 'hover:bg-white/20'" :title="pl.name" :aria-label="`Ranking menurut ${pl.name}`" @click="pilihPilar(pl.code)">{{ pl.short }}</button>
+                </th>
+                <th class="text-center">Skor akhir</th>
+                <th>Jenjang</th>
+              </tr></thead>
+              <tbody>
+                <tr v-if="!barisKompetensi.length"><td :colspan="kolomKompetensi" class="py-6 text-center text-sm">Tidak ada peserta di filter ini.</td></tr>
+                <tr v-for="r in barisKompetensi" :key="r.id" class="is-click" @click="buka(r)">
+                  <td class="text-center">
+                    <span v-if="rankKompetensi.get(r.id)" class="u-display text-xl font-extrabold tabular-nums" :class="rankKompetensi.get(r.id) <= 3 ? '' : 'text-[color:var(--ink-soft)]'">{{ rankKompetensi.get(r.id) }}</span>
+                    <span v-else class="text-sm">–</span>
+                  </td>
+                  <td class="min-w-[10rem]"><router-link :to="`/dashboard/asesmen/rekap/${r.id}`" class="font-bold leading-tight hover:underline underline-offset-4" @click.stop>{{ r.employee.name }}</router-link><p class="text-xs text-[color:var(--ink-soft)]">{{ r.employee.job }}</p></td>
+                  <td class="font-semibold">{{ r.employee.department || '–' }}</td>
+                  <td v-if="data.cycle.oral_enabled" class="whitespace-nowrap text-right font-extrabold tabular-nums">{{ r.summary.components.oral?.status === 'done' ? pct(r.oral_percent) : '–' }}</td>
+                  <td v-for="pl in pilar" :key="pl.code" class="!px-1 text-center" :class="urutPilar === pl.code ? '!bg-[#fffbe0]' : ''">
+                    <span v-if="nilaiPilar(r, pl.code) != null" class="u-level" :class="levelClass(nilaiPilar(r, pl.code))">{{ num(nilaiPilar(r, pl.code), 1) }}</span>
+                    <span v-else class="text-sm">–</span>
+                  </td>
+                  <td class="text-center">
+                    <span v-if="r.summary.final_level && r.summary.combined != null" class="u-level" :class="levelClass(r.summary.combined)">{{ num(r.summary.combined) }}</span>
+                    <span v-else class="text-sm">–</span>
+                  </td>
+                  <td><span v-if="r.summary.final_level" class="u-level" :class="levelClass(r.summary.final_level)" :title="r.summary.final_name">L{{ r.summary.final_level }}</span><span v-else class="text-sm">–</span></td>
+                </tr>
+                <tr v-if="barisKompetensi.length" class="!cursor-default">
+                  <td class="!bg-[#ececec]"></td>
+                  <td class="!bg-[#ececec] font-extrabold">Rata-rata</td>
+                  <td class="!bg-[#ececec]"></td>
+                  <td v-if="data.cycle.oral_enabled" class="!bg-[#ececec] text-right font-extrabold tabular-nums">{{ rataPct == null ? '–' : `${num(rataPct, 1)}%` }}</td>
+                  <td v-for="pl in pilar" :key="pl.code" class="!bg-[#ececec] text-center font-extrabold tabular-nums">{{ pl.rata == null ? '–' : num(pl.rata, 1) }}</td>
+                  <td class="!bg-[#ececec] text-center font-extrabold tabular-nums">{{ rataSkorAkhir == null ? '–' : num(rataSkorAkhir) }}</td>
+                  <td class="!bg-[#ececec]"></td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+          <p class="mt-3 text-sm text-[color:var(--ink-soft)]">Nilai kompetensi = rata-rata berbobot studi kasus ({{ data.cycle.weights.case }}) dan lead ({{ data.cycle.weights.lead }}) untuk kompetensi itu, skala 1-4. Ujian lisan dinilai per aspek, jadi tampil sebagai persen terpisah. "–" berarti kompetensi itu belum dinilai untuk peserta tersebut.</p>
+          <p class="mt-1 text-sm text-[color:var(--ink-soft)]">{{ urutPilar ? `Ranking menurut ${pilar.find((x) => x.code === urutPilar)?.name}, di dalam departemen dan jabatan terpilih. Nilai sama mendapat nomor sama.` : 'Tanpa kompetensi terpilih, urutan dan nomor mengikuti peringkat keseluruhan.' }}</p>
+        </template>
+      </template>
     </template>
   </div>
 </template>
@@ -275,6 +354,13 @@ const URUTAN = [
   { key: 'nama', label: 'Nama' },
 ]
 const POLL_MS = 4000
+const TAMPILAN = [
+  { key: 'peserta', label: 'Per peserta' },
+  { key: 'kompetensi', label: 'Per kompetensi' },
+]
+// Singkatan pilar mekanik seperti di sheet asesor; pilar lain memakai huruf depan namanya.
+const KODE_PILAR = { servis_berkala: 'SB', diagnosa: 'DP', kelistrikan: 'KS', kualitas: 'QC', kerja_tim: 'DT', cepat_rapi: 'KR', komunikasi: 'SA' }
+const singkat = (p) => KODE_PILAR[p.code] || p.name.split(/[\s&,]+/).filter((w) => w && w.toLowerCase() !== 'dan').map((w) => w[0]).join('').slice(0, 3).toUpperCase()
 
 const Komponen = defineComponent({
   props: { c: Object },
@@ -301,6 +387,8 @@ const q = (k) => (typeof route.query[k] === 'string' ? route.query[k] : '')
 const urut = ref(URUTAN.some((u) => u.key === route.query.urut) ? route.query.urut : 'peringkat')
 const jabatan = ref(q('jabatan'))
 const departemen = ref(q('departemen'))
+const tampil = ref(q('tampil') === 'kompetensi' ? 'kompetensi' : 'peserta')
+const urutPilar = ref(q('pilar'))
 const insight = ref({ state: 'none', data: null, at: null, error: '', done: 0, total: 0 })
 let pollTimer = null
 
@@ -365,12 +453,48 @@ const petaDepartemen = computed(() => unik(barisJabatan.value.map(deptOf)).map((
   const rows = barisJabatan.value.filter((r) => deptOf(r) === d)
   return { d, n: rows.length, lv: [1, 2, 3, 4].map((l) => rata(rows.map((r) => skorLevel(r, l)))), pct: rata(rows.map((r) => r.oral_percent)) }
 }))
+// --- Per kompetensi ---
+const nilaiPilar = (r, code) => r.summary.pillar_levels?.[code] ?? null
+const barisKompetensi = computed(() => {
+  const rows = baris.value
+  const code = urutPilar.value
+  if (!code) return rows
+  const p = peringkat.value
+  return [...rows].sort((a, b) => (nilaiPilar(b, code) ?? -1) - (nilaiPilar(a, code) ?? -1)
+    || (p.get(a.id) || Infinity) - (p.get(b.id) || Infinity) || a.employee.name.localeCompare(b.employee.name, 'id'))
+})
+// Kompetensi yang punya nilai di periode ini (pilar tanpa nilai sama sekali tidak dibuat kolom kosong).
+const pilar = computed(() => {
+  const rows = data.value?.rows || []
+  return (data.value?.pillars || []).filter((pl) => rows.some((r) => nilaiPilar(r, pl.code) != null))
+    .map((pl) => ({ ...pl, short: singkat(pl), rata: rata(barisKompetensi.value.map((r) => nilaiPilar(r, pl.code))) }))
+})
+const ujung = computed(() => {
+  const ada = pilar.value.filter((pl) => pl.rata != null)
+  if (ada.length < 2) return {}
+  const urut2 = [...ada].sort((a, b) => a.rata - b.rata)
+  if (urut2[0].rata === urut2[urut2.length - 1].rata) return {}
+  return { lemah: urut2[0].code, kuat: urut2[urut2.length - 1].code }
+})
+// Nomor: ranking di kompetensi terpilih (dalam departemen & jabatan terpilih), atau peringkat keseluruhan.
+const rankKompetensi = computed(() => {
+  const code = urutPilar.value
+  if (!code) return peringkat.value
+  const ada = barisFilter.value.filter((r) => nilaiPilar(r, code) != null).sort((a, b) => nilaiPilar(b, code) - nilaiPilar(a, code))
+  const out = new Map()
+  ada.forEach((r, i) => out.set(r.id, i && nilaiPilar(ada[i - 1], code) === nilaiPilar(r, code) ? out.get(ada[i - 1].id) : i + 1))
+  return out
+})
+const kolomKompetensi = computed(() => 5 + (data.value?.cycle.oral_enabled ? 1 : 0) + pilar.value.length)
+const pilihPilar = (code) => { urutPilar.value = urutPilar.value === code ? '' : code }
+
 const rataAspek = computed(() => (data.value?.aspects || []).map((a) => ({
   ...a, v: rata(barisFilter.value.flatMap((r) => (r.oral_levels || []).map((lv) => lv.aspects?.[a.code] ?? null))),
 })))
 
-watch([urut, jabatan, departemen], () => router.replace({ query: {
+watch([urut, jabatan, departemen, tampil, urutPilar], () => router.replace({ query: {
   ...route.query, urut: urut.value === 'peringkat' ? undefined : urut.value, jabatan: jabatan.value || undefined, departemen: departemen.value || undefined,
+  tampil: tampil.value === 'peserta' ? undefined : tampil.value, pilar: urutPilar.value || undefined,
 } }))
 
 const waktu = (s) => (s ? new Date(String(s).replace(' ', 'T') + 'Z').toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' WIB' : '')
@@ -418,12 +542,12 @@ function buka(r) { router.push(`/dashboard/asesmen/rekap/${r.id}`) }
 
 function unduh() {
   const kolomCsv = ['Peringkat', 'Peserta', 'Departemen', 'Jabatan', 'Lisan L1', 'Lisan L2', 'Lisan L3', 'Lisan L4', 'Lisan persen', 'Lisan jenjang',
-    'Studi kasus', 'Lead', 'Gabungan', 'Jenjang akhir', 'Nama jenjang', 'Status', 'Rekomendasi AI']
+    'Studi kasus', 'Lead', ...pilar.value.map((pl) => `${pl.short} ${pl.name}`), 'Gabungan', 'Jenjang akhir', 'Nama jenjang', 'Status', 'Rekomendasi AI']
   const sel = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
   const isi = baris.value.map((r) => [
     peringkat.value.get(r.id) ?? '', r.employee.name, r.employee.department, r.employee.job,
     ...[1, 2, 3, 4].map((l) => skorLevel(r, l) ?? ''), r.oral_percent ?? '', r.summary.components.oral?.level ?? '',
-    r.summary.components.case?.level ?? '', r.summary.components.lead?.level ?? '', r.summary.combined ?? '',
+    r.summary.components.case?.level ?? '', r.summary.components.lead?.level ?? '', ...pilar.value.map((pl) => nilaiPilar(r, pl.code) ?? ''), r.summary.combined ?? '',
     r.summary.final_level ? `L${r.summary.final_level}` : '', r.summary.final_name || '', STATUS[r.summary.status].label, r.ai_reco?.ringkas || '',
   ].map(sel).join(';'))
   const blob = new Blob([`﻿${[kolomCsv.map(sel).join(';'), ...isi].join('\n')}`], { type: 'text/csv;charset=utf-8' })
@@ -439,6 +563,7 @@ const tour = useTour('asesmen-rekap', () => [
   { element: '[data-tour="rekap-ai"]', title: 'Analisis AI', text: 'Tekan sekali setelah nilai lengkap. AI menulis rekomendasi tiap peserta dan ringkasan periode; prosesnya berjalan di server, halaman boleh ditinggal.', side: 'bottom' },
   { element: '[data-tour="rekap-departemen-peta"]', title: 'Bandingkan departemen', text: 'Rata-rata skor lisan per level di tiap departemen. Klik nama departemen untuk menyaring tabel.', side: 'left' },
   { element: '[data-tour="rekap-angka"]', title: 'Mulai dari "Perlu dicek"', text: 'Klik kotak untuk menyaring. Kuning = ada jawaban lisan yang ditandai (mepet batas, yakin tapi salah, terlalu pendek, AI ragu).', side: 'bottom' },
+  { element: '[data-tour="rekap-tampilan"]', title: 'Per peserta atau per kompetensi', text: 'Per kompetensi menampilkan nilai SB, DP, KS, QC, DT, KR, SA tiap peserta berdampingan. Klik satu kompetensi untuk meranking peserta di kompetensi itu dan melihat mana yang paling lemah di tim.', side: 'bottom' },
   { element: '[data-tour="rekap-tabel"]', title: 'Satu baris satu peserta', text: 'Skor lisan L1-L4, komponen lain, jenjang, dan rekomendasi AI. Panah di kiri membuka rincian 6 aspek per level di tabel; klik baris untuk mendengar rekaman, memeriksa, lalu mengesahkan.', side: 'top' },
 ])
 

@@ -5,6 +5,16 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.28.0',
+    date: '2026-11-24',
+    title: 'Rekap: bandingkan & ranking per kompetensi',
+    items: [
+      { type: 'baru', text: 'Tombol "Per kompetensi" di atas tabel Rekap & Validasi menampilkan nilai SB, DP, KS, QC, DT, KR, dan SA tiap peserta berdampingan, dengan warna per level dan baris rata-rata.' },
+      { type: 'baru', text: 'Klik satu kompetensi (di kotak kunci atau kepala kolom) untuk meranking peserta di kompetensi itu. Kompetensi paling lemah dan paling kuat di tim ditandai.' },
+      { type: 'ubah', text: 'Unduhan CSV ikut memuat nilai tiap kompetensi. Kolom Skor akhir memakai warna level 1-4, sama dengan Kasus dan Lead.' },
+    ],
+  },
+  {
     version: '1.27.1',
     date: '2026-11-24',
     title: 'Rekap: skor akhir tampil lagi',
