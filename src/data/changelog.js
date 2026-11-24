@@ -5,6 +5,14 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.27.1',
+    date: '2026-11-24',
+    title: 'Rekap: skor akhir tampil lagi',
+    items: [
+      { type: 'perbaikan', text: 'Kolom Skor akhir (gabungan lisan, kasus, dan lead, misalnya 2,9) kembali muncul di tabel Rekap & Validasi, sebelum kolom Jenjang. Baris rata-rata juga menghitung rata-rata skor akhir.' },
+    ],
+  },
+  {
     version: '1.27.0',
     date: '2026-11-21',
     title: 'Rekap: skor tiap level & rincian aspek langsung di tabel',

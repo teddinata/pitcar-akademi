@@ -123,7 +123,7 @@
 
       <!-- Tabel: satu baris per peserta, panah membuka rincian aspek & rekomendasi AI di tempat -->
       <section class="overflow-x-auto rounded-xl border-[2.5px] border-[color:var(--ink)] bg-white shadow-[4px_4px_0_var(--ink)]" data-tour="rekap-tabel">
-        <table class="u-table min-w-[86rem]">
+        <table class="u-table min-w-[91rem]">
           <thead><tr>
             <th class="w-12"><span class="sr-only">Rincian</span></th>
             <th class="w-12 text-center">#</th>
@@ -133,6 +133,7 @@
             <th v-if="data.cycle.oral_enabled" class="text-right">Lisan ({{ data.cycle.weights.oral }})</th>
             <th v-if="data.cycle.cases.length" class="text-center">Kasus ({{ data.cycle.weights.case }})</th>
             <th v-if="data.cycle.lead_enabled" class="text-center">Lead ({{ data.cycle.weights.lead }})</th>
+            <th class="text-center">Skor akhir</th>
             <th>Jenjang</th><th>Status</th><th>Rekomendasi AI</th>
           </tr></thead>
           <tbody>
@@ -173,6 +174,10 @@
                 </td>
                 <td v-if="data.cycle.cases.length" class="text-center"><Komponen :c="r.summary.components.case" /></td>
                 <td v-if="data.cycle.lead_enabled" class="text-center"><Komponen :c="r.summary.components.lead" /></td>
+                <td class="text-center">
+                  <span v-if="r.summary.final_level && r.summary.combined != null" class="u-skor !min-w-[3.2rem] font-extrabold" :class="skorClass(r.summary.combined)" :title="`Rata-rata berbobot komponen: ${num(r.summary.combined)} dari 4`">{{ num(r.summary.combined) }}</span>
+                  <span v-else class="text-sm">–</span>
+                </td>
                 <td class="whitespace-nowrap">
                   <template v-if="r.summary.final_level">
                     <span class="u-level" :class="levelClass(r.summary.final_level)" :title="r.summary.final_name">L{{ r.summary.final_level }}</span>
@@ -229,12 +234,14 @@
               <td class="!bg-[#ececec] font-extrabold">Rata-rata</td><td class="!bg-[#ececec]"></td>
               <td v-for="l in 4" :key="l" class="!bg-[#ececec] text-center font-extrabold tabular-nums">{{ rataLevel(l) == null ? '–' : num(rataLevel(l)) }}</td>
               <td class="!bg-[#ececec] text-right font-extrabold tabular-nums">{{ rataPct == null ? '–' : `${num(rataPct, 1)}%` }}</td>
-              <td :colspan="kolom - 9" class="!bg-[#ececec]"></td>
+              <td v-if="kolomKomponen" :colspan="kolomKomponen" class="!bg-[#ececec]"></td>
+              <td class="!bg-[#ececec] text-center font-extrabold tabular-nums">{{ rataSkorAkhir == null ? '–' : num(rataSkorAkhir) }}</td>
+              <td colspan="3" class="!bg-[#ececec]"></td>
             </tr>
           </tbody>
         </table>
       </section>
-      <p class="mt-3 text-sm text-[color:var(--ink-soft)]">Jenjang akhir = rata-rata berbobot komponen yang dipakai (angka di kepala kolom), paling tinggi satu level di atas komponen terendah. "Sumber berbeda" muncul bila selisih komponen ≥ 1,5 level: dengarkan rekamannya sebelum mengesahkan.</p>
+      <p class="mt-3 text-sm text-[color:var(--ink-soft)]">Skor akhir = rata-rata berbobot komponen yang dipakai (angka di kepala kolom). Jenjang mengikuti skor akhir, paling tinggi satu level di atas komponen terendah. "Sumber berbeda" muncul bila selisih komponen ≥ 1,5 level: dengarkan rekamannya sebelum mengesahkan.</p>
       <p class="mt-1 text-sm text-[color:var(--ink-soft)]">Peringkat dihitung di dalam departemen dan jabatan terpilih: jenjang akhir dulu, lalu nilai gabungan, lalu nilai lisan. Nilai sama mendapat nomor sama.</p>
     </template>
   </div>
@@ -305,7 +312,8 @@ const barisById = computed(() => new Map((data.value?.rows || []).map((r) => [r.
 const lengkapSemua = computed(() => (data.value?.rows || []).some((r) => r.summary.complete))
 const aiSibuk = computed(() => ['queued', 'running'].includes(insight.value.state))
 // Kolom tabel yang tampil, untuk colspan baris pemisah & rincian.
-const kolom = computed(() => 7 + (data.value?.cycle.oral_enabled ? 5 : 0) + (data.value?.cycle.cases.length ? 1 : 0) + (data.value?.cycle.lead_enabled ? 1 : 0))
+const kolomKomponen = computed(() => (data.value?.cycle.cases.length ? 1 : 0) + (data.value?.cycle.lead_enabled ? 1 : 0))
+const kolom = computed(() => 8 + (data.value?.cycle.oral_enabled ? 5 : 0) + (data.value?.cycle.cases.length ? 1 : 0) + (data.value?.cycle.lead_enabled ? 1 : 0))
 const bobotLevel = (l) => data.value?.cycle.oral_weights?.[String(l)] ?? ''
 // Grade lisan seperti sheet asesor: B >= 80, C 70-79, D 60-69, E di bawah 60 (di bawah 50: pelatihan ulang).
 const grade = (v) => {
@@ -352,6 +360,7 @@ const rata = (vals) => { const v = vals.filter((x) => x != null); return v.lengt
 const skorLevel = (r, l) => r.oral_levels?.find((x) => x.level === l)?.score ?? null
 const rataLevel = (l) => rata(baris.value.map((r) => skorLevel(r, l)))
 const rataPct = computed(() => rata(baris.value.map((r) => r.oral_percent)))
+const rataSkorAkhir = computed(() => rata(baris.value.map((r) => (r.summary.final_level ? r.summary.combined : null))))
 const petaDepartemen = computed(() => unik(barisJabatan.value.map(deptOf)).map((d) => {
   const rows = barisJabatan.value.filter((r) => deptOf(r) === d)
   return { d, n: rows.length, lv: [1, 2, 3, 4].map((l) => rata(rows.map((r) => skorLevel(r, l)))), pct: rata(rows.map((r) => r.oral_percent)) }
