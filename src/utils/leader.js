@@ -105,3 +105,25 @@ export const pilihDb = async (db) => {
     await fetch(`/web/login?db=${encodeURIComponent(db)}`, { credentials: 'include', redirect: 'manual' })
   } catch { /* cookie tetap tersimpan; panggilan berikutnya yang menentukan */ }
 }
+
+/**
+ * POST JSON-RPC ke rute publik (QR kelas, quiz, mentor). HP yang pernah login tidak memilih
+ * database lagi; bila sesi servernya sudah habis, sesi baru tanpa database dijawab Odoo
+ * dengan 404 Not Found. Dalam kasus itu database dipilih ulang lalu permintaan diulang sekali.
+ */
+export async function postPublik(url, params, db) {
+  const kirim = () => fetch(url, {
+    method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params }),
+  })
+  let res = await kirim()
+  if (res.status === 404 && db) {
+    await pilihDb(db)
+    res = await kirim()
+  }
+  if (!res.ok) throw new Error(`Server tidak bisa dihubungi (${res.status}). Muat ulang halaman, atau minta tautan/QR terbaru.`)
+  const data = await res.json()
+  if (data.error) throw new Error(data.error.data?.message || data.error.message || 'Terjadi kesalahan.')
+  if (data.result?.status === 'error') throw new Error(data.result.message)
+  return data.result?.data
+}

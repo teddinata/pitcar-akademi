@@ -1,6 +1,7 @@
 // API Kelas Offline Akademi. Admin lewat /web/v1/leader (login); mentor lewat /web/v1/leader/mentor (tautan
 // bertoken, tanpa login). Keduanya memakai nama operasi yang sama, jadi komponen menerima salah satu klien.
 import apiClient from '../config/api'
+import { postPublik } from '../utils/leader'
 
 const UPLOAD_TIMEOUT = 120000
 
@@ -47,18 +48,8 @@ function client(op) {
 export const academyApi = client(adminOp)
 
 /** Klien untuk halaman mentor (tanpa login): token dari tautan, database disetel lebih dulu lewat ?db=. */
-export function mentorClient(token) {
-  return client(async (operation, params = {}) => {
-    const res = await fetch('/web/v1/leader/mentor', {
-      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { token, operation, ...params } }),
-    })
-    if (!res.ok) throw new Error(`Server tidak bisa dihubungi (${res.status}).`)
-    const data = await res.json()
-    if (data.error) throw new Error(data.error.data?.message || data.error.message || 'Terjadi kesalahan.')
-    if (data.result?.status === 'error') throw new Error(data.result.message)
-    return data.result?.data
-  })
+export function mentorClient(token, db = '') {
+  return client((operation, params = {}) => postPublik('/web/v1/leader/mentor', { token, operation, ...params }, db))
 }
 
 export const ATT_STATUS = {

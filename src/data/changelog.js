@@ -5,6 +5,15 @@
 // 'perbaikan' (bug fix). Tulis dari sudut pandang pengguna, bukan nama file.
 export const CHANGELOG = [
   {
+    version: '1.28.1',
+    date: '2026-11-24',
+    title: 'QR kelas & quiz tidak lagi "not found"',
+    items: [
+      { type: 'perbaikan', text: 'Memindai QR quiz atau QR kelas Kelas Offline dari HP yang pernah login Akademi tidak lagi berakhir dengan error 404 / not found saat sesi login di HP itu sudah habis. Halaman memilih database lagi lalu langsung mencoba ulang.' },
+      { type: 'perbaikan', text: 'Perbaikan yang sama berlaku untuk halaman quiz (/quiz), tautan mentor, dan QR kelas Calon Kabeng.' },
+    ],
+  },
+  {
     version: '1.28.0',
     date: '2026-11-24',
     title: 'Rekap: bandingkan & ranking per kompetensi',

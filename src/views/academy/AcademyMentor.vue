@@ -101,7 +101,7 @@ import SessionRunner from '../../components/academy/SessionRunner.vue'
 const route = useRoute()
 const token = String(route.params.token || '')
 const db = String(route.query.db || '')
-const api = mentorClient(token)
+const api = mentorClient(token, db)
 
 const home = ref(null)
 const loading = ref(true)

@@ -198,7 +198,7 @@ import '../../styles/asesmen.css'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ClockIcon, ExclamationTriangleIcon, PlayIcon } from '@heroicons/vue/24/outline'
-import { pilihDb } from '../../utils/leader'
+import { pilihDb, postPublik } from '../../utils/leader'
 
 const STATUS = {
   passed: { label: 'Lulus', chip: 'u-chip-hijau' },
@@ -229,17 +229,8 @@ let ticker = null
 let autoSent = false
 
 // Panggilan publik: tanpa header sesi akun (memakai sesi cookie yang terikat ke DB Akademi).
-async function call(path, params = {}) {
-  const res = await fetch(`/web/v1/leader/take/${path}`, {
-    method: 'POST', credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { token, ...params } }),
-  })
-  if (!res.ok) throw new Error(`Server tidak bisa dihubungi (${res.status}).`)
-  const data = await res.json()
-  if (data.error) throw new Error(data.error.data?.message || data.error.message || 'Terjadi kesalahan.')
-  if (data.result?.status === 'error') throw new Error(data.result.message)
-  return data.result?.data
+function call(path, params = {}) {
+  return postPublik(`/web/v1/leader/take/${path}`, { token, ...params }, db)
 }
 
 async function siapkanDb() {

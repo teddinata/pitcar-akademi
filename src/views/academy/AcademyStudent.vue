@@ -166,7 +166,7 @@ import '../../styles/academy.css'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { BackspaceIcon, CheckIcon, ChevronRightIcon, ExclamationTriangleIcon, MagnifyingGlassIcon, PlayIcon } from '@heroicons/vue/24/outline'
-import { pilihDb } from '../../utils/leader'
+import { pilihDb, postPublik } from '../../utils/leader'
 import StudentProgress from '../../components/academy/StudentProgress.vue'
 import MaterialList from '../../components/academy/MaterialList.vue'
 import LNotice from '../../components/leader/LNotice.vue'
@@ -201,16 +201,8 @@ const tersaring = computed(() => {
   return q ? peserta.value.filter((p) => p.name.toLowerCase().includes(q)) : peserta.value
 })
 
-async function call(path, params = {}) {
-  const res = await fetch(`/web/v1/leader/kiosk/${path}`, {
-    method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { kiosk, ...params } }),
-  })
-  if (!res.ok) throw new Error(`Server tidak bisa dihubungi (${res.status}).`)
-  const data = await res.json()
-  if (data.error) throw new Error(data.error.data?.message || data.error.message || 'Terjadi kesalahan.')
-  if (data.result?.status === 'error') throw new Error(data.result.message)
-  return data.result?.data
+function call(path, params = {}) {
+  return postPublik(`/web/v1/leader/kiosk/${path}`, { kiosk, ...params }, db)
 }
 
 async function siapkanDb() {
